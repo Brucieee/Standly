@@ -3,17 +3,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Lock, Mail, User } from 'lucide-react';
 
 interface AuthPageProps {
-  onLogin: (email: string) => void;
+  onLogin: (email: string, password: string) => Promise<void>;
+  onRegister: (email: string, password: string, name: string) => Promise<void>;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(email) onLogin(email);
+    setError(null);
+    setLoading(true);
+    try {
+      if (isLogin) {
+        await onLogin(email, password);
+      } else {
+        await onRegister(email, password, name);
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -49,6 +65,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
               onSubmit={handleSubmit}
               className="space-y-4"
             >
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+                  {error}
+                </div>
+              )}
+
               {!isLogin && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
@@ -88,6 +110,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
                   <input 
                     type="password" 
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-black placeholder:text-slate-400"
                     placeholder="••••••••"
                   />
@@ -97,10 +121,17 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
               <div className="pt-4">
                 <button 
                   type="submit"
-                  className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group"
+                  disabled={loading}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <span>{isLogin ? 'Sign In' : 'Get Started'}</span>
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  {loading ? (
+                    <span>Processing...</span>
+                  ) : (
+                    <>
+                      <span>{isLogin ? 'Sign In' : 'Get Started'}</span>
+                      <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
               </div>
             </motion.form>
@@ -110,7 +141,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             <p className="text-slate-500">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button 
-                onClick={() => setIsLogin(!isLogin)}
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError(null);
+                }}
                 className="text-indigo-600 font-semibold hover:underline"
               >
                 {isLogin ? 'Sign up' : 'Log in'}

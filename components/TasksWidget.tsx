@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, User } from '../types';
-import { Plus, Calendar, User as UserIcon } from 'lucide-react';
+import { Plus, Calendar, User as UserIcon, Trash2 } from 'lucide-react';
 
 interface TasksWidgetProps {
   tasks: Task[];
@@ -8,9 +8,10 @@ interface TasksWidgetProps {
   currentUserId: string;
   onAddTask: (task: Omit<Task, 'id' | 'creatorId'>) => void;
   onUpdateStatus: (taskId: string, status: Task['status']) => void;
+  onDelete: (taskId: string) => void;
 }
 
-export const TasksWidget: React.FC<TasksWidgetProps> = ({ tasks, users, currentUserId, onAddTask, onUpdateStatus }) => {
+export const TasksWidget: React.FC<TasksWidgetProps> = ({ tasks, users, currentUserId, onAddTask, onUpdateStatus, onDelete }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState(currentUserId);
@@ -90,7 +91,7 @@ export const TasksWidget: React.FC<TasksWidgetProps> = ({ tasks, users, currentU
             const isDueSoon = new Date(task.dueDate) < new Date(Date.now() + 86400000 * 2);
             
             return (
-              <div key={task.id} className="group flex items-start space-x-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-sm transition-all bg-white">
+              <div key={task.id} className="group flex items-start space-x-3 p-3 rounded-xl border border-slate-100 hover:border-indigo-100 hover:shadow-sm transition-all bg-white relative">
                 <input 
                   type="checkbox" 
                   checked={task.status === 'done'}
@@ -114,7 +115,16 @@ export const TasksWidget: React.FC<TasksWidgetProps> = ({ tasks, users, currentU
                     )}
                   </div>
                 </div>
-                <div className={`w-2 h-2 rounded-full mt-2 ${
+                
+                {/* Delete button (visible on hover) */}
+                <button 
+                  onClick={() => onDelete(task.id)}
+                  className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 absolute right-2 top-2 bg-white/80 rounded"
+                >
+                   <Trash2 size={14} />
+                </button>
+                
+                <div className={`w-2 h-2 rounded-full mt-2 ml-2 flex-shrink-0 ${
                   task.status === 'done' ? 'bg-green-400' :
                   task.status === 'in-progress' ? 'bg-indigo-500' : 'bg-slate-300'
                 }`}></div>

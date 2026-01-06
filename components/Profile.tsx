@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Camera, Save } from 'lucide-react';
+import { Save, Camera, Loader2 } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 interface ProfileProps {
   user: User;
@@ -12,6 +13,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
   const [role, setRole] = useState(user.role);
   const [avatar, setAvatar] = useState(user.avatar);
   const [isSaved, setIsSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,11 +22,33 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      // Mocking image upload by creating a local URL
-      const url = URL.createObjectURL(e.target.files[0]);
-      setAvatar(url);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+
+    setUploading(true);
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      setAvatar(data.publicUrl);
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Error uploading avatar');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -36,10 +60,25 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
         <div className="h-32 bg-indigo-600"></div>
         <div className="px-8 pb-8">
           <div className="relative -mt-16 mb-6 inline-block">
-            <img src={avatar} alt="Profile" className="w-32 h-32 rounded-full border-4 border-white object-cover shadow-md" />
-            <label className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md cursor-pointer hover:bg-slate-50 transition-colors">
-              <Camera size={20} className="text-slate-600" />
-              <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+            <img 
+              src={avatar} 
+              alt="Profile" 
+              className={`w-32 h-32 rounded-full border-4 border-white object-cover shadow-md bg-white ${uploading ? 'opacity-50' : ''}`} 
+            />
+            
+            <label className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md cursor-pointer hover:bg-slate-50 transition-colors group">
+              {uploading ? (
+                <Loader2 size={20} className="text-indigo-600 animate-spin" />
+              ) : (
+                <Camera size={20} className="text-slate-600 group-hover:text-indigo-600" />
+              )}
+              <input 
+                type="file" 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileUpload}
+                disabled={uploading}
+              />
             </label>
           </div>
 

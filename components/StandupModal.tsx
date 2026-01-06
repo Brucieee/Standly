@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Sparkles, Loader2, Calendar } from 'lucide-react';
-import { generateStandupSummary } from '../services/geminiService';
+import { X, Calendar } from 'lucide-react';
 import { Standup } from '../types';
 
 interface StandupModalProps {
@@ -17,7 +16,6 @@ export const StandupModal: React.FC<StandupModalProps> = ({ isOpen, onClose, onS
   const [today, setToday] = useState('');
   const [blockers, setBlockers] = useState('');
   const [mood, setMood] = useState<'happy' | 'neutral' | 'stressed'>('happy');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,16 +36,6 @@ export const StandupModal: React.FC<StandupModalProps> = ({ isOpen, onClose, onS
   }, [isOpen, initialData, initialDate]);
 
   if (!isOpen) return null;
-
-  const handleAiAssist = async () => {
-    setIsGenerating(true);
-    // In a real app, we'd pass actual history. 
-    // Here we pass a mock list representing what the user might have clicked "done" on recently.
-    const mockRecentDoneTasks = ["Fix login bug", "Update user schema"]; 
-    const suggestion = await generateStandupSummary(mockRecentDoneTasks, blockers || "None");
-    setToday(suggestion);
-    setIsGenerating(false);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,15 +106,6 @@ export const StandupModal: React.FC<StandupModalProps> = ({ isOpen, onClose, onS
               <label className="block text-sm font-semibold text-slate-700">
                 What will you do today?
               </label>
-              <button 
-                type="button" 
-                onClick={handleAiAssist}
-                disabled={isGenerating}
-                className="text-xs flex items-center space-x-1 text-indigo-600 hover:text-indigo-700 font-medium disabled:opacity-50"
-              >
-                {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                <span>AI Suggest</span>
-              </button>
             </div>
             <textarea
               required

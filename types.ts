@@ -32,6 +32,7 @@ export interface Task {
   assigneeId: string; // Could be self or others
   creatorId: string;
   dueDate: string; // ISO String
+  type?: 'task' | 'deadline'; // New field for separation
 }
 
 export interface AppState {
