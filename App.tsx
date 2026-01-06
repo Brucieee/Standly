@@ -223,6 +223,27 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDeleteDeadline = (taskId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Deadline',
+      message: 'Are you sure you want to delete this deadline? This action cannot be undone.',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await apiTasks.delete(taskId);
+          setState(prev => ({
+            ...prev,
+            tasks: prev.tasks.filter(t => t.id !== taskId)
+          }));
+        } catch (error: any) {
+          console.error('Failed to delete deadline', error);
+          alert(`Failed to delete deadline: ${error.message || 'Unknown error'}. Please check console.`);
+        }
+      }
+    });
+  };
+
   const handleDeleteTask = (taskId: string) => {
     setConfirmModal({
       isOpen: true,
@@ -319,7 +340,7 @@ const App: React.FC = () => {
               </div>
             </div>
             
-            <WeeklySummaryWidget standups={state.standups} users={state.users} />
+            <WeeklySummaryWidget standups={state.standups} users={state.users} deadlines={deadlines} />
 
             <StandupFeed 
               standups={sortedStandups} 
@@ -332,7 +353,7 @@ const App: React.FC = () => {
 
           {/* Sidebar Widgets */}
           <div className="space-y-8">
-            <DeadlinesWidget tasks={deadlines} onDelete={handleDeleteTask} />
+            <DeadlinesWidget tasks={deadlines} onDelete={handleDeleteDeadline} />
             <CalendarWidget 
               standups={state.standups} 
               userId={state.currentUser.id} 

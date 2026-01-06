@@ -30,11 +30,9 @@ export const Layout: React.FC<LayoutProps> = ({
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
-        <div className="p-6 flex items-center space-x-3">
-           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-             <span className="text-white font-bold text-lg">S</span>
-           </div>
-           <span className="text-xl font-bold text-slate-800 tracking-tight">Standly</span>
+        <div className="p-6 flex items-center justify-center space-x-3">
+           <img src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo.png" alt="Standly Logo" className="h-10 w-10 object-contain rounded-lg" />
+           <img src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_text.png" alt="Standly" className="h-8 object-contain" />
         </div>
 
         <div className="px-4 py-2">
@@ -82,10 +80,8 @@ export const Layout: React.FC<LayoutProps> = ({
       {/* Mobile Header (visible only on small screens) */}
       <div className="md:hidden fixed top-0 w-full bg-white z-20 border-b border-slate-200 px-4 py-3 flex justify-between items-center">
         <div className="flex items-center space-x-2">
-           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-             <span className="text-white font-bold">S</span>
-           </div>
-           <span className="font-bold text-slate-800">Standly</span>
+           <img src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo.png" alt="Standly Logo" className="h-10 w-10 object-contain rounded-lg" />
+           <img src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_text.png" alt="Standly" className="h-8 object-contain" />
         </div>
         <button onClick={onLogout} className="text-slate-500">
           <LogOut size={20} />

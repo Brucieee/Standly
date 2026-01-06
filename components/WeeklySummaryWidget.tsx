@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Sparkles, Loader2, FileText } from 'lucide-react';
+import Markdown from 'react-markdown';
 import { generateWeeklySummary } from '../services/geminiService';
-import { Standup, User } from '../types';
-import ReactMarkdown from 'react-markdown'; // Assuming we might want markdown, but simple text is safer for now. We'll use whitespace-pre-line.
+import { Standup, User, Task } from '../types';
 
 interface WeeklySummaryWidgetProps {
   standups: Standup[];
   users: User[];
+  deadlines: Task[];
 }
 
-export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standups, users }) => {
+export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standups, users, deadlines }) => {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +34,15 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
         };
       });
 
-    const result = await generateWeeklySummary(relevantStandups);
+    // Filter relevant deadlines (e.g., upcoming or recently passed)
+    const relevantDeadlines = deadlines.map(d => ({
+        title: d.title,
+        description: d.description,
+        date: d.dueDate,
+        status: d.status
+    }));
+
+    const result = await generateWeeklySummary(relevantStandups, relevantDeadlines);
     setSummary(result);
     setLoading(false);
   };
@@ -64,7 +73,20 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
 
         {summary && (
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 animate-fade-in text-sm leading-relaxed text-indigo-50 max-h-60 overflow-y-auto custom-scrollbar">
-             <div className="whitespace-pre-line">{summary}</div>
+             <Markdown 
+               components={{
+                 strong: ({node, ...props}) => <span className="font-bold text-white" {...props} />,
+                 p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                 ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
+                 ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
+                 li: ({node, ...props}) => <li className="pl-1" {...props} />,
+                 h1: ({node, ...props}) => <h3 className="text-lg font-bold text-white mt-3 mb-2" {...props} />,
+                 h2: ({node, ...props}) => <h4 className="text-base font-bold text-white mt-2 mb-1" {...props} />,
+                 h3: ({node, ...props}) => <h5 className="text-sm font-bold text-white mt-2 mb-1" {...props} />,
+               }}
+             >
+               {summary}
+             </Markdown>
           </div>
         )}
         

@@ -44,15 +44,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister }) => {
         
         <div className="p-8 md:p-12">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-indigo-600 rounded-xl text-white font-bold text-2xl mb-4 shadow-lg shadow-indigo-200">
-              S
-            </div>
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">
-              {isLogin ? 'Welcome back' : 'Create an account'}
-            </h2>
-            <p className="text-slate-500">
-              {isLogin ? 'Enter your details to access your workspace.' : 'Join your team and start tracking progress.'}
-            </p>
+            <img 
+              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_1.png" 
+              alt="Standly" 
+              className="h-60 mx-auto mb-6" 
+            />
+            {!isLogin && (
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                Create an account
+              </h2>
+            )}
           </div>
 
           <AnimatePresence mode="wait">
