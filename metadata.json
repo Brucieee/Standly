@@ -1,0 +1,5 @@
+{
+  "name": "Standly",
+  "description": "A modern daily standup application for agile teams featuring role management, task tracking, streak visualization, and AI-assisted updates.",
+  "requestFramePermissions": []
+}
