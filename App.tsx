@@ -60,6 +60,18 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
+    // Update document title and favicon
+    document.title = 'Standly';
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = 'https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo.png';
+    } else {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = 'https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo.png';
+      document.head.appendChild(newLink);
+    }
+
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -119,9 +131,9 @@ const App: React.FC = () => {
     }
   };
 
-  const handleRegister = async (email: string, password: string, name: string) => {
+  const handleRegister = async (email: string, password: string, name: string, role: string) => {
     try {
-      const { user, session } = await apiAuth.signUp(email, password, name);
+      const { user, session } = await apiAuth.signUp(email, password, name, role);
       if (user && !session) {
         setSuccessModalOpen(true);
         setAuthKey(prev => prev + 1); // Remount AuthPage to reset to Login view
@@ -334,17 +346,25 @@ const App: React.FC = () => {
   };
 
   const handleDeleteLeave = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this leave?')) return;
-    try {
-      await apiLeaves.delete(id);
-      setState(prev => ({
-        ...prev,
-        leaves: prev.leaves.filter(l => l.id !== id)
-      }));
-    } catch (error) {
-      console.error('Failed to delete leave', error);
-      alert('Failed to delete leave.');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Cancel Leave',
+      message: 'Are you sure you want to cancel this leave request? This action cannot be undone.',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await apiLeaves.delete(id);
+          setState(prev => ({
+            ...prev,
+            leaves: prev.leaves.filter(l => l.id !== id)
+          }));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error('Failed to delete leave', error);
+          alert('Failed to delete leave.');
+        }
+      }
+    });
   };
 
   const handleLeaveClick = (leave: Leave) => {

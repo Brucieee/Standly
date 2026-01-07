@@ -28,7 +28,10 @@ export const Layout: React.FC<LayoutProps> = ({
     { id: 'history', label: 'History', icon: History },
     { id: 'leaves', label: 'Leaves', icon: Palmtree },
     { id: 'virtual-office', label: 'Virtual Office', icon: Monitor },
-  ];
+  ].filter(item => {
+    if (item.id === 'jira' && userRole === 'Intern') return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 flex">

@@ -4,14 +4,15 @@ import { User, Standup, Task, UserRole, Deadline, Leave } from '../types';
 // --- Auth & User ---
 
 export const apiAuth = {
-  async signUp(email: string, password: string, name: string) {
+  async signUp(email: string, password: string, name: string, role: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { 
           name,
-          full_name: name // Add full_name as redundant field for trigger compatibility
+          full_name: name,
+          role
         },
       },
     });
@@ -65,7 +66,7 @@ export const apiAuth = {
             email: user.email,
             name: user.user_metadata.name || user.email?.split('@')[0] || 'User',
             avatar: user.user_metadata.avatar || '',
-            role: 'Developer'
+            role: user.user_metadata.role || 'Developer'
         });
 
         // Fallback if profile doesn't exist yet (should generally exist after trigger)
@@ -74,7 +75,7 @@ export const apiAuth = {
             name: user.user_metadata.name || user.email?.split('@')[0] || 'User',
             email: user.email || '',
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email || 'U')}`,
-            role: UserRole.DEVELOPER,
+            role: (user.user_metadata.role as UserRole) || UserRole.DEVELOPER,
             isAdmin: false,
          }
     }
@@ -114,6 +115,21 @@ export const apiUsers = {
             role: p.role as UserRole,
             isAdmin: p.is_admin
         }));
+    },
+
+    async uploadAvatar(userId: string, file: File) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${userId}-${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('Standly')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('Standly').getPublicUrl(filePath);
+        return data.publicUrl;
     }
 }
 

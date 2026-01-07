@@ -15,6 +15,12 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
 
+  // Helper to parse YYYY-MM-DD as local date to avoid timezone issues
+  const parseLocalDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -32,8 +38,8 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
 
   const isLeaveDay = (day: number, leave: Leave) => {
     const checkDate = new Date(year, currentDate.getMonth(), day);
-    const start = new Date(leave.startDate);
-    const end = new Date(leave.endDate);
+    const start = parseLocalDate(leave.startDate);
+    const end = parseLocalDate(leave.endDate);
     // Reset hours for accurate comparison
     checkDate.setHours(0,0,0,0);
     start.setHours(0,0,0,0);
@@ -49,6 +55,43 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
       case 'wellness': return 'bg-purple-500';
       default: return 'bg-slate-500';
     }
+  };
+
+  const handleUserClick = (userId: string) => {
+    const userLeaves = leaves.filter(l => l.userId === userId);
+    if (userLeaves.length === 0) return;
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Sort leaves by start date
+    const sortedLeaves = [...userLeaves].sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+    // Try to find the leave that matches the current view exactly (same start date)
+    let currentIndex = sortedLeaves.findIndex(l => {
+        const d = parseLocalDate(l.startDate);
+        return d.getTime() === currentDate.getTime();
+    });
+
+    // If not found, try to find a leave in the current month view
+    if (currentIndex === -1) {
+         currentIndex = sortedLeaves.findIndex(l => {
+            const d = parseLocalDate(l.startDate);
+            return d.getFullYear() === currentDate.getFullYear() && d.getMonth() === currentDate.getMonth();
+        });
+    }
+
+    // Determine the next leave to show (Cycle through them)
+    let nextIndex = 0;
+    if (currentIndex !== -1) {
+        nextIndex = (currentIndex + 1) % sortedLeaves.length;
+    } else {
+        // If no leave is currently in view, find the first upcoming one
+        const upcomingIndex = sortedLeaves.findIndex(l => parseLocalDate(l.endDate) >= now);
+        nextIndex = upcomingIndex !== -1 ? upcomingIndex : sortedLeaves.length - 1;
+    }
+
+    setCurrentDate(parseLocalDate(sortedLeaves[nextIndex].startDate));
   };
 
   const getLeaveEmoji = (type: Leave['type']) => {
@@ -80,6 +123,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
             return (
               <div
                 key={user.id}
+                onClick={() => handleUserClick(user.id)}
                 onMouseEnter={() => setHoveredUserId(user.id)}
                 onMouseLeave={() => setHoveredUserId(null)}
                 className={`p-3 rounded-xl transition-all cursor-pointer border ${

@@ -60,12 +60,10 @@ export const ViewLeaveModal: React.FC<ViewLeaveModalProps> = ({ isOpen, onClose,
               </div>
             </div>
 
-            {leave.reason && (
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Reason</div>
-                <p className="text-slate-700 leading-relaxed">{leave.reason}</p>
-              </div>
-            )}
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Description</div>
+              <p className="text-slate-700 leading-relaxed">{leave.reason || <span className="text-slate-400 italic">No description provided</span>}</p>
+            </div>
           </div>
         </div>
       </div>

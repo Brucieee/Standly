@@ -34,10 +34,6 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({ isOpen, onClose, onSubmi
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({ startDate, endDate, type, reason });
-    setStartDate('');
-    setEndDate('');
-    setType('vacation');
-    setReason('');
   };
 
   return (
@@ -62,7 +58,7 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({ isOpen, onClose, onSubmi
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900"
               />
             </div>
             <div>
@@ -72,7 +68,7 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({ isOpen, onClose, onSubmi
                 required
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900"
               />
             </div>
           </div>
@@ -82,7 +78,7 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({ isOpen, onClose, onSubmi
             <select
               value={type}
               onChange={(e) => setType(e.target.value as Leave['type'])}
-              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-slate-900"
             >
               <option value="vacation">Vacation 🏖️</option>
               <option value="sick">Sick Leave 🤒</option>
@@ -96,8 +92,8 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({ isOpen, onClose, onSubmi
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Going to the beach..."
-              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[80px] resize-none"
+              placeholder="e.g. Going to the beach..."
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[80px] resize-none text-slate-900"
             />
           </div>
 
