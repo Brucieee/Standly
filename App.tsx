@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
-import { StandupFeed } from './components/StandupFeed';
-import { CalendarWidget } from './components/CalendarWidget';
-import { TasksWidget } from './components/TasksWidget';
 import { StandupModal } from './components/StandupModal';
 import { AuthPage } from './components/AuthPage';
 import { Profile } from './components/Profile';
-import { AppState, User, Standup, Task } from './types';
-import { apiAuth, apiStandups, apiTasks, apiUsers } from './services/api';
-import { Plus, Flag } from 'lucide-react';
+import { Dashboard } from './components/Dashboard';
+import { AppState, User, Standup, Deadline } from './types';
+import { apiAuth, apiStandups, apiUsers, apiDeadlines } from './services/api';
 import { supabase } from './services/supabase';
 import { DeadlineModal } from './components/DeadlineModal';
-import { DeadlinesWidget } from './components/DeadlinesWidget';
 import { WeeklySummaryWidget } from './components/WeeklySummaryWidget';
 import { ConfirmationModal } from './components/ConfirmationModal';
+import { History } from './components/History';
+import { SuccessModal } from './components/SuccessModal';
+import { VirtualOfficeModal } from './components/VirtualOfficeModal';
+
+interface ConfirmModalState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void | Promise<void>;
+  isDestructive: boolean;
+}
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>({
     currentUser: null,
     users: [],
     standups: [],
-    tasks: [],
+    deadlines: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -28,10 +35,15 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
   const [editingStandup, setEditingStandup] = useState<Standup | null>(null);
+  const [editingDeadline, setEditingDeadline] = useState<Deadline | null>(null);
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [modalInitialDate, setModalInitialDate] = useState<string>('');
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [isVirtualOfficeModalOpen, setIsVirtualOfficeModalOpen] = useState(false);
+  const [authKey, setAuthKey] = useState(0); // Used to reset AuthPage state
 
   // Confirmation Modal State
-  const [confirmModal, setConfirmModal] = useState({
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
     isOpen: false,
     title: '',
     message: '',
@@ -50,11 +62,10 @@ const App: React.FC = () => {
            loadData(); // Reload data on auth change
         }
       } else {
-        setState(prev => ({ ...prev, currentUser: null, users: [], standups: [], tasks: [] }));
+        setState(prev => ({ ...prev, currentUser: null, users: [], standups: [], deadlines: [] }));
       }
       setLoading(false);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -74,33 +85,42 @@ const App: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [users, standups, tasks] = await Promise.all([
+      const [users, standups, deadlines] = await Promise.all([
         apiUsers.getAll(),
         apiStandups.getAll(),
-        apiTasks.getAll()
+        apiDeadlines.getAll()
       ]);
-      setState(prev => ({ ...prev, users, standups, tasks }));
+      setState(prev => ({ ...prev, users, standups, deadlines }));
     } catch (error) {
       console.error('Failed to load data', error);
     }
   };
 
-  // Sorting standups by date desc
   const sortedStandups = [...state.standups].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
-  const deadlines = state.tasks.filter(t => t.type === 'deadline');
-  const teamTasks = state.tasks.filter(t => t.type !== 'deadline');
-
   // Handlers
   const handleLogin = async (email: string, password: string) => {
-     await apiAuth.signIn(email, password);
+    try {
+      await apiAuth.signIn(email, password);
+    } catch (error: any) {
+      console.error('Login failed', error);
+      alert(error.message || 'Failed to login. Please check your credentials.');
+    }
   };
 
   const handleRegister = async (email: string, password: string, name: string) => {
-    await apiAuth.signUp(email, password, name);
-    alert('Please check your email to confirm your account.');
+    try {
+      const { user, session } = await apiAuth.signUp(email, password, name);
+      if (user && !session) {
+        setSuccessModalOpen(true);
+        setAuthKey(prev => prev + 1); // Remount AuthPage to reset to Login view
+      }
+    } catch (error: any) {
+      console.error('Registration failed', error);
+      alert(error.message || 'Failed to register.');
+    }
   };
 
   const handleLogout = async () => {
@@ -133,7 +153,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveStandup = async (data: { date: string; yesterday: string; today: string; blockers: string; mood: 'happy' | 'neutral' | 'stressed' }) => {
+  const handleSaveStandup = async (data: { date: string; yesterday: string; today: string; blockers: string; mood: 'happy' | 'neutral' | 'stressed'; jiraLinks?: string[] }) => {
     if (!state.currentUser) return;
     
     try {
@@ -160,6 +180,23 @@ const App: React.FC = () => {
     }
   };
 
+  const handleViewStandup = async (standup: Standup) => {
+    if (!state.currentUser) return;
+    if (standup.views?.includes(state.currentUser.id)) return;
+
+    try {
+      await apiStandups.markViewed(standup.id, state.currentUser.id);
+      setState(prev => ({
+        ...prev,
+        standups: prev.standups.map(s => 
+          s.id === standup.id ? { ...s, views: [...(s.views || []), state.currentUser!.id] } : s
+        )
+      }));
+    } catch (error) {
+      console.error('Failed to mark standup as viewed', error);
+    }
+  };
+
   const handleDeleteStandup = (id: string) => {
     setConfirmModal({
       isOpen: true,
@@ -173,6 +210,7 @@ const App: React.FC = () => {
             ...prev,
             standups: prev.standups.filter(s => s.id !== id)
           }));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           console.error('Failed to delete standup', error);
           alert('Failed to delete standup.');
@@ -181,49 +219,45 @@ const App: React.FC = () => {
     });
   };
 
-  const handleAddTask = async (taskData: Omit<Task, 'id' | 'creatorId'>) => {
+  const handleSaveDeadline = async (data: Partial<Deadline>) => {
     if (!state.currentUser) return;
 
     try {
-      const newTask = await apiTasks.create({
-        creatorId: state.currentUser.id,
-        type: 'task',
-        ...taskData
-      });
+      if (editingDeadline) {
+        await apiDeadlines.update(editingDeadline.id, data);
+        setState(prev => ({
+          ...prev,
+          deadlines: prev.deadlines.map(t => t.id === editingDeadline.id ? { ...t, ...data } : t)
+        }));
+      } else {
+        const newDeadline = await apiDeadlines.create({
+          creatorId: state.currentUser.id,
+          ...data as any
+        });
 
-      setState(prev => ({
-        ...prev,
-        tasks: [...prev.tasks, newTask]
-      }));
+        setState(prev => ({
+          ...prev,
+          deadlines: [...prev.deadlines, newDeadline]
+        }));
+      }
+      setIsDeadlineModalOpen(false);
+      setEditingDeadline(null);
     } catch (error) {
-        console.error('Failed to create task', error);
-        alert('Failed to create task.');
+        console.error('Failed to save deadline', error);
+        alert('Failed to save deadline.');
     }
   };
 
-  const handleSaveDeadline = async (taskData: Omit<Task, 'id' | 'creatorId' | 'status' | 'assigneeId'>) => {
-    if (!state.currentUser) return;
-
-    try {
-      const newTask = await apiTasks.create({
-        creatorId: state.currentUser.id,
-        status: 'todo',
-        assigneeId: state.currentUser.id,
-        type: 'deadline',
-        ...taskData
-      });
-
-      setState(prev => ({
-        ...prev,
-        tasks: [...prev.tasks, newTask]
-      }));
-    } catch (error) {
-        console.error('Failed to create deadline task', error);
-        alert('Failed to create deadline.');
-    }
+  const handleEditDeadline = (deadline: Deadline) => {
+    setEditingDeadline(deadline);
+    setIsDeadlineModalOpen(true);
   };
 
   const handleDeleteDeadline = (taskId: string) => {
+    if (!taskId) {
+      return;
+    }
+
     setConfirmModal({
       isOpen: true,
       title: 'Delete Deadline',
@@ -231,50 +265,18 @@ const App: React.FC = () => {
       isDestructive: true,
       onConfirm: async () => {
         try {
-          await apiTasks.delete(taskId);
+          await apiDeadlines.delete(taskId);
           setState(prev => ({
             ...prev,
-            tasks: prev.tasks.filter(t => t.id !== taskId)
+            deadlines: prev.deadlines.filter(t => t.id !== taskId)
           }));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error: any) {
           console.error('Failed to delete deadline', error);
           alert(`Failed to delete deadline: ${error.message || 'Unknown error'}. Please check console.`);
         }
       }
     });
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Delete Task',
-      message: 'Are you sure you want to delete this task? This action cannot be undone.',
-      isDestructive: true,
-      onConfirm: async () => {
-        try {
-          await apiTasks.delete(taskId);
-          setState(prev => ({
-            ...prev,
-            tasks: prev.tasks.filter(t => t.id !== taskId)
-          }));
-        } catch (error: any) {
-          console.error('Failed to delete task', error);
-          alert(`Failed to delete task: ${error.message || 'Unknown error'}. Please check console.`);
-        }
-      }
-    });
-  };
-
-  const handleUpdateTaskStatus = async (taskId: string, status: Task['status']) => {
-    try {
-      await apiTasks.update(taskId, { status });
-      setState(prev => ({
-        ...prev,
-        tasks: prev.tasks.map(t => t.id === taskId ? { ...t, status } : t)
-      }));
-    } catch (error) {
-        console.error('Failed to update task', error);
-    }
   };
 
   const handleUpdateProfile = async (updated: Partial<User>) => {
@@ -301,7 +303,17 @@ const App: React.FC = () => {
 
   // Auth Guard
   if (!state.currentUser) {
-    return <AuthPage onLogin={handleLogin} onRegister={handleRegister} />;
+    return (
+      <>
+        <AuthPage key={authKey} onLogin={handleLogin} onRegister={handleRegister} />
+        <SuccessModal 
+          isOpen={successModalOpen} 
+          onClose={() => setSuccessModalOpen(false)}
+          title="Account Created Successfully!"
+          message="Please check your email to confirm your registration before logging in."
+        />
+      </>
+    );
   }
 
   return (
@@ -309,81 +321,38 @@ const App: React.FC = () => {
       activeTab={activeTab} 
       onTabChange={setActiveTab}
       onLogout={handleLogout}
+      onOpenVirtualOffice={() => setIsVirtualOfficeModalOpen(true)}
       userAvatar={state.currentUser.avatar}
       userName={state.currentUser.name}
       userRole={state.currentUser.role}
     >
       {activeTab === 'dashboard' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Feed */}
-          <div className="lg:col-span-2 space-y-8">
-            <div className="flex justify-between items-center">
-              <div>
-                 <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-                 <p className="text-slate-500">Welcome back, {state.currentUser.name.split(' ')[0]}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setIsDeadlineModalOpen(true)}
-                  className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
-                >
-                  <Flag size={20} className="text-red-500" />
-                  <span className="hidden sm:inline">Add Deadline</span>
-                </button>
-                <button 
-                  onClick={handleOpenNewStandup}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-200 flex items-center gap-2 transition-all active:scale-[0.98]"
-                >
-                  <Plus size={20} />
-                  <span className="hidden sm:inline">New Standup</span>
-                </button>
-              </div>
-            </div>
-            
-            <WeeklySummaryWidget standups={state.standups} users={state.users} deadlines={deadlines} />
-
-            <StandupFeed 
-              standups={sortedStandups} 
-              users={state.users} 
-              currentUserId={state.currentUser.id}
-              onDelete={handleDeleteStandup}
-              onEdit={handleEditStandup}
-            />
-          </div>
-
-          {/* Sidebar Widgets */}
-          <div className="space-y-8">
-            <DeadlinesWidget tasks={deadlines} onDelete={handleDeleteDeadline} />
-            <CalendarWidget 
-              standups={state.standups} 
-              userId={state.currentUser.id} 
-              onDateClick={handleCalendarDateClick}
-            />
-            <div className="h-[400px]">
-               <TasksWidget 
-                 tasks={teamTasks} 
-                 users={state.users} 
-                 currentUserId={state.currentUser.id}
-                 onAddTask={handleAddTask}
-                 onUpdateStatus={handleUpdateTaskStatus}
-                 onDelete={handleDeleteTask}
-               />
-            </div>
-          </div>
-        </div>
+        <Dashboard
+          currentUser={state.currentUser}
+          users={state.users}
+          standups={sortedStandups}
+          deadlines={state.deadlines}
+          onGenerateReport={() => setIsSummaryModalOpen(true)}
+          onAddDeadline={() => {
+            setEditingDeadline(null);
+            setIsDeadlineModalOpen(true);
+          }}
+          onNewStandup={handleOpenNewStandup}
+          onDeleteDeadline={handleDeleteDeadline}
+          onEditDeadline={handleEditDeadline}
+          onEditStandup={handleEditStandup}
+          onDeleteStandup={handleDeleteStandup}
+          onViewStandup={handleViewStandup}
+          onCalendarDateClick={handleCalendarDateClick}
+        />
       )}
 
-      {activeTab === 'tasks' && (
-         <div className="h-[calc(100vh-140px)]">
-           <TasksWidget 
-             tasks={teamTasks} 
-             users={state.users} 
-             currentUserId={state.currentUser.id}
-             onAddTask={handleAddTask}
-             onUpdateStatus={handleUpdateTaskStatus}
-             onDelete={handleDeleteTask}
-           />
-         </div>
+      {activeTab === 'history' && (
+        <History 
+          standups={sortedStandups}
+          deadlines={state.deadlines}
+          users={state.users}
+        />
       )}
 
       {activeTab === 'profile' && (
@@ -400,9 +369,37 @@ const App: React.FC = () => {
 
       <DeadlineModal
         isOpen={isDeadlineModalOpen}
-        onClose={() => setIsDeadlineModalOpen(false)}
+        onClose={() => {
+          setIsDeadlineModalOpen(false);
+          setEditingDeadline(null);
+        }}
         onSubmit={handleSaveDeadline}
+        initialData={editingDeadline}
       />
+
+      <VirtualOfficeModal
+        isOpen={isVirtualOfficeModalOpen}
+        onClose={() => setIsVirtualOfficeModalOpen(false)}
+      />
+
+      {isSummaryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-xl font-bold text-slate-900">Weekly AI Summary</h2>
+              <button 
+                onClick={() => setIsSummaryModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <WeeklySummaryWidget standups={state.standups} users={state.users} deadlines={state.deadlines} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmationModal
         isOpen={confirmModal.isOpen}

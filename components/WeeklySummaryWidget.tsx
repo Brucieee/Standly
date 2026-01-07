@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Sparkles, Loader2, FileText } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { generateWeeklySummary } from '../services/geminiService';
-import { Standup, User, Task } from '../types';
+import { Standup, User, Deadline } from '../types';
 
 interface WeeklySummaryWidgetProps {
   standups: Standup[];
   users: User[];
-  deadlines: Task[];
+  deadlines: Deadline[];
 }
 
 export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standups, users, deadlines }) => {
@@ -39,7 +39,6 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
         title: d.title,
         description: d.description,
         date: d.dueDate,
-        status: d.status
     }));
 
     const result = await generateWeeklySummary(relevantStandups, relevantDeadlines);

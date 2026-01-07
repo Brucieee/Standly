@@ -22,6 +22,9 @@ export interface Standup {
   today: string;
   blockers: string;
   mood: 'happy' | 'neutral' | 'stressed';
+  jiraLinks?: string[];
+  views?: string[];
+  createdAt?: string;
 }
 
 export interface Task {
@@ -32,12 +35,20 @@ export interface Task {
   assigneeId: string; // Could be self or others
   creatorId: string;
   dueDate: string; // ISO String
-  type?: 'task' | 'deadline'; // New field for separation
+}
+
+export interface Deadline {
+  id: string;
+  title: string;
+  dueDate: string;
+  description?: string;
+  releaseLink?: string;
+  creatorId: string;
 }
 
 export interface AppState {
   currentUser: User | null;
   users: User[];
   standups: Standup[];
-  tasks: Task[];
+  deadlines: Deadline[];
 }

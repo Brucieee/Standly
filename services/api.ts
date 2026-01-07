@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { User, Standup, Task, UserRole } from '../types';
+import { User, Standup, Task, UserRole, Deadline } from '../types';
 
 // --- Auth & User ---
 
@@ -46,7 +46,6 @@ export const apiAuth = {
 
     if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
       console.error('Error fetching profile:', error);
-      return null;
     }
 
     if (profile) {
@@ -59,6 +58,16 @@ export const apiAuth = {
         isAdmin: profile.is_admin,
       };
     } else {
+        // Attempt to self-heal: Create missing profile for existing auth user
+        // This handles cases where public tables were wiped but auth users remain
+        await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata.name || user.email?.split('@')[0] || 'User',
+            avatar: user.user_metadata.avatar || '',
+            role: 'Developer'
+        });
+
         // Fallback if profile doesn't exist yet (should generally exist after trigger)
          return {
             id: user.id,
@@ -128,6 +137,9 @@ export const apiStandups = {
       today: s.today,
       blockers: s.blockers,
       mood: s.mood,
+      jiraLinks: s.jira_links || [],
+      views: s.views || [],
+      createdAt: s.created_at,
     }));
   },
 
@@ -141,12 +153,13 @@ export const apiStandups = {
         today: standup.today,
         blockers: standup.blockers,
         mood: standup.mood,
+        jira_links: standup.jiraLinks,
       })
       .select()
       .single();
 
     if (error) throw error;
-    return { ...standup, id: data.id };
+    return { ...standup, id: data.id, createdAt: data.created_at };
   },
 
   async update(id: string, updates: Partial<Standup>) {
@@ -156,6 +169,7 @@ export const apiStandups = {
     if (updates.today) dbUpdates.today = updates.today;
     if (updates.blockers) dbUpdates.blockers = updates.blockers;
     if (updates.mood) dbUpdates.mood = updates.mood;
+    if (updates.jiraLinks !== undefined) dbUpdates.jira_links = updates.jiraLinks;
 
     const { error } = await supabase
       .from('standups')
@@ -173,61 +187,75 @@ export const apiStandups = {
 
     if (error) throw error;
   },
+
+  async markViewed(id: string, userId: string) {
+    const { data: current } = await supabase.from('standups').select('views').eq('id', id).single();
+    const currentViews: string[] = current?.views || [];
+    
+    if (!currentViews.includes(userId)) {
+      const { error } = await supabase
+        .from('standups')
+        .update({ views: [...currentViews, userId] })
+        .eq('id', id);
+      if (error) throw error;
+    }
+  },
 };
 
-// --- Tasks ---
+// --- Deadlines ---
 
-export const apiTasks = {
-  async getAll(): Promise<Task[]> {
+export const apiDeadlines = {
+  async getAll(): Promise<Deadline[]> {
     const { data, error } = await supabase
-      .from('tasks')
+      .from('deadlines')
       .select('*')
       .order('due_date', { ascending: true });
 
     if (error) throw error;
 
-    return (data || []).map(t => ({
-      id: t.id,
-      title: t.title,
-      description: t.description,
-      status: t.status,
-      assigneeId: t.assignee_id,
-      creatorId: t.creator_id,
-      dueDate: t.due_date,
-      type: t.type || 'task', // Map snake_case to camelCase if needed, though 'type' is same. Handle default.
+    return (data || []).map(d => ({
+      id: d.id,
+      title: d.title,
+      dueDate: d.due_date,
+      description: d.description,
+      releaseLink: d.release_link,
+      creatorId: d.creator_id,
     }));
   },
 
-  async create(task: Omit<Task, 'id'>) {
+  async create(deadline: Omit<Deadline, 'id'>) {
     const { data, error } = await supabase
-      .from('tasks')
+      .from('deadlines')
       .insert({
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        assignee_id: task.assigneeId,
-        creator_id: task.creatorId,
-        due_date: task.dueDate,
-        type: task.type || 'task',
+        title: deadline.title,
+        due_date: deadline.dueDate,
+        description: deadline.description,
+        release_link: deadline.releaseLink,
+        creator_id: deadline.creatorId,
       })
       .select()
       .single();
 
     if (error) throw error;
-    return { ...task, id: data.id };
+    return {
+      id: data.id,
+      title: data.title,
+      dueDate: data.due_date,
+      description: data.description,
+      releaseLink: data.release_link,
+      creatorId: data.creator_id,
+    };
   },
 
-  async update(id: string, updates: Partial<Task>) {
+  async update(id: string, updates: Partial<Deadline>) {
     const dbUpdates: any = {};
-    if (updates.title) dbUpdates.title = updates.title;
-    if (updates.description) dbUpdates.description = updates.description;
-    if (updates.status) dbUpdates.status = updates.status;
-    if (updates.assigneeId) dbUpdates.assignee_id = updates.assigneeId;
-    if (updates.dueDate) dbUpdates.due_date = updates.dueDate;
-    if (updates.type) dbUpdates.type = updates.type;
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.releaseLink !== undefined) dbUpdates.release_link = updates.releaseLink;
 
     const { error } = await supabase
-      .from('tasks')
+      .from('deadlines')
       .update(dbUpdates)
       .eq('id', id);
 
@@ -236,7 +264,7 @@ export const apiTasks = {
 
   async delete(id: string) {
     const { error } = await supabase
-      .from('tasks')
+      .from('deadlines')
       .delete()
       .eq('id', id);
 
