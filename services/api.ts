@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { User, Standup, Task, UserRole, Deadline } from '../types';
+import { User, Standup, Task, UserRole, Deadline, Leave } from '../types';
 
 // --- Auth & User ---
 
@@ -268,6 +268,65 @@ export const apiDeadlines = {
       .delete()
       .eq('id', id);
 
+    if (error) throw error;
+  },
+};
+
+// --- Leaves ---
+
+export const apiLeaves = {
+  async getAll(): Promise<Leave[]> {
+    const { data, error } = await supabase
+      .from('leaves')
+      .select('*')
+      .order('start_date', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map(l => ({
+      id: l.id,
+      userId: l.user_id,
+      startDate: l.start_date,
+      endDate: l.end_date,
+      reason: l.reason,
+      type: l.type,
+    }));
+  },
+
+  async create(leave: Omit<Leave, 'id'>) {
+    const { data, error } = await supabase
+      .from('leaves')
+      .insert({
+        user_id: leave.userId,
+        start_date: leave.startDate,
+        end_date: leave.endDate,
+        reason: leave.reason,
+        type: leave.type,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { ...leave, id: data.id };
+  },
+
+  async update(id: string, updates: Partial<Leave>) {
+    const dbUpdates: any = {};
+    if (updates.startDate) dbUpdates.start_date = updates.startDate;
+    if (updates.endDate) dbUpdates.end_date = updates.endDate;
+    if (updates.reason !== undefined) dbUpdates.reason = updates.reason;
+    if (updates.type) dbUpdates.type = updates.type;
+
+    const { error } = await supabase
+      .from('leaves')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase.from('leaves').delete().eq('id', id);
     if (error) throw error;
   },
 };

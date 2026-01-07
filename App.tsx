@@ -4,8 +4,8 @@ import { StandupModal } from './components/StandupModal';
 import { AuthPage } from './components/AuthPage';
 import { Profile } from './components/Profile';
 import { Dashboard } from './components/Dashboard';
-import { AppState, User, Standup, Deadline } from './types';
-import { apiAuth, apiStandups, apiUsers, apiDeadlines } from './services/api';
+import { AppState, User, Standup, Deadline, Leave } from './types';
+import { apiAuth, apiStandups, apiUsers, apiDeadlines, apiLeaves } from './services/api';
 import { supabase } from './services/supabase';
 import { DeadlineModal } from './components/DeadlineModal';
 import { WeeklySummaryWidget } from './components/WeeklySummaryWidget';
@@ -13,6 +13,9 @@ import { ConfirmationModal } from './components/ConfirmationModal';
 import { History } from './components/History';
 import { SuccessModal } from './components/SuccessModal';
 import { VirtualOfficeModal } from './components/VirtualOfficeModal';
+import { LeaveCalendar } from './components/LeaveCalendar';
+import { LeaveModal } from './components/LeaveModal';
+import { ViewLeaveModal } from './components/ViewLeaveModal';
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -28,6 +31,7 @@ const App: React.FC = () => {
     users: [],
     standups: [],
     deadlines: [],
+    leaves: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -40,6 +44,10 @@ const App: React.FC = () => {
   const [modalInitialDate, setModalInitialDate] = useState<string>('');
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [isVirtualOfficeModalOpen, setIsVirtualOfficeModalOpen] = useState(false);
+  const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isViewLeaveModalOpen, setIsViewLeaveModalOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
+  const [editingLeave, setEditingLeave] = useState<Leave | null>(null);
   const [authKey, setAuthKey] = useState(0); // Used to reset AuthPage state
 
   // Confirmation Modal State
@@ -62,7 +70,7 @@ const App: React.FC = () => {
            loadData(); // Reload data on auth change
         }
       } else {
-        setState(prev => ({ ...prev, currentUser: null, users: [], standups: [], deadlines: [] }));
+        setState(prev => ({ ...prev, currentUser: null, users: [], standups: [], deadlines: [], leaves: [] }));
       }
       setLoading(false);
     });
@@ -85,12 +93,13 @@ const App: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [users, standups, deadlines] = await Promise.all([
+      const [users, standups, deadlines, leaves] = await Promise.all([
         apiUsers.getAll(),
         apiStandups.getAll(),
-        apiDeadlines.getAll()
+        apiDeadlines.getAll(),
+        apiLeaves.getAll()
       ]);
-      setState(prev => ({ ...prev, users, standups, deadlines }));
+      setState(prev => ({ ...prev, users, standups, deadlines, leaves }));
     } catch (error) {
       console.error('Failed to load data', error);
     }
@@ -297,6 +306,57 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveLeave = async (data: Omit<Leave, 'id' | 'userId'>) => {
+    if (!state.currentUser) return;
+    try {
+      if (editingLeave) {
+        await apiLeaves.update(editingLeave.id, data);
+        setState(prev => ({
+          ...prev,
+          leaves: prev.leaves.map(l => l.id === editingLeave.id ? { ...l, ...data } : l)
+        }));
+      } else {
+        const newLeave = await apiLeaves.create({
+          userId: state.currentUser.id,
+          ...data
+        });
+        setState(prev => ({
+          ...prev,
+          leaves: [...prev.leaves, newLeave]
+        }));
+      }
+      setIsLeaveModalOpen(false);
+      setEditingLeave(null);
+    } catch (error) {
+      console.error('Failed to save leave', error);
+      alert('Failed to save leave.');
+    }
+  };
+
+  const handleDeleteLeave = async (id: string) => {
+    if (!confirm('Are you sure you want to cancel this leave?')) return;
+    try {
+      await apiLeaves.delete(id);
+      setState(prev => ({
+        ...prev,
+        leaves: prev.leaves.filter(l => l.id !== id)
+      }));
+    } catch (error) {
+      console.error('Failed to delete leave', error);
+      alert('Failed to delete leave.');
+    }
+  };
+
+  const handleLeaveClick = (leave: Leave) => {
+    if (state.currentUser && leave.userId === state.currentUser.id) {
+      setEditingLeave(leave);
+      setIsLeaveModalOpen(true);
+    } else {
+      setSelectedLeave(leave);
+      setIsViewLeaveModalOpen(true);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500">Loading...</div>;
   }
@@ -355,6 +415,20 @@ const App: React.FC = () => {
         />
       )}
 
+      {activeTab === 'leaves' && (
+        <LeaveCalendar
+          users={state.users}
+          leaves={state.leaves}
+          currentUserId={state.currentUser.id}
+          onAddLeave={() => {
+            setEditingLeave(null);
+            setIsLeaveModalOpen(true);
+          }}
+          onDeleteLeave={handleDeleteLeave}
+          onLeaveClick={handleLeaveClick}
+        />
+      )}
+
       {activeTab === 'profile' && (
         <Profile user={state.currentUser} onUpdate={handleUpdateProfile} />
       )}
@@ -380,6 +454,20 @@ const App: React.FC = () => {
       <VirtualOfficeModal
         isOpen={isVirtualOfficeModalOpen}
         onClose={() => setIsVirtualOfficeModalOpen(false)}
+      />
+
+      <LeaveModal
+        isOpen={isLeaveModalOpen}
+        onClose={() => setIsLeaveModalOpen(false)}
+        onSubmit={handleSaveLeave}
+        initialData={editingLeave}
+      />
+
+      <ViewLeaveModal
+        isOpen={isViewLeaveModalOpen}
+        onClose={() => setIsViewLeaveModalOpen(false)}
+        leave={selectedLeave}
+        user={state.users.find(u => u.id === selectedLeave?.userId)}
       />
 
       {isSummaryModalOpen && (

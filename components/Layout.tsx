@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CheckSquare, History, LogOut, ExternalLink, Monitor } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, History, LogOut, ExternalLink, Monitor, Palmtree } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,6 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'jira', label: 'Jira Board', icon: CheckSquare, href: 'https://cocogenproduct.atlassian.net/jira/software/projects/ECPM/boards/1/timeline' },
     { id: 'history', label: 'History', icon: History },
+    { id: 'leaves', label: 'Leaves', icon: Palmtree },
     { id: 'virtual-office', label: 'Virtual Office', icon: Monitor },
   ];
 

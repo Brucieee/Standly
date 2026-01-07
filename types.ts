@@ -46,9 +46,19 @@ export interface Deadline {
   creatorId: string;
 }
 
+export interface Leave {
+  id: string;
+  userId: string;
+  startDate: string; // ISO Date string (YYYY-MM-DD)
+  endDate: string;   // ISO Date string (YYYY-MM-DD)
+  reason?: string;
+  type: 'vacation' | 'sick' | 'personal' | 'wellness';
+}
+
 export interface AppState {
   currentUser: User | null;
   users: User[];
   standups: Standup[];
   deadlines: Deadline[];
+  leaves: Leave[];
 }
