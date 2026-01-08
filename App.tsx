@@ -93,11 +93,24 @@ const App: React.FC = () => {
            loadData(); // Reload data on auth change
         }
       } else {
-        setState(prev => ({ ...prev, currentUser: null, users: [], standups: [], deadlines: [], leaves: [] }));
+        // Only clear state if we are NOT using a code login
+        // This prevents Supabase Auth (which is null for code login) from wiping the code login session
+        if (!localStorage.getItem('standly_login_code')) {
+          setState(prev => ({ ...prev, currentUser: null, users: [], standups: [], deadlines: [], leaves: [] }));
+        }
       }
       setLoading(false);
     });
-    return () => subscription.unsubscribe();
+
+    // Safety timeout: If auth takes too long (e.g. network issues), stop loading so user sees something
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
   }, []);
 
   const checkSession = async () => {
@@ -250,6 +263,8 @@ const App: React.FC = () => {
       console.error('Code login failed', error);
       localStorage.removeItem('standly_login_code'); // Clear invalid code
       alert(error.message || 'Invalid login code.');
+    } finally {
+      setLoading(false);
     }
   };
 
