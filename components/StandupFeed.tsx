@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Standup, User, Comment, Reaction } from '../types';
 import { Trash2, Edit2, ExternalLink, Smile, Meh, Frown, MessageCircle } from 'lucide-react';
@@ -28,6 +28,31 @@ interface StandupFeedProps {
 
 export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, currentUserId, onDelete, onEdit, onView, onReact, onComment, onEditComment, onDeleteComment }) => {
   const [selectedStandupId, setSelectedStandupId] = useState<string | null>(null);
+  const storageKey = `standly_read_counts_${currentUserId}`;
+  
+  // Initialize read counts from local storage
+  const [readCounts, setReadCounts] = useState<Record<string, number>>(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Sync with local storage when user changes or on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) setReadCounts(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, [storageKey]);
+
+  const updateReadCount = (standupId: string, count: number) => {
+    const newCounts = { ...readCounts, [standupId]: count };
+    setReadCounts(newCounts);
+    localStorage.setItem(storageKey, JSON.stringify(newCounts));
+  };
 
   const selectedStandup = selectedStandupId ? standups.find(s => s.id === selectedStandupId) || null : null;
 
@@ -80,6 +105,10 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
               // Mock data for UI demonstration if fields don't exist
               const comments = standup.comments || [];
               const reactions = standup.reactions || [];
+              
+              // Calculate unread comments
+              const lastReadCount = readCounts[standup.id] || 0;
+              const unreadComments = Math.max(0, comments.length - lastReadCount);
 
               return (
                 <div 
@@ -87,6 +116,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                   onClick={() => {
                     setSelectedStandupId(standup.id);
                     onView(standup);
+                    updateReadCount(standup.id, comments.length);
                   }}
                   className={`
                     relative bg-white rounded-2xl p-6 cursor-pointer group transition-all duration-300
@@ -100,6 +130,16 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                   {/* Unread Indicator */}
                   {!isViewed && !isCurrentUser && (
                      <div className="absolute top-5 right-5 w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-lg shadow-indigo-200" />
+                  )}
+
+                  {/* New Comments Ping Notification */}
+                  {unreadComments > 0 && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 z-20">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <div className="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-xs font-bold items-center justify-center border-2 border-white shadow-md">
+                        {unreadComments}
+                      </div>
+                    </div>
                   )}
 
                   <div className="flex items-start gap-4">
@@ -243,7 +283,12 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
         standup={selectedStandup}
         users={users}
         currentUserId={currentUserId}
-        onClose={() => setSelectedStandupId(null)}
+        onClose={() => {
+          if (selectedStandup) {
+            updateReadCount(selectedStandup.id, (selectedStandup.comments || []).length);
+          }
+          setSelectedStandupId(null);
+        }}
         onReact={onReact}
         onComment={onComment}
         onEditComment={onEditComment}

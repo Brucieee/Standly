@@ -239,6 +239,26 @@ const App: React.FC = () => {
     }
   };
 
+  // Real-time subscriptions
+  useEffect(() => {
+    if (!state.currentUser) return;
+
+    const channel = supabase
+      .channel('app-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'standups' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'standup_comments' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'standup_reactions' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leaves' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deadlines' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'holidays' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadData())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [state.currentUser?.id]);
+
   const sortedStandups = [...state.standups].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
