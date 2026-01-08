@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
 import { User, Leave } from '../types';
-import { ChevronLeft, ChevronRight, Plus, Palmtree, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Palmtree, Trash2, CalendarPlus, List, LayoutGrid } from 'lucide-react';
 
 interface LeaveCalendarProps {
   users: User[];
   leaves: Leave[];
+  holidays: any[];
   currentUserId: string;
+  currentUserIsAdmin?: boolean;
   onAddLeave: () => void;
   onDeleteLeave: (id: string) => void;
   onLeaveClick: (leave: Leave) => void;
+  onAddHoliday: () => void;
+  onDeleteHoliday: (id: string) => void;
 }
 
-export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, currentUserId, onAddLeave, onDeleteLeave, onLeaveClick }) => {
+export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, holidays, currentUserId, currentUserIsAdmin, onAddLeave, onDeleteLeave, onLeaveClick, onAddHoliday, onDeleteHoliday }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'calendar' | 'months'>('calendar');
+  const [displayMode, setDisplayMode] = useState<'calendar' | 'list'>('calendar');
 
   // Helper to parse YYYY-MM-DD as local date to avoid timezone issues
   const parseLocalDate = (dateStr: string) => {
@@ -53,6 +59,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
       case 'sick': return 'bg-red-500';
       case 'personal': return 'bg-green-500';
       case 'wellness': return 'bg-purple-500';
+      case 'birthday': return 'bg-pink-500';
       default: return 'bg-slate-500';
     }
   };
@@ -100,9 +107,14 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
       case 'sick': return '🤒';
       case 'personal': return '🏠';
       case 'wellness': return '🧘';
+      case 'birthday': return '🎂';
       default: return '📅';
     }
   };
+
+  // Calculate rows for dynamic grid sizing
+  const totalSlots = firstDay + days;
+  const numRows = Math.ceil(totalSlots / 7);
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
@@ -133,7 +145,12 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full bg-slate-100 object-cover" />
+                  <img 
+                    src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+                    alt={user.name} 
+                    className="w-10 h-10 rounded-full bg-slate-100 object-cover" 
+                    onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
+                  />
                   <div className="flex-1 min-w-0">
                     <h3 className={`font-bold text-sm truncate ${hoveredUserId === user.id ? 'text-indigo-700' : 'text-slate-900'}`}>
                       {user.name}
@@ -159,50 +176,152 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
             Post Leave
           </button>
         </div>
+        
+        {currentUserIsAdmin && (
+          <div className="p-4 pt-0">
+            <button
+              onClick={onAddHoliday}
+              className="w-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+            >
+              <CalendarPlus size={18} />
+              Add Holiday
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main - Calendar */}
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden">
         {/* Calendar Header */}
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-slate-900">
-            {monthName} <span className="text-slate-400">{year}</span>
-          </h2>
-          <div className="flex gap-2">
-            <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setViewMode(viewMode === 'calendar' ? 'months' : 'calendar')} className="text-2xl font-bold text-slate-900 hover:text-indigo-600 transition-colors flex items-center gap-2">
+              {monthName} <span className="text-slate-400">{year}</span>
+            </button>
+            
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button 
+                onClick={() => setDisplayMode('calendar')} 
+                className={`p-1.5 rounded-md transition-all ${displayMode === 'calendar' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                title="Calendar View"
+              >
+                <LayoutGrid size={18} />
+              </button>
+              <button 
+                onClick={() => setDisplayMode('list')} 
+                className={`p-1.5 rounded-md transition-all ${displayMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+                title="List View"
+              >
+                <List size={18} />
+              </button>
+            </div>
+          </div>
+
+          {displayMode === 'calendar' && (
+          <div className={`flex gap-2 ${viewMode === 'months' ? 'invisible' : ''}`}>
+            <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors" >
               <ChevronLeft size={24} />
             </button>
             <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
               <ChevronRight size={24} />
             </button>
           </div>
+          )}
         </div>
 
         {/* Calendar Grid */}
-        <div className="flex-1 p-6 overflow-y-auto">
-          <div className="grid grid-cols-7 gap-4 mb-4">
+        {displayMode === 'list' ? (
+          <div className="flex-1 overflow-y-auto p-6 animate-fade-in-up">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <th className="pb-3 pl-2">User</th>
+                  <th className="pb-3">Type</th>
+                  <th className="pb-3">Dates</th>
+                  <th className="pb-3">Reason</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm divide-y divide-slate-50">
+                {[...leaves].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(leave => {
+                  const user = users.find(u => u.id === leave.userId);
+                  if (!user) return null;
+                  const isCurrentUser = currentUserId === leave.userId;
+                  
+                  return (
+                    <tr key={leave.id} className="group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onLeaveClick(leave)}>
+                      <td className="py-3 pl-2">
+                        <div className="flex items-center gap-3">
+                           <img 
+                            src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+                            alt={user.name} 
+                            className="w-8 h-8 rounded-full bg-slate-100 object-cover" 
+                            onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
+                          />
+                          <span className="font-medium text-slate-900">{user.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-medium">
+                          {getLeaveEmoji(leave.type)} <span className="capitalize">{leave.type}</span>
+                        </span>
+                      </td>
+                      <td className="py-3 text-slate-600">
+                        {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 text-slate-500 max-w-xs truncate">
+                        {leave.reason || <span className="italic text-slate-400">No reason provided</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {leaves.length === 0 && (
+                <div className="text-center py-12 text-slate-400">No leaves found.</div>
+            )}
+          </div>
+        ) : viewMode === 'months' ? (
+          <div className="flex-1 p-6 grid grid-cols-3 gap-4 overflow-y-auto animate-fade-in-up">
+            {Array.from({ length: 12 }).map((_, i) => {
+              const date = new Date(year, i, 1);
+              const isCurrentMonth = i === new Date().getMonth() && year === new Date().getFullYear();
+              return (
+                <button
+                  key={i}
+                  onClick={() => { setCurrentDate(date); setViewMode('calendar'); }}
+                  className={`p-6 rounded-2xl text-lg font-bold transition-all ${isCurrentMonth ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600'}`}
+                >
+                  {date.toLocaleString('default', { month: 'long' })}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+        <div className="flex-1 p-6 flex flex-col min-h-0 animate-fade-in-up">
+          <div className="grid grid-cols-7 gap-4 mb-2 flex-shrink-0">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="text-center text-sm font-bold text-slate-400 uppercase tracking-wider">
                 {day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-4 auto-rows-[1fr]">
+          <div className="grid grid-cols-7 gap-4 flex-1 min-h-0" style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}>
             {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="min-h-[100px]" />
+              <div key={`empty-${i}`} className="" />
             ))}
             {Array.from({ length: days }).map((_, i) => {
               const day = i + 1;
               const dayLeaves = leaves.filter(l => isLeaveDay(day, l));
               const isHoveredUserOnLeave = hoveredUserId && dayLeaves.some(l => l.userId === hoveredUserId);
               const isToday = new Date().getDate() === day && new Date().getMonth() === currentDate.getMonth() && new Date().getFullYear() === currentDate.getFullYear();
+              const holiday = holidays.find(h => parseLocalDate(h.date).getDate() === day && parseLocalDate(h.date).getMonth() === currentDate.getMonth() && parseLocalDate(h.date).getFullYear() === currentDate.getFullYear());
 
               return (
                 <div 
                   key={day} 
                   className={`
-                    min-h-[100px] p-3 rounded-2xl border transition-all duration-300 relative group
-                    ${isHoveredUserOnLeave 
+                    p-2 lg:p-3 rounded-2xl border transition-all duration-300 relative group flex flex-col
+                    ${holiday ? 'bg-red-50 border-red-100' : isHoveredUserOnLeave 
                       ? 'bg-indigo-50 border-indigo-200 shadow-md scale-105 z-10' 
                       : isToday 
                         ? 'bg-white border-indigo-500 ring-1 ring-indigo-500/20' 
@@ -212,12 +331,25 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
                 >
                   <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{day}</span>
                   
-                  <div className="mt-2 space-y-1">
+                  {holiday && (
+                    <div className="mb-1">
+                      <div className="text-[10px] font-bold text-red-500 truncate flex items-center justify-between">
+                        <span>🎉 {holiday.name}</span>
+                        {currentUserIsAdmin && (
+                          <button onClick={(e) => { e.stopPropagation(); onDeleteHoliday(holiday.id); }} className="hover:text-red-700"><Trash2 size={10} /></button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar">
                     {dayLeaves.map(leave => {
                       const user = users.find(u => u.id === leave.userId);
                       if (!user) return null;
                       const isHovered = hoveredUserId === leave.userId;
                       const isCurrentUser = currentUserId === leave.userId;
+                      const isMorning = (leave as any).startTime?.startsWith('08') || (leave as any).startTime?.startsWith('8');
+                      const isAfternoon = (leave as any).startTime?.startsWith('13');
 
                       return (
                         <div 
@@ -230,10 +362,12 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
                           `}
                           title={`${user.name} - ${leave.type}`}
                         >
-                          <span className="flex items-center gap-1">{getLeaveEmoji(leave.type)} {user.name.split(' ')[0]}</span>
-                          {isCurrentUser && (
-                            <button onClick={(e) => { e.stopPropagation(); onDeleteLeave(leave.id); }} className="hover:text-red-500"><Trash2 size={10} /></button>
-                          )}
+                          <span className="flex items-center gap-1">
+                            {getLeaveEmoji(leave.type)} 
+                            {user.name.split(' ')[0]}
+                            {isMorning && <span className="px-1 rounded bg-amber-200 text-amber-800 text-[8px] font-bold leading-none">AM</span>}
+                            {isAfternoon && <span className="px-1 rounded bg-blue-200 text-blue-800 text-[8px] font-bold leading-none">PM</span>}
+                          </span>
                         </div>
                       );
                     })}
@@ -243,6 +377,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, cur
             })}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

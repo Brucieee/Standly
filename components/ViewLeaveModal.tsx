@@ -1,70 +1,100 @@
 import React from 'react';
-import { X, Palmtree, Calendar, User as UserIcon } from 'lucide-react';
+import { X, Calendar, Clock, Edit2, Trash2, Tag } from 'lucide-react';
 import { Leave, User } from '../types';
 
 interface ViewLeaveModalProps {
   isOpen: boolean;
   onClose: () => void;
   leave: Leave | null;
-  user: User | undefined;
+  user?: User;
+  onEdit: (leave: Leave) => void;
+  onDelete: (id: string) => void;
+  currentUserId: string;
 }
 
-export const ViewLeaveModal: React.FC<ViewLeaveModalProps> = ({ isOpen, onClose, leave, user }) => {
-  if (!isOpen || !leave) return null;
+export const ViewLeaveModal: React.FC<ViewLeaveModalProps> = ({
+  isOpen,
+  onClose,
+  leave,
+  user,
+  onEdit,
+  onDelete,
+  currentUserId
+}) => {
+  if (!isOpen || !leave || !user) return null;
 
-  const getTypeEmoji = (type: Leave['type']) => {
+  const isOwner = currentUserId === user.id;
+
+  const getLeaveLabel = (type: string) => {
     switch (type) {
-      case 'vacation': return '🏖️';
-      case 'sick': return '🤒';
-      case 'personal': return '🏠';
-      case 'wellness': return '🧘';
-      default: return '📅';
+      case 'vacation': return '🏖️ Vacation';
+      case 'sick': return '🤒 Sick Leave';
+      case 'personal': return '🏠 Personal';
+      case 'wellness': return '🧘 Wellness';
+      case 'birthday': return '🎂 Birthday';
+      default: return type;
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-fade-in-up" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Palmtree className="text-indigo-500" size={24} />
-            Leave Details
-          </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
-            <X size={20} />
-          </button>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b border-slate-100 flex justify-between items-start">
+          <div className="flex items-center gap-4">
+            <img 
+              src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
+              alt={user.name} 
+              className="w-14 h-14 rounded-2xl bg-slate-100 object-cover shadow-sm"
+              onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
+            />
+            <div>
+              <h3 className="font-bold text-lg text-slate-900">{user.name}</h3>
+              <p className="text-sm text-slate-500">{user.role}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <img src={user?.avatar} alt={user?.name} className="w-16 h-16 rounded-full bg-slate-100 object-cover border-4 border-slate-50" />
+          <div className="flex items-center gap-3 text-slate-700">
+            <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Tag size={20} /></div>
             <div>
-              <h3 className="font-bold text-lg text-slate-900">{user?.name}</h3>
-              <p className="text-slate-500 text-sm">{user?.role}</p>
+              <p className="text-xs text-slate-500 font-bold uppercase">Type</p>
+              <p className="font-medium capitalize">{getLeaveLabel(leave.type)}</p>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Type</div>
-              <div className="font-medium text-slate-900 capitalize flex items-center gap-2">
-                {getTypeEmoji(leave.type)} {leave.type}
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Duration</div>
-              <div className="font-medium text-slate-900 flex items-center gap-2">
-                <Calendar size={16} className="text-indigo-500" />
-                {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Description</div>
-              <p className="text-slate-700 leading-relaxed">{leave.reason || <span className="text-slate-400 italic">No description provided</span>}</p>
+          <div className="flex items-center gap-3 text-slate-700">
+            <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Calendar size={20} /></div>
+            <div>
+              <p className="text-xs text-slate-500 font-bold uppercase">Date Range</p>
+              <p className="font-medium">{leave.startDate} <span className="text-slate-400">to</span> {leave.endDate}</p>
             </div>
           </div>
+
+          {((leave as any).startTime || (leave as any).endTime) && (
+            <div className="flex items-center gap-3 text-slate-700">
+              <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Clock size={20} /></div>
+              <div>
+                <p className="text-xs text-slate-500 font-bold uppercase">Time</p>
+                <p className="font-medium">{(leave as any).startTime || 'Start'} - {(leave as any).endTime || 'End'}</p>
+              </div>
+            </div>
+          )}
+
+          {leave.reason && (
+            <div className="bg-slate-50 p-4 rounded-xl">
+              <p className="text-xs text-slate-500 font-bold uppercase mb-1">Reason</p>
+              <p className="text-slate-700">{leave.reason}</p>
+            </div>
+          )}
+
+          {isOwner && (
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => onEdit(leave)} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 flex items-center justify-center gap-2"><Edit2 size={16} /> Edit</button>
+              <button onClick={() => onDelete(leave.id)} className="flex-1 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-medium hover:bg-red-50 flex items-center justify-center gap-2"><Trash2 size={16} /> Cancel</button>
+            </div>
+          )}
         </div>
       </div>
     </div>

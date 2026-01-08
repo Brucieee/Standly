@@ -16,6 +16,21 @@ export interface User {
   loginCode?: string;
 }
 
+export interface Comment {
+  id: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+  replies?: Comment[];
+  parentId?: string;
+}
+
+export interface Reaction {
+  id: string;
+  userId: string;
+  type: string;
+}
+
 export interface Standup {
   id: string;
   userId: string;
@@ -26,6 +41,8 @@ export interface Standup {
   mood: 'happy' | 'neutral' | 'stressed';
   jiraLinks?: string[];
   views?: string[];
+  comments?: Comment[];
+  reactions?: Reaction[];
   createdAt?: string;
 }
 

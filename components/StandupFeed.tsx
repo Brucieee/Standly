@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Standup, User } from '../types';
-import { Trash2, Edit2, Clock, X, CheckCircle2, AlertCircle, ExternalLink, Smile, Meh, Frown, Eye } from 'lucide-react';
+import { Standup, User, Comment, Reaction } from '../types';
+import { Trash2, Edit2, ExternalLink, Smile, Meh, Frown, MessageCircle } from 'lucide-react';
+import { StandupFeedModal } from './StandupFeedModal';
+
+const REACTION_TYPES = [
+  { id: 'like', icon: '👍', label: 'Like' },
+  { id: 'love', icon: '❤️', label: 'Love' },
+  { id: 'haha', icon: '😂', label: 'Haha' },
+  { id: 'wow', icon: '😮', label: 'Wow' },
+  { id: 'sad', icon: '😢', label: 'Sad' },
+  { id: 'angry', icon: '😡', label: 'Angry' },
+];
 
 interface StandupFeedProps {
   standups: Standup[];
@@ -10,10 +20,16 @@ interface StandupFeedProps {
   onDelete: (id: string) => void;
   onEdit: (standup: Standup) => void;
   onView: (standup: Standup) => void;
+  onReact: (standupId: string, reactionType: string) => void;
+  onComment: (standupId: string, text: string, parentId?: string) => void;
+  onEditComment?: (commentId: string, text: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 }
 
-export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, currentUserId, onDelete, onEdit, onView }) => {
-  const [selectedStandup, setSelectedStandup] = useState<Standup | null>(null);
+export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, currentUserId, onDelete, onEdit, onView, onReact, onComment, onEditComment, onDeleteComment }) => {
+  const [selectedStandupId, setSelectedStandupId] = useState<string | null>(null);
+
+  const selectedStandup = selectedStandupId ? standups.find(s => s.id === selectedStandupId) || null : null;
 
   const getMoodIcon = (mood: string, size: number = 28) => {
     switch (mood) {
@@ -26,7 +42,9 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
 
   // Group standups by date to create sections
   const groupedStandups = standups.reduce((groups, standup) => {
-    const dateObj = new Date(standup.date);
+    // Check if date string already has time component (contains 'T') to avoid double appending
+    const dateStr = standup.date && standup.date.includes('T') ? standup.date : (standup.date + 'T00:00:00');
+    const dateObj = new Date(dateStr);
     const dateLabel = dateObj.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
     
     if (!groups[dateLabel]) {
@@ -49,88 +67,93 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
             <div className="h-px bg-slate-100 w-full"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {groupStandups.map((standup) => {
               const user = users.find(u => u.id === standup.userId);
               const isCurrentUser = standup.userId === currentUserId;
               const date = new Date(standup.date);
               const isViewed = standup.views?.includes(currentUserId);
-              const creationDate = standup.createdAt ? new Date(standup.createdAt) : new Date(standup.date);
+              const creationDate = standup.createdAt ? new Date(standup.createdAt) : new Date(standup.date + 'T00:00:00');
               const timeStr = creationDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
               const hasLinks = standup.jiraLinks && standup.jiraLinks.length > 0;
+              
+              // Mock data for UI demonstration if fields don't exist
+              const comments = standup.comments || [];
+              const reactions = standup.reactions || [];
 
               return (
                 <div 
                   key={standup.id} 
                   onClick={() => {
-                    setSelectedStandup(standup);
+                    setSelectedStandupId(standup.id);
                     onView(standup);
                   }}
                   className={`
-                    relative bg-white rounded-2xl p-5 cursor-pointer group transition-all duration-300
-                    border shadow-sm hover:shadow-xl hover:-translate-y-1
-                    overflow-hidden
+                    relative bg-white rounded-2xl p-6 cursor-pointer group transition-all duration-300
+                    border shadow-sm hover:shadow-xl hover:-translate-y-1 hover:z-10
                     ${isViewed ? 'border-indigo-500 ring-1 ring-indigo-500/20' : 'border-slate-100'}
                   `}
                 >
                   {/* Gradient Top Border Effect on Hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-1 top-0 w-full" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-1 top-0 w-full rounded-t-2xl" />
                   
                   {/* Unread Indicator */}
                   {!isViewed && !isCurrentUser && (
                      <div className="absolute top-5 right-5 w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-lg shadow-indigo-200" />
                   )}
 
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
+                  <div className="flex items-start gap-4">
+                      <div className="relative flex-shrink-0">
                           <img 
                             src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`} 
                             alt={user?.name}
                             className="w-12 h-12 rounded-xl bg-slate-100 object-cover shadow-sm group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`;
+                            }}
                           />
                           <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
-                              {getMoodIcon(standup.mood, 14)}
+                              {getMoodIcon(standup.mood, 18)}
                           </div>
                       </div>
                       
-                      <div>
-                        <h3 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
                           {user?.name || 'Unknown User'}
                         </h3>
                         <p className="text-xs font-medium text-indigo-500 mb-0.5">
                           {user?.role || 'Developer'}
                         </p>
-                        <p className="text-[10px] text-slate-400 flex items-center gap-1 font-medium uppercase tracking-wide">
-                          {timeStr}
-                        </p>
+                        <div className="flex justify-between items-end">
+                          <p className="text-[10px] text-slate-400 flex items-center gap-1 font-medium uppercase tracking-wide">
+                            {timeStr}
+                          </p>
+                          {isCurrentUser && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEdit(standup);
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                title="Edit Standup"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(standup.id);
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete Standup"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    
-                    {isCurrentUser && (
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(standup);
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          title="Edit Standup"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(standup.id);
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete Standup"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   {/* Jira Links on Card */}
@@ -152,6 +175,55 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                       ))}
                     </div>
                   )}
+
+                  {/* Card Footer: Reactions & Comments */}
+                  <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                    <div className="flex items-center gap-2 relative">
+                      {/* Reaction Picker on Hover */}
+                      <div className="absolute top-full left-0 mt-2 bg-white rounded-full shadow-xl border border-slate-100 p-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 origin-top-left z-20">
+                        {REACTION_TYPES.map((reaction) => (
+                          <button
+                            key={reaction.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onReact(standup.id, reaction.id);
+                            }}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-full text-lg transition-transform hover:scale-125"
+                            title={reaction.label}
+                          >
+                            {reaction.icon}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Existing Reactions */}
+                      <div className="flex -space-x-1">
+                        {reactions.length > 0 ? (
+                          // Group reactions by type and show top 3
+                          [...new Set(reactions.map((r: Reaction) => r.type))].slice(0, 3).map((type: string) => {
+                            const rIcon = REACTION_TYPES.find(rt => rt.id === type)?.icon;
+                            return (
+                              <div key={type} className="w-8 h-8 rounded-full bg-slate-50 border border-white flex items-center justify-center text-sm shadow-sm">
+                                {rIcon}
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-slate-50 border border-white flex items-center justify-center text-slate-300 shadow-sm">
+                            <Smile size={12} />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs font-medium text-slate-500">
+                        {reactions.length > 0 ? reactions.length : 'React'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-slate-400">
+                      <MessageCircle size={14} />
+                      <span className="text-xs font-medium">{comments.length}</span>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -167,111 +239,16 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
     </div>
 
     {selectedStandup && createPortal(
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedStandup(null)}>
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-up" onClick={e => e.stopPropagation()}>
-          {/* Header */}
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <img 
-                src={users.find(u => u.id === selectedStandup.userId)?.avatar || `https://ui-avatars.com/api/?name=User`} 
-                alt="User"
-                className="w-10 h-10 rounded-full bg-slate-100 object-cover"
-              />
-              <div>
-                <h3 className="font-bold text-slate-900">{users.find(u => u.id === selectedStandup.userId)?.name || 'Unknown User'}</h3>
-                <p className="text-xs text-slate-500 flex items-center gap-1">
-                  <Clock size={12} />
-                  {new Date(selectedStandup.date).toLocaleString(undefined, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
-                </p>
-              </div>
-            </div>
-            <button onClick={() => setSelectedStandup(null)} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors">
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-8">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column */}
-                <div className="space-y-8">
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-green-500" />
-                      Yesterday
-                    </h4>
-                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{selectedStandup.yesterday}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                      <AlertCircle size={14} className="text-red-500" />
-                      Blockers
-                    </h4>
-                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">
-                      {selectedStandup.blockers || <span className="text-slate-400 italic">None</span>}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-8">
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                      <Clock size={14} className="text-indigo-500" />
-                      Today
-                    </h4>
-                    <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{selectedStandup.today}</p>
-                  </div>
-
-                  <div className="space-y-2">
-                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mood</h4>
-                     <div className="flex items-center gap-2">
-                        {getMoodIcon(selectedStandup.mood)}
-                        <span className="text-sm font-medium text-slate-700 capitalize">{selectedStandup.mood}</span>
-                     </div>
-                  </div>
-                </div>
-             </div>
-
-             {selectedStandup.jiraLinks && selectedStandup.jiraLinks.length > 0 && (
-                <div className="pt-4 border-t border-slate-100 space-y-2">
-                  {selectedStandup.jiraLinks.map((link, index) => (
-                    <a key={index} href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors mr-2 mb-2">
-                      <ExternalLink size={14} />
-                      View Jira Ticket {selectedStandup.jiraLinks!.length > 1 ? `#${index + 1}` : ''}
-                    </a>
-                  ))}
-                </div>
-             )}
-
-             {/* Viewers Section */}
-             <div className="pt-4 border-t border-slate-100">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Eye size={14} />
-                  Viewed By
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {(selectedStandup.views || []).length > 0 ? (selectedStandup.views || []).map(viewerId => {
-                    const viewer = users.find(u => u.id === viewerId);
-                    if (!viewer) return null;
-                    return (
-                      <img 
-                        key={viewerId}
-                        src={viewer.avatar} 
-                        alt={viewer.name}
-                        title={viewer.name}
-                        className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
-                      />
-                    );
-                  }) : (
-                    <span className="text-sm text-slate-400 italic">No views yet</span>
-                  )}
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>,
+      <StandupFeedModal
+        standup={selectedStandup}
+        users={users}
+        currentUserId={currentUserId}
+        onClose={() => setSelectedStandupId(null)}
+        onReact={onReact}
+        onComment={onComment}
+        onEditComment={onEditComment}
+        onDeleteComment={onDeleteComment}
+      />,
       document.body
     )}
     </>

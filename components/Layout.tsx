@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CheckSquare, History, LogOut, ExternalLink, Monitor, Palmtree, Cloud } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, History, LogOut, ExternalLink, Monitor, Palmtree, Cloud, FileText } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,6 +31,7 @@ export const Layout: React.FC<LayoutProps> = ({
   const quickLinks = [
     { id: 'jira', label: 'Jira Board', icon: CheckSquare, href: 'https://cocogenproduct.atlassian.net/jira/software/projects/ECPM/boards/1/timeline' },
     { id: 'onedrive', label: 'OneDrive', icon: Cloud, href: 'https://teams.microsoft.com/l/message/19:be663b44-7c7b-4a5b-867a-cfd654a2e22e_c479d6c3-3508-4b17-a6c3-b3e2e909087a@unq.gbl.spaces/1767832518597?context=%7B%22contextType%22%3A%22chat%22%7D' },
+    { id: 'release-notes', label: 'Release Notes', icon: FileText, href: 'https://cocogencom-my.sharepoint.com/personal/john_lopez_cocogen_com/_layouts/15/Doc.aspx?sourcedoc={c227dc84-e475-408b-9bc5-5c5c54a6b351}&action=edit&wd=target%28Cocogen%20Release%20Notes.one%7C707180dc-e890-434c-b1eb-df0b1451aa84%2FUntitled%20Page%7C6ca429d0-542f-42a4-8ff8-5d6afd24c12b%2F%29&wdorigin=NavigationUrl' },
     { id: 'virtual-office', label: 'Virtual Office', icon: Monitor },
   ].filter(item => {
     if (item.id === 'jira' && userRole === 'Intern') return false;

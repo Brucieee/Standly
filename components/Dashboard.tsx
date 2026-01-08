@@ -19,6 +19,10 @@ interface DashboardProps {
   onDeleteStandup: (id: string) => void;
   onViewStandup: (standup: Standup) => void;
   onCalendarDateClick: (date: string) => void;
+  onReact: (standupId: string, reactionType: string) => void;
+  onComment: (standupId: string, text: string, parentId?: string) => void;
+  onEditComment?: (commentId: string, text: string) => void;
+  onDeleteComment?: (commentId: string) => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -35,6 +39,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onDeleteStandup,
   onViewStandup,
   onCalendarDateClick,
+  onReact,
+  onComment,
+  onEditComment,
+  onDeleteComment,
 }) => {
   // Filter deadlines: upcoming within 3 days, max 3 items
   const upcomingDeadlines = deadlines
@@ -98,6 +106,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
           onDelete={onDeleteStandup}
           onEdit={onEditStandup}
           onView={onViewStandup}
+          onReact={onReact}
+          onComment={onComment}
+          onEditComment={onEditComment}
+          onDeleteComment={onDeleteComment}
         />
       </div>
 

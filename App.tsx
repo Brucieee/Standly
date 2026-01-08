@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { Layout } from './components/Layout';
 import { StandupModal } from './components/StandupModal';
 import { AuthPage } from './components/AuthPage';
@@ -17,6 +18,7 @@ import { LeaveCalendar } from './components/LeaveCalendar';
 import { CodeErrorModal } from './components/CodeErrorModal';
 import { LeaveModal } from './components/LeaveModal';
 import { ViewLeaveModal } from './components/ViewLeaveModal';
+import { HolidayModal } from './components/HolidayModal';
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -33,6 +35,7 @@ const App: React.FC = () => {
     standups: [],
     deadlines: [],
     leaves: [],
+    holidays: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -49,6 +52,7 @@ const App: React.FC = () => {
   const [isViewLeaveModalOpen, setIsViewLeaveModalOpen] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
   const [editingLeave, setEditingLeave] = useState<Leave | null>(null);
+  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
   const [authKey, setAuthKey] = useState(0); // Used to reset AuthPage state
 
   // Confirmation Modal State
@@ -112,13 +116,111 @@ const App: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [users, standups, deadlines, leaves] = await Promise.all([
-        apiUsers.getAll(),
-        apiStandups.getAll(),
-        apiDeadlines.getAll(),
-        apiLeaves.getAll()
+      // Fetch users directly from profiles
+      const { data: usersData, error: usersError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (usersError) throw usersError;
+
+      // Helper to map DB profile to User type (handles different column names)
+      const mapProfileToUser = (profile: any) => ({
+        id: profile.id,
+        name: profile.name || profile.full_name || 'Unknown',
+        avatar: profile.avatar || profile.avatar_url || null,
+        role: profile.role || 'user',
+        isAdmin: profile.is_admin || false,
+        email: profile.email || ''
+      });
+
+      const mappedUsers = (usersData || []).map(mapProfileToUser);
+
+      // Fetch standups with relations
+      const { data: standupsData, error: standupsError } = await supabase
+        .from('standups')
+        .select(`
+          *,
+          user:profiles(*),
+          comments:standup_comments(*, user:profiles(*)),
+          reactions:standup_reactions(*, user:profiles(*))
+        `)
+        .order('date', { ascending: false });
+
+      if (standupsError) throw standupsError;
+
+      const unknownUser = { id: 'unknown', name: 'Unknown User', avatar: null, role: 'user', email: '' };
+
+      // Map standups to include mapped user details
+      const mappedStandups = (standupsData || []).map((s: any) => {
+        const standupUserRaw = Array.isArray(s.user) ? s.user[0] : s.user;
+        const standupUser = (standupUserRaw ? mapProfileToUser(standupUserRaw) : mappedUsers.find(u => u.id === (s.user_id || s.userId))) || unknownUser;
+
+        const comments = (s.comments || []).map((c: any) => {
+          const commentUserRaw = Array.isArray(c.user) ? c.user[0] : c.user;
+          const commentUser = (commentUserRaw ? mapProfileToUser(commentUserRaw) : mappedUsers.find(u => u.id === (c.user_id || c.userId))) || unknownUser;
+          return {
+            ...c,
+            userId: c.user_id || c.userId,
+            user: commentUser,
+            createdAt: c.created_at
+          };
+        }).sort((a: any, b: any) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+
+        const reactions = (s.reactions || []).map((r: any) => {
+          const reactionUserRaw = Array.isArray(r.user) ? r.user[0] : r.user;
+          const reactionUser = (reactionUserRaw ? mapProfileToUser(reactionUserRaw) : mappedUsers.find(u => u.id === (r.user_id || r.userId))) || unknownUser;
+          return {
+            ...r,
+            userId: r.user_id || r.userId,
+            user: reactionUser
+          };
+        });
+
+        return {
+          ...s,
+          userId: s.user_id || s.userId,
+          user: standupUser,
+          comments,
+          reactions,
+          createdAt: s.created_at
+        };
+      });
+
+      // Fetch holidays
+      const { data: holidaysData } = await supabase
+        .from('holidays')
+        .select('*');
+
+      // Fetch leaves directly to ensure correct mapping of time fields
+      const { data: leavesData, error: leavesError } = await supabase
+        .from('leaves')
+        .select('*');
+
+      if (leavesError) throw leavesError;
+
+      const mappedLeaves = (leavesData || []).map((l: any) => ({
+        ...l,
+        userId: l.user_id,
+        startDate: l.start_date,
+        endDate: l.end_date,
+        startTime: l.start_time,
+        endTime: l.end_time
+      }));
+
+      const [deadlines] = await Promise.all([
+        apiDeadlines.getAll()
       ]);
-      setState(prev => ({ ...prev, users, standups, deadlines, leaves }));
+      
+      setState(prev => ({ 
+        ...prev, 
+        users: mappedUsers, 
+        // Refresh current user role from latest profile data
+        currentUser: prev.currentUser ? (mappedUsers.find(u => u.id === prev.currentUser.id) || prev.currentUser) : prev.currentUser,
+        standups: mappedStandups as any, 
+        deadlines, 
+        leaves: mappedLeaves, 
+        holidays: holidaysData || [] 
+      }));
     } catch (error) {
       console.error('Failed to load data', error);
     }
@@ -239,6 +341,117 @@ const App: React.FC = () => {
     }
   };
 
+  const handleReact = async (standupId: string, reactionType: string) => {
+    if (!state.currentUser) return;
+
+    try {
+      // Check if reaction already exists
+      const { data: existing, error: fetchError } = await supabase
+        .from('standup_reactions')
+        .select('id, type')
+        .eq('standup_id', standupId)
+        .eq('user_id', state.currentUser.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      if (existing) {
+        if (existing.type === reactionType) {
+          const { error: deleteError } = await supabase.from('standup_reactions').delete().eq('id', existing.id);
+          if (deleteError) throw deleteError;
+        } else {
+          const { error: updateError } = await supabase.from('standup_reactions').update({ type: reactionType }).eq('id', existing.id);
+          if (updateError) throw updateError;
+        }
+      } else {
+        const { error: insertError } = await supabase.from('standup_reactions').insert({
+          standup_id: standupId,
+          user_id: state.currentUser.id,
+          type: reactionType
+        });
+        if (insertError) throw insertError;
+      }
+      
+      // Refresh data
+      await loadData();
+    } catch (error) {
+      console.error('Error updating reaction:', error);
+      if ((error as any).code === '42501') {
+        alert('Permission denied: You need to enable RLS policies in Supabase for "standup_reactions".');
+      } else {
+        alert('Failed to update reaction. Please try again.');
+      }
+    }
+  };
+
+  const handleComment = async (standupId: string, text: string, parentId?: string) => {
+    if (!state.currentUser) return;
+
+    try {
+      const { error } = await supabase
+        .from('standup_comments')
+        .insert({
+          standup_id: standupId,
+          user_id: state.currentUser.id,
+          text: text,
+          parent_id: parentId || null
+        });
+
+      if (error) throw error;
+
+      // Refresh data
+      await loadData();
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      if ((error as any).code === '42501') {
+        alert('Permission denied: You need to enable RLS policies in Supabase for "standup_comments".');
+      } else {
+        alert('Failed to add comment. Please try again.');
+      }
+    }
+  };
+
+  const handleEditComment = async (commentId: string, text: string) => {
+    if (!state.currentUser) return;
+    try {
+      const { error } = await supabase
+        .from('standup_comments')
+        .update({ text })
+        .eq('id', commentId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (error) {
+      console.error('Error editing comment:', error);
+      if ((error as any).code === '42501') {
+        alert('Permission denied: You need to enable UPDATE RLS policies for "standup_comments".');
+      } else {
+        alert('Failed to edit comment.');
+      }
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!state.currentUser) return;
+    try {
+      const { error } = await supabase
+        .from('standup_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+      await loadData();
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      if ((error as any).code === '42501') {
+        alert('Permission denied: You need to enable DELETE RLS policies for "standup_comments".');
+      } else {
+        alert('Failed to delete comment.');
+      }
+    }
+  };
+
   const handleDeleteStandup = (id: string) => {
     setConfirmModal({
       isOpen: true,
@@ -341,18 +554,46 @@ const App: React.FC = () => {
 
   const handleSaveLeave = async (data: Omit<Leave, 'id' | 'userId'>) => {
     if (!state.currentUser) return;
+    
+    // Map data to match database columns (snake_case for time fields)
+    const dbData = {
+      ...data,
+      start_date: data.startDate,
+      end_date: data.endDate,
+      start_time: (data as any).startTime || null,
+      end_time: (data as any).endTime || null
+    };
+    // Remove camelCase keys to avoid errors if API is strict
+    delete (dbData as any).startDate;
+    delete (dbData as any).endDate;
+    delete (dbData as any).startTime;
+    delete (dbData as any).endTime;
+
     try {
       if (editingLeave) {
-        await apiLeaves.update(editingLeave.id, data);
+        await supabase.from('leaves').update(dbData).eq('id', editingLeave.id);
         setState(prev => ({
           ...prev,
           leaves: prev.leaves.map(l => l.id === editingLeave.id ? { ...l, ...data } : l)
         }));
       } else {
-        const newLeave = await apiLeaves.create({
-          userId: state.currentUser.id,
-          ...data
-        });
+        const { data: newLeaveData, error } = await supabase.from('leaves').insert({
+          user_id: state.currentUser.id,
+          ...dbData
+        }).select().single();
+        
+        if (error) throw error;
+        
+        // Map back to frontend model
+        const newLeave = {
+            ...newLeaveData,
+            userId: newLeaveData.user_id,
+            startDate: newLeaveData.start_date,
+            endDate: newLeaveData.end_date,
+            startTime: newLeaveData.start_time,
+            endTime: newLeaveData.end_time
+        };
+
         setState(prev => ({
           ...prev,
           leaves: [...prev.leaves, newLeave]
@@ -380,12 +621,60 @@ const App: React.FC = () => {
             leaves: prev.leaves.filter(l => l.id !== id)
           }));
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          setIsLeaveModalOpen(false);
+          setIsViewLeaveModalOpen(false);
         } catch (error) {
           console.error('Failed to delete leave', error);
           alert('Failed to delete leave.');
         }
       }
     });
+  };
+
+  const handleSaveHoliday = async (date: string, name: string) => {
+    try {
+      const { data, error } = await supabase.from('holidays').insert({ date, name }).select().single();
+      if (error) throw error;
+      setState(prev => ({ ...prev, holidays: [...(prev.holidays || []), data] }));
+    } catch (error) {
+      console.error('Failed to save holiday', error);
+      if ((error as any).code === '42501') {
+        alert('Permission denied: Only admins can add holidays. Please ensure your account has "is_admin" set to TRUE in the database.');
+      } else {
+        alert('Failed to save holiday.');
+      }
+    }
+  };
+
+  const handleDeleteHoliday = async (id: string) => {
+    if (!confirm('Delete this holiday?')) return;
+    
+    try {
+      const { error } = await supabase.from('holidays').delete().eq('id', id);
+      if (error) throw error;
+      setState(prev => ({ ...prev, holidays: (prev.holidays || []).filter(h => h.id !== id) }));
+    } catch (error) {
+      console.error('Failed to delete holiday', error);
+      if ((error as any).code === '42501') {
+        alert('Permission denied: Only admins can delete holidays.');
+      } else {
+        alert('Failed to delete holiday.');
+      }
+    }
+  };
+
+  const getPreviousStandup = () => {
+    if (!state.currentUser) return undefined;
+    const targetDate = editingStandup ? editingStandup.date : modalInitialDate;
+    
+    // Filter user's standups
+    const userStandups = state.standups.filter(s => s.userId === state.currentUser?.id);
+    
+    // Sort descending
+    const sorted = [...userStandups].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    // Find first one strictly before targetDate
+    return sorted.find(s => s.date < targetDate);
   };
 
   const handleLeaveClick = (leave: Leave) => {
@@ -446,6 +735,10 @@ const App: React.FC = () => {
           onDeleteStandup={handleDeleteStandup}
           onViewStandup={handleViewStandup}
           onCalendarDateClick={handleCalendarDateClick}
+          onReact={handleReact}
+          onComment={handleComment}
+          onEditComment={handleEditComment}
+          onDeleteComment={handleDeleteComment}
         />
       )}
 
@@ -464,13 +757,17 @@ const App: React.FC = () => {
         <LeaveCalendar
           users={state.users}
           leaves={state.leaves}
+          holidays={state.holidays || []}
           currentUserId={state.currentUser.id}
+          currentUserIsAdmin={state.currentUser.isAdmin}
           onAddLeave={() => {
             setEditingLeave(null);
             setIsLeaveModalOpen(true);
           }}
           onDeleteLeave={handleDeleteLeave}
           onLeaveClick={handleLeaveClick}
+          onAddHoliday={() => setIsHolidayModalOpen(true)}
+          onDeleteHoliday={handleDeleteHoliday}
         />
       )}
 
@@ -485,6 +782,8 @@ const App: React.FC = () => {
         onSubmit={handleSaveStandup}
         initialData={editingStandup}
         initialDate={modalInitialDate}
+        onDelete={editingStandup ? () => handleDeleteStandup(editingStandup.id) : undefined}
+        previousStandup={getPreviousStandup()}
       />
 
       <DeadlineModal
@@ -495,6 +794,7 @@ const App: React.FC = () => {
         }}
         onSubmit={handleSaveDeadline}
         initialData={editingDeadline}
+        onDelete={editingDeadline ? () => handleDeleteDeadline(editingDeadline.id) : undefined}
       />
 
       <VirtualOfficeModal
@@ -507,6 +807,7 @@ const App: React.FC = () => {
         onClose={() => setIsLeaveModalOpen(false)}
         onSubmit={handleSaveLeave}
         initialData={editingLeave}
+        onDelete={editingLeave ? () => handleDeleteLeave(editingLeave.id) : undefined}
       />
 
       <ViewLeaveModal
@@ -514,6 +815,22 @@ const App: React.FC = () => {
         onClose={() => setIsViewLeaveModalOpen(false)}
         leave={selectedLeave}
         user={state.users.find(u => u.id === selectedLeave?.userId)}
+        onEdit={(leave) => {
+          setIsViewLeaveModalOpen(false);
+          setEditingLeave(leave);
+          setIsLeaveModalOpen(true);
+        }}
+        onDelete={(id) => {
+          setIsViewLeaveModalOpen(false);
+          handleDeleteLeave(id);
+        }}
+        currentUserId={state.currentUser.id}
+      />
+
+      <HolidayModal
+        isOpen={isHolidayModalOpen}
+        onClose={() => setIsHolidayModalOpen(false)}
+        onSubmit={handleSaveHoliday}
       />
 
       {isSummaryModalOpen && (
