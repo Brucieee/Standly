@@ -34,6 +34,24 @@ export const apiAuth = {
     if (error) throw error;
   },
 
+  async loginWithCode(code: string): Promise<User> {
+    const { data, error } = await supabase.rpc('get_profile_by_code', { code_input: code });
+    
+    if (error) throw error;
+    if (!data || data.length === 0) throw new Error('Invalid login code');
+    
+    const profile = data[0];
+    return {
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      avatar: profile.avatar ? profile.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}`,
+      role: profile.role as UserRole,
+      isAdmin: profile.is_admin,
+      loginCode: profile.login_code,
+    };
+  },
+
   async getCurrentUser(): Promise<User | null> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -57,6 +75,7 @@ export const apiAuth = {
         avatar: profile.avatar ? profile.avatar : `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}`,
         role: profile.role as UserRole,
         isAdmin: profile.is_admin,
+        loginCode: profile.login_code,
       };
     } else {
         // Attempt to self-heal: Create missing profile for existing auth user
@@ -86,6 +105,7 @@ export const apiAuth = {
       if (updates.name) dbUpdates.name = updates.name;
       if (updates.avatar) dbUpdates.avatar = updates.avatar;
       if (updates.role) dbUpdates.role = updates.role;
+      if (updates.loginCode !== undefined) dbUpdates.login_code = updates.loginCode;
       // email is handled by auth, isAdmin usually restricted
 
       const { error } = await supabase
@@ -93,7 +113,12 @@ export const apiAuth = {
         .update(dbUpdates)
         .eq('id', userId);
         
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') { // Unique violation error code
+            throw new Error('This login code is already taken. Please choose another one.');
+        }
+        throw error;
+      }
   }
 };
 

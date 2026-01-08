@@ -59,13 +59,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <p className="text-slate-500">Welcome back, {currentUser.name.split(' ')[0]}</p>
           </div>
           <div className="flex items-center gap-3">
-            <button 
-              onClick={onGenerateReport}
-              className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
-            >
-              <FileText size={20} className="text-indigo-500" />
-              <span className="hidden sm:inline">Weekly AI Summary</span>
-            </button>
+            {currentUser.isAdmin && (
+              <button 
+                onClick={onGenerateReport}
+                className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
+              >
+                <FileText size={20} className="text-indigo-500" />
+                <span className="hidden sm:inline">Weekly AI Summary</span>
+              </button>
+            )}
             <button 
               onClick={onAddDeadline}
               className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"

@@ -20,7 +20,7 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({ isOpen, onClose, onSubmi
       setStartDate(initialData.startDate);
       setEndDate(initialData.endDate);
       setType(initialData.type);
-      setReason(initialData.reason || '');
+      setReason(initialData.reason ?? '');
     } else if (isOpen) {
       setStartDate('');
       setEndDate('');

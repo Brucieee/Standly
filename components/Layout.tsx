@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, CheckSquare, History, LogOut, ExternalLink, Monitor, Palmtree } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, History, LogOut, ExternalLink, Monitor, Palmtree, Cloud } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,16 +22,22 @@ export const Layout: React.FC<LayoutProps> = ({
   userName,
   userRole,
 }) => {
-  const navItems = [
+  const mainNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'jira', label: 'Jira Board', icon: CheckSquare, href: 'https://cocogenproduct.atlassian.net/jira/software/projects/ECPM/boards/1/timeline' },
     { id: 'history', label: 'History', icon: History },
     { id: 'leaves', label: 'Leaves', icon: Palmtree },
+  ];
+
+  const quickLinks = [
+    { id: 'jira', label: 'Jira Board', icon: CheckSquare, href: 'https://cocogenproduct.atlassian.net/jira/software/projects/ECPM/boards/1/timeline' },
+    { id: 'onedrive', label: 'OneDrive', icon: Cloud, href: 'https://cocogencom-my.sharepoint.com/personal/jp_salvador_cocogen_com/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjp%5Fsalvador%5Fcocogen%5Fcom%2FDocuments%2FInnovation%20Division%2FInnovation%20Division%20Shared%20Drive&ga=1' },
     { id: 'virtual-office', label: 'Virtual Office', icon: Monitor },
   ].filter(item => {
     if (item.id === 'jira' && userRole === 'Intern') return false;
     return true;
   });
+
+  const allNavItems = [...mainNavItems, ...quickLinks];
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
@@ -48,7 +54,7 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
 
           <nav className="space-y-1">
-            {navItems.map((item) => (
+            {mainNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {
@@ -72,6 +78,33 @@ export const Layout: React.FC<LayoutProps> = ({
               </button>
             ))}
           </nav>
+
+          <div className="mt-8">
+            <h3 className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Quick Links
+            </h3>
+            <nav className="space-y-1">
+              {quickLinks.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.href) {
+                      window.open(item.href, '_blank');
+                    } else if (item.id === 'virtual-office') {
+                      onOpenVirtualOffice();
+                    } else {
+                      onTabChange(item.id);
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all"
+                >
+                  <item.icon size={20} />
+                  {item.label}
+                  {item.href && <ExternalLink size={14} className="ml-auto opacity-50" />}
+                </button>
+              ))}
+            </nav>
+          </div>
         </div>
 
         <div className="mt-auto p-6 border-t border-slate-100">
@@ -123,7 +156,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
         {/* Mobile Nav */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-2 flex justify-around z-30 pb-safe">
-           {navItems.map((item) => (
+           {allNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => {

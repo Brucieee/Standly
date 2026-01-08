@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Standup, Deadline, User } from '../types';
 import { Timeline } from './timeline';
+import { Edit2, Trash2 } from 'lucide-react';
 
 interface HistoryProps {
   standups: Standup[];
   deadlines: Deadline[];
   users: User[];
+  currentUser: User | null;
+  onEditDeadline: (deadline: Deadline) => void;
+  onDeleteDeadline: (id: string) => void;
 }
 
-export const History: React.FC<HistoryProps> = ({ standups, deadlines, users }) => {
+export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, currentUser, onEditDeadline, onDeleteDeadline }) => {
   const [activeTab, setActiveTab] = useState<'standups' | 'deadlines'>('standups');
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
@@ -48,6 +52,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users }) 
                   <th className="px-6 py-4 font-semibold text-slate-700">Yesterday</th>
                   <th className="px-6 py-4 font-semibold text-slate-700">Today</th>
                   <th className="px-6 py-4 font-semibold text-slate-700">Blockers</th>
+                  <th className="px-6 py-4 font-semibold text-slate-700">Links</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -69,11 +74,24 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users }) 
                     <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={standup.blockers}>
                       {standup.blockers || <span className="text-slate-400 italic">None</span>}
                     </td>
+                    <td className="px-6 py-4">
+                      {standup.jiraLinks && standup.jiraLinks.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {standup.jiraLinks.map((link, i) => (
+                            <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-xs whitespace-nowrap">
+                              Ticket #{i + 1}
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic text-xs">None</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {standups.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No standup records found.</td>
+                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No standup records found.</td>
                   </tr>
                 )}
               </tbody>
@@ -101,9 +119,29 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users }) 
                             View Release Link
                           </a>
                         )}
-                        <div className="flex items-center gap-2">
-                           <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
-                           <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                             <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
+                             <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
+                          </div>
+                          {currentUser?.isAdmin && (
+                            <div className="flex gap-1">
+                              <button 
+                                onClick={() => onEditDeadline(deadline)} 
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                title="Edit Deadline"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button 
+                                onClick={() => onDeleteDeadline(deadline.id)} 
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete Deadline"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )

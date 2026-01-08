@@ -13,6 +13,7 @@ export interface User {
   avatar: string;
   role: UserRole;
   isAdmin: boolean;
+  loginCode?: string;
 }
 
 export interface Standup {

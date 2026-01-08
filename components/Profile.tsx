@@ -1,19 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { User } from '../types';
-import { User as UserIcon, Camera, Save } from 'lucide-react';
+import { User as UserIcon, Camera, Save, KeyRound, CheckCircle2 } from 'lucide-react';
 import { apiUsers } from '../services/api';
 
 interface ProfileProps {
   user: User;
-  onUpdate: (data: Partial<User>) => void;
+  onUpdate: (data: Partial<User>) => Promise<void>;
 }
 
 export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
   const [name, setName] = useState(user.name);
   const [avatar, setAvatar] = useState(user.avatar);
+  const [loginCode, setLoginCode] = useState(user.loginCode || '');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,15 +29,18 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
+    setShowSuccess(false);
     try {
       let avatarUrl = avatar;
       if (selectedFile) {
         avatarUrl = await apiUsers.uploadAvatar(user.id, selectedFile);
       }
-      onUpdate({ name, avatar: avatarUrl });
-    } catch (error) {
-      console.error('Failed to upload avatar', error);
-      alert('Failed to upload avatar');
+      await onUpdate({ name, avatar: avatarUrl, loginCode });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error: any) {
+      console.error('Failed to update profile', error);
+      alert(error.message || 'Failed to update profile');
     } finally {
       setUploading(false);
     }
@@ -85,9 +90,31 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Secret Login Code (6 Digits)</label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  value={loginCode}
+                  onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all tracking-widest font-mono"
+                  placeholder="000000"
+                  maxLength={6}
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Used for quick login. Must be unique.</p>
+            </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex justify-end">
+          <div className="pt-4 border-t border-slate-100 flex justify-end items-center gap-4">
+            {showSuccess && (
+              <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg animate-fade-in">
+                <CheckCircle2 size={16} />
+                <span className="text-sm font-medium">Saved successfully</span>
+              </div>
+            )}
             <button
               type="submit"
               disabled={uploading}

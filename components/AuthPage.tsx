@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { UserRole } from '../types';
-import { LogIn, UserPlus, Mail, Lock, User, Briefcase } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User, Briefcase, KeyRound } from 'lucide-react';
 
 interface AuthPageProps {
   onLogin: (email: string, password: string) => void;
+  onCodeLogin: (code: string) => void;
   onRegister: (email: string, password: string, name: string, role: string) => void;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister }) => {
+export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginCode, setLoginCode] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<string>(UserRole.DEVELOPER);
   const [customRole, setCustomRole] = useState('');
@@ -18,7 +21,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLogin) {
-      onLogin(email, password);
+      if (loginMethod === 'email') {
+        onLogin(email, password);
+      } else {
+        onCodeLogin(loginCode);
+      }
     } else {
       const finalRole = role === 'Others' ? customRole : role;
       if (role === 'Others' && !customRole.trim()) {
@@ -40,12 +47,33 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister }) => {
               className="h-12 mx-auto mb-4" 
             />
             <h1 className="text-2xl font-bold text-slate-900">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+              {isLogin ? (loginMethod === 'code' ? 'Enter Access Code' : 'Welcome Back') : 'Create Account'}
             </h1>
             <p className="text-slate-500 mt-2">
-              {isLogin ? 'Sign in to access your workspace' : 'Join your team on Standly'}
+              {isLogin 
+                ? (loginMethod === 'code' ? 'Enter your 6-digit secret code to login' : 'Sign in to access your workspace') 
+                : 'Join your team on Standly'}
             </p>
           </div>
+
+          {isLogin && (
+            <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+              <button
+                type="button"
+                onClick={() => setLoginMethod('email')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${loginMethod === 'email' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Email & Password
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginMethod('code')}
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${loginMethod === 'code' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                Secret Code
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
@@ -101,41 +129,66 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister }) => {
               </>
             )}
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
-                  placeholder="john@example.com"
-                />
+            {isLogin && loginMethod === 'code' ? (
+              <div className="py-2">
+                <div className="relative">
+                  <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500" size={24} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    required
+                    value={loginCode}
+                    onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-indigo-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all tracking-[0.5em] font-mono text-center text-2xl font-bold text-indigo-900 placeholder:text-slate-300"
+                    placeholder="000000"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </div>
+                <p className="text-center text-xs text-slate-400 mt-4">
+                  Enter the 6-digit code from your profile settings
+                </p>
               </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             <button
               type="submit"
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] mt-6"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLogin ? (loginMethod === 'code' ? 'Login with Code' : 'Sign In') : 'Create Account'}
             </button>
           </form>
 

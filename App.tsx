@@ -14,6 +14,7 @@ import { History } from './components/History';
 import { SuccessModal } from './components/SuccessModal';
 import { VirtualOfficeModal } from './components/VirtualOfficeModal';
 import { LeaveCalendar } from './components/LeaveCalendar';
+import { CodeErrorModal } from './components/CodeErrorModal';
 import { LeaveModal } from './components/LeaveModal';
 import { ViewLeaveModal } from './components/ViewLeaveModal';
 
@@ -72,7 +73,13 @@ const App: React.FC = () => {
       document.head.appendChild(newLink);
     }
 
-    checkSession();
+    // Check for code login first, otherwise check supabase session
+    const storedCode = localStorage.getItem('standly_login_code');
+    if (storedCode) {
+      handleCodeLogin(storedCode);
+    } else {
+      checkSession();
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
@@ -131,6 +138,19 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCodeLogin = async (code: string) => {
+    try {
+      const user = await apiAuth.loginWithCode(code);
+      setState(prev => ({ ...prev, currentUser: user }));
+      localStorage.setItem('standly_login_code', code); // Persist login
+      await loadData();
+    } catch (error: any) {
+      console.error('Code login failed', error);
+      localStorage.removeItem('standly_login_code'); // Clear invalid code
+      alert(error.message || 'Invalid login code.');
+    }
+  };
+
   const handleRegister = async (email: string, password: string, name: string, role: string) => {
     try {
       const { user, session } = await apiAuth.signUp(email, password, name, role);
@@ -146,6 +166,7 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await apiAuth.signOut();
+    localStorage.removeItem('standly_login_code');
     setActiveTab('dashboard');
   };
 
@@ -314,7 +335,7 @@ const App: React.FC = () => {
       }));
     } catch (error) {
         console.error('Failed to update profile', error);
-        alert('Failed to update profile.');
+        alert(error.message || 'Failed to update profile.');
     }
   };
 
@@ -385,7 +406,7 @@ const App: React.FC = () => {
   if (!state.currentUser) {
     return (
       <>
-        <AuthPage key={authKey} onLogin={handleLogin} onRegister={handleRegister} />
+        <AuthPage key={authKey} onLogin={handleLogin} onCodeLogin={handleCodeLogin} onRegister={handleRegister} />
         <SuccessModal 
           isOpen={successModalOpen} 
           onClose={() => setSuccessModalOpen(false)}
@@ -397,7 +418,8 @@ const App: React.FC = () => {
   }
 
   return (
-    <Layout 
+    <>
+      <Layout 
       activeTab={activeTab} 
       onTabChange={setActiveTab}
       onLogout={handleLogout}
@@ -432,6 +454,9 @@ const App: React.FC = () => {
           standups={sortedStandups}
           deadlines={state.deadlines}
           users={state.users}
+          currentUser={state.currentUser}
+          onEditDeadline={handleEditDeadline}
+          onDeleteDeadline={handleDeleteDeadline}
         />
       )}
 
@@ -452,6 +477,7 @@ const App: React.FC = () => {
       {activeTab === 'profile' && (
         <Profile user={state.currentUser} onUpdate={handleUpdateProfile} />
       )}
+      </Layout>
 
       <StandupModal 
         isOpen={isModalOpen} 
@@ -517,7 +543,7 @@ const App: React.FC = () => {
         message={confirmModal.message}
         isDestructive={confirmModal.isDestructive}
       />
-    </Layout>
+    </>
   );
 };
 

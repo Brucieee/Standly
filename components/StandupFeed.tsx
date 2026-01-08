@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Standup, User } from '../types';
 import { Trash2, Edit2, Clock, X, CheckCircle2, AlertCircle, ExternalLink, Smile, Meh, Frown, Eye } from 'lucide-react';
 
@@ -56,6 +57,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
               const isViewed = standup.views?.includes(currentUserId);
               const creationDate = standup.createdAt ? new Date(standup.createdAt) : new Date(standup.date);
               const timeStr = creationDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const hasLinks = standup.jiraLinks && standup.jiraLinks.length > 0;
 
               return (
                 <div 
@@ -130,6 +132,26 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                       </div>
                     )}
                   </div>
+
+                  {/* Jira Links on Card */}
+                  {hasLinks && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {standup.jiraLinks!.map((link, i) => (
+                        <a 
+                          key={i}
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md hover:bg-indigo-100 transition-colors border border-indigo-100"
+                          title={link}
+                        >
+                          <ExternalLink size={10} />
+                          Ticket {i + 1}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -144,8 +166,8 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
       )}
     </div>
 
-    {selectedStandup && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedStandup(null)}>
+    {selectedStandup && createPortal(
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedStandup(null)}>
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-up" onClick={e => e.stopPropagation()}>
           {/* Header */}
           <div className="p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
@@ -249,7 +271,8 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
              </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
     </>
   );
