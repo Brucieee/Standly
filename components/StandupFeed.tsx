@@ -29,29 +29,29 @@ interface StandupFeedProps {
 export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, currentUserId, onDelete, onEdit, onView, onReact, onComment, onEditComment, onDeleteComment }) => {
   const [selectedStandupId, setSelectedStandupId] = useState<string | null>(null);
   const storageKey = `standly_read_counts_${currentUserId}`;
-  
-  // Initialize read counts from local storage
-  const [readCounts, setReadCounts] = useState<Record<string, number>>(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
-  });
+  const [readCounts, setReadCounts] = useState<Record<string, number>>({});
 
   // Sync with local storage when user changes or on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey);
-      if (stored) setReadCounts(JSON.parse(stored));
-    } catch { /* ignore */ }
+      // If there's stored data, parse and set it. Otherwise, reset to an empty object.
+      // This ensures that changing users doesn't leave stale read counts in state.
+      setReadCounts(stored ? JSON.parse(stored) : {});
+    } catch {
+      // If parsing fails, reset to an empty object.
+      setReadCounts({});
+    }
   }, [storageKey]);
 
   const updateReadCount = (standupId: string, count: number) => {
-    const newCounts = { ...readCounts, [standupId]: count };
-    setReadCounts(newCounts);
-    localStorage.setItem(storageKey, JSON.stringify(newCounts));
+    // Use a functional update to ensure we're always working with the latest state,
+    // preventing race conditions and ensuring previously read counts are preserved.
+    setReadCounts(prevCounts => {
+      const newCounts = { ...prevCounts, [standupId]: count };
+      localStorage.setItem(storageKey, JSON.stringify(newCounts));
+      return newCounts;
+    });
   };
 
   const selectedStandup = selectedStandupId ? standups.find(s => s.id === selectedStandupId) || null : null;

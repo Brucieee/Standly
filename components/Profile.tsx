@@ -143,7 +143,20 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
       if (selectedFile) {
         avatarUrl = await apiUsers.uploadAvatar(user.id, selectedFile);
       }
-      await onUpdate({ name, avatar: avatarUrl, loginCode });
+      
+      const updates: Partial<User> = {};
+      if (name !== user.name) updates.name = name;
+      if (avatarUrl !== user.avatar) updates.avatar = avatarUrl;
+      
+      // Only update login code if it's not empty and has changed
+      if (loginCode && loginCode !== user.loginCode) {
+        updates.loginCode = loginCode;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await onUpdate(updates);
+      }
+      
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error: any) {
