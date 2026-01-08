@@ -333,15 +333,15 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
             })}
           </div>
         ) : (
-        <div className="flex-1 p-0 lg:p-6 flex flex-col min-h-0 animate-fade-in-up">
-          <div className="grid grid-cols-7 gap-1 lg:gap-4 mb-2 flex-shrink-0">
+        <div className="flex-1 p-0 lg:p-6 flex flex-col min-h-0 animate-fade-in-up w-full max-w-full">
+          <div className="grid grid-cols-7 gap-px lg:gap-4 mb-2 flex-shrink-0 w-full">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
               <div key={day} className="text-center text-xs lg:text-sm font-bold text-slate-400 uppercase tracking-wider">
                 {day.slice(0, 3)}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1 lg:gap-4 flex-1 lg:min-h-0 min-h-[400px]" style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}>
+          <div className="grid grid-cols-7 gap-px lg:gap-4 flex-1 lg:min-h-0 min-h-[400px] w-full max-w-full" style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}>
             {Array.from({ length: firstDay }).map((_, i) => (
               <div key={`empty-${i}`} className="" />
             ))}
@@ -356,7 +356,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                 <div 
                   key={day} 
                   className={`
-                    p-1 lg:p-3 rounded-lg lg:rounded-2xl border transition-all duration-300 relative group flex flex-col overflow-hidden min-w-0
+                    p-0.5 lg:p-3 rounded-md lg:rounded-2xl border transition-all duration-300 relative group flex flex-col overflow-hidden min-w-0
                     ${holiday ? 'bg-red-50 border-red-100' : isHoveredUserOnLeave 
                       ? 'bg-indigo-50 border-indigo-200 shadow-md scale-105 z-10' 
                       : isToday 
@@ -365,7 +365,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                     }
                   `}
                 >
-                  <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{day}</span>
+                  <span className={`text-xs lg:text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{day}</span>
                   
                   {holiday && (
                     <div className="mb-1 min-w-0">
