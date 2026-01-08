@@ -341,7 +341,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-px lg:gap-4 flex-1 lg:min-h-0 min-h-[400px] w-full max-w-full" style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}>
+          <div className="grid grid-cols-7 gap-px lg:gap-4 flex-1 lg:min-h-0 w-full max-w-full" style={{ gridTemplateRows: `repeat(${numRows}, 1fr)` }}>
             {Array.from({ length: firstDay }).map((_, i) => (
               <div key={`empty-${i}`} className="" />
             ))}
