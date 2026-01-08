@@ -134,7 +134,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                 <div className="relative">
                   <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-500" size={24} />
                   <input
-                    type="text"
+                    type="password"
                     inputMode="numeric"
                     pattern="[0-9]*"
                     required
