@@ -30,7 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
   const quickLinks = [
     { id: 'jira', label: 'Jira Board', icon: CheckSquare, href: 'https://cocogenproduct.atlassian.net/jira/software/projects/ECPM/boards/1/timeline' },
-    { id: 'onedrive', label: 'OneDrive', icon: Cloud, href: 'https://cocogencom-my.sharepoint.com/personal/jp_salvador_cocogen_com/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fjp%5Fsalvador%5Fcocogen%5Fcom%2FDocuments%2FInnovation%20Division%2FInnovation%20Division%20Shared%20Drive&ga=1' },
+    { id: 'onedrive', label: 'OneDrive', icon: Cloud, href: 'https://teams.microsoft.com/l/message/19:be663b44-7c7b-4a5b-867a-cfd654a2e22e_c479d6c3-3508-4b17-a6c3-b3e2e909087a@unq.gbl.spaces/1767832518597?context=%7B%22contextType%22%3A%22chat%22%7D' },
     { id: 'virtual-office', label: 'Virtual Office', icon: Monitor },
   ].filter(item => {
     if (item.id === 'jira' && userRole === 'Intern') return false;
@@ -46,11 +46,15 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8">
             <img 
-              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_1.png" 
+              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo.png" 
               alt="Standly" 
               className="h-8" 
             />
-            <span className="font-bold text-xl text-slate-900">Standly</span>
+            <img 
+              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_text.png" 
+              alt="Standly" 
+              className="h-6" 
+            />
           </div>
 
           <nav className="space-y-1">

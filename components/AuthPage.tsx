@@ -44,7 +44,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
             <img 
               src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_1.png" 
               alt="Standly" 
-              className="h-12 mx-auto mb-4" 
+              className="h-60 mx-auto mb-4" 
             />
             <h1 className="text-2xl font-bold text-slate-900">
               {isLogin ? (loginMethod === 'code' ? 'Enter Access Code' : 'Welcome Back') : 'Create Account'}
