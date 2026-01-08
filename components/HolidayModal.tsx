@@ -4,13 +4,27 @@ import { X } from 'lucide-react';
 interface HolidayModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (date: string, name: string) => Promise<void>;
+  onSubmit: (date: string, name: string, id?: string) => Promise<void>;
+  initialData?: { id: string; date: string; name: string } | null;
 }
 
-export const HolidayModal: React.FC<HolidayModalProps> = ({ isOpen, onClose, onSubmit }) => {
+export const HolidayModal: React.FC<HolidayModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [date, setDate] = useState('');
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset form when modal opens/closes or initialData changes
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setDate(initialData.date);
+        setName(initialData.name);
+      } else {
+        setDate('');
+        setName('');
+      }
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +32,7 @@ export const HolidayModal: React.FC<HolidayModalProps> = ({ isOpen, onClose, onS
     
     setIsSubmitting(true);
     try {
-      await onSubmit(date, name);
+      await onSubmit(date, name, initialData?.id);
       setDate('');
       setName('');
       onClose();
@@ -30,10 +44,10 @@ export const HolidayModal: React.FC<HolidayModalProps> = ({ isOpen, onClose, onS
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-slate-900">Add Holiday</h2>
+          <h2 className="text-xl font-bold text-slate-900">{initialData ? 'Edit Holiday' : 'Add Holiday'}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
         </div>
 
@@ -51,7 +65,7 @@ export const HolidayModal: React.FC<HolidayModalProps> = ({ isOpen, onClose, onS
           <div className="flex gap-3 pt-4">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg">Cancel</button>
             <button type="submit" disabled={isSubmitting} className="flex-1 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-              {isSubmitting ? 'Adding...' : 'Add Holiday'}
+              {isSubmitting ? 'Saving...' : initialData ? 'Save Changes' : 'Add Holiday'}
             </button>
           </div>
         </form>

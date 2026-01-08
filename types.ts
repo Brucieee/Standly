@@ -1,5 +1,5 @@
 export enum UserRole {
-  DEVELOPER = 'Developer',
+  DEVELOPER = 'Software Developer',
   QA = 'Quality Assurance',
   PRODUCT_OWNER = 'Product Owner',
   PRODUCT_MANAGER = 'Product Manager',

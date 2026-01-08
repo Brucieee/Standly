@@ -163,11 +163,11 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
             <select value={type} onChange={e => setType(e.target.value as any)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-              <option value="vacation">🏖️ Vacation</option>
+              <option value="vacation">🏖️ Vacation Leave</option>
               <option value="sick">🤒 Sick Leave</option>
-              <option value="personal">🏠 Personal</option>
-              <option value="wellness">🧘 Wellness</option>
-              <option value="birthday">🎂 Birthday</option>
+              <option value="personal">🏠 Personal Leave</option>
+              <option value="wellness">🧘 Wellness Leave</option>
+              <option value="birthday">🎂 Birthday Leave</option>
             </select>
           </div>
 

@@ -85,7 +85,7 @@ export const apiAuth = {
             email: user.email,
             name: user.user_metadata.name || user.email?.split('@')[0] || 'User',
             avatar: user.user_metadata.avatar || '',
-            role: user.user_metadata.role || 'Developer'
+            role: user.user_metadata.role || 'Software Developer'
         });
 
         // Fallback if profile doesn't exist yet (should generally exist after trigger)

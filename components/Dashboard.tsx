@@ -1,20 +1,23 @@
 import React from 'react';
-import { User, Standup, Deadline } from '../types';
+import { User, Standup, Deadline, Leave } from '../types';
 import { Plus, Flag, FileText } from 'lucide-react';
 import { DeadlinesWidget } from './DeadlinesWidget';
 import { StandupFeed } from './StandupFeed';
 import { CalendarWidget } from './CalendarWidget';
+import { AnnouncementsWidget } from './AnnouncementsWidget';
 
 interface DashboardProps {
   currentUser: User;
   users: User[];
   standups: Standup[];
   deadlines: Deadline[];
+  leaves: Leave[];
   onGenerateReport: () => void;
   onAddDeadline: () => void;
   onNewStandup: () => void;
   onDeleteDeadline: (id: string) => void;
   onEditDeadline: (deadline: Deadline) => void;
+  onViewDeadline: (deadline: Deadline) => void;
   onEditStandup: (standup: Standup) => void;
   onDeleteStandup: (id: string) => void;
   onViewStandup: (standup: Standup) => void;
@@ -30,11 +33,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   users,
   standups,
   deadlines,
+  leaves,
   onGenerateReport,
   onAddDeadline,
   onNewStandup,
   onDeleteDeadline,
   onEditDeadline,
+  onViewDeadline,
   onEditStandup,
   onDeleteStandup,
   onViewStandup,
@@ -98,6 +103,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           users={users}
           onDelete={(id) => onDeleteDeadline(id)}
           onEdit={onEditDeadline}
+          onView={onViewDeadline}
         />
         <StandupFeed 
           standups={standups} 
@@ -120,6 +126,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           userId={currentUser.id} 
           onDateClick={onCalendarDateClick}
         />
+        <AnnouncementsWidget users={users} leaves={leaves} />
       </div>
     </div>
   );

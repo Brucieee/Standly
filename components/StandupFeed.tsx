@@ -162,7 +162,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                           {user?.name || 'Unknown User'}
                         </h3>
                         <p className="text-xs font-medium text-indigo-500 mb-0.5">
-                          {user?.role || 'Developer'}
+                          {user?.role || 'Software Developer'}
                         </p>
                         <div className="flex justify-between items-end">
                           <p className="text-[10px] text-slate-400 flex items-center gap-1 font-medium uppercase tracking-wide">

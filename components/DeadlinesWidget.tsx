@@ -7,9 +7,10 @@ interface DeadlinesWidgetProps {
   users: User[];
   onDelete: (id: string) => void;
   onEdit: (deadline: Deadline) => void;
+  onView: (deadline: Deadline) => void;
 }
 
-export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, users, onDelete, onEdit }) => {
+export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, users, onDelete, onEdit, onView }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -24,7 +25,11 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const isOverdue = dueDate < new Date();
 
           return (
-            <div key={deadline.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full">
+            <div 
+              key={deadline.id} 
+              onClick={() => onView(deadline)}
+              className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col h-full cursor-pointer"
+            >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2 min-w-0">
                   <div className={`p-2 rounded-lg shrink-0 ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-indigo-50 text-indigo-600'}`}>
@@ -38,10 +43,16 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                   </div>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                   <button onClick={() => onEdit(deadline)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                   <button 
+                     onClick={(e) => { e.stopPropagation(); onEdit(deadline); }} 
+                     className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                   >
                      <Edit2 size={14} />
                    </button>
-                   <button onClick={() => onDelete(deadline.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                   <button 
+                     onClick={(e) => { e.stopPropagation(); onDelete(deadline.id); }} 
+                     className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                   >
                      <Trash2 size={14} />
                    </button>
                 </div>
@@ -68,6 +79,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                  {deadline.releaseLink && (
                    <a 
                      href={deadline.releaseLink}
+                     onClick={(e) => e.stopPropagation()}
                      target="_blank"
                      rel="noopener noreferrer"
                      className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1 shrink-0 ml-2"

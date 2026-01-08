@@ -18,7 +18,10 @@ import { LeaveCalendar } from './components/LeaveCalendar';
 import { CodeErrorModal } from './components/CodeErrorModal';
 import { LeaveModal } from './components/LeaveModal';
 import { ViewLeaveModal } from './components/ViewLeaveModal';
+import { ViewDeadlineModal } from './components/ViewDeadlineModal';
 import { HolidayModal } from './components/HolidayModal';
+import { HolidayManagerModal } from './components/HolidayManagerModal';
+import { AnnouncementsWidget } from './components/AnnouncementsWidget';
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -50,9 +53,13 @@ const App: React.FC = () => {
   const [isVirtualOfficeModalOpen, setIsVirtualOfficeModalOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isViewLeaveModalOpen, setIsViewLeaveModalOpen] = useState(false);
+  const [isViewDeadlineModalOpen, setIsViewDeadlineModalOpen] = useState(false);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
+  const [viewingDeadline, setViewingDeadline] = useState<Deadline | null>(null);
   const [editingLeave, setEditingLeave] = useState<Leave | null>(null);
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
+  const [isHolidayManagerOpen, setIsHolidayManagerOpen] = useState(false);
+  const [editingHoliday, setEditingHoliday] = useState<{ id: string; date: string; name: string } | null>(null);
   const [authKey, setAuthKey] = useState(0); // Used to reset AuthPage state
 
   // Confirmation Modal State
@@ -309,7 +316,9 @@ const App: React.FC = () => {
 
   const handleOpenNewStandup = () => {
     setEditingStandup(null);
-    setModalInitialDate(new Date().toISOString().split('T')[0]);
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setModalInitialDate(localDate);
     setIsModalOpen(true);
   };
 
@@ -501,6 +510,7 @@ const App: React.FC = () => {
             standups: prev.standups.filter(s => s.id !== id)
           }));
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          setIsModalOpen(false);
         } catch (error) {
           console.error('Failed to delete standup', error);
           alert('Failed to delete standup.');
@@ -541,6 +551,11 @@ const App: React.FC = () => {
   const handleEditDeadline = (deadline: Deadline) => {
     setEditingDeadline(deadline);
     setIsDeadlineModalOpen(true);
+  };
+
+  const handleViewDeadline = (deadline: Deadline) => {
+    setViewingDeadline(deadline);
+    setIsViewDeadlineModalOpen(true);
   };
 
   const handleDeleteDeadline = (taskId: string) => {
@@ -666,11 +681,21 @@ const App: React.FC = () => {
     });
   };
 
-  const handleSaveHoliday = async (date: string, name: string) => {
+  const handleSaveHoliday = async (date: string, name: string, id?: string) => {
     try {
-      const { data, error } = await supabase.from('holidays').insert({ date, name }).select().single();
-      if (error) throw error;
-      setState(prev => ({ ...prev, holidays: [...(prev.holidays || []), data] }));
+      if (id) {
+        const { error } = await supabase.from('holidays').update({ date, name }).eq('id', id);
+        if (error) throw error;
+        setState(prev => ({ 
+          ...prev, 
+          holidays: (prev.holidays || []).map(h => h.id === id ? { ...h, date, name } : h)
+        }));
+        setEditingHoliday(null);
+      } else {
+        const { data, error } = await supabase.from('holidays').insert({ date, name }).select().single();
+        if (error) throw error;
+        setState(prev => ({ ...prev, holidays: [...(prev.holidays || []), data] }));
+      }
     } catch (error) {
       console.error('Failed to save holiday', error);
       if ((error as any).code === '42501') {
@@ -696,20 +721,6 @@ const App: React.FC = () => {
         alert('Failed to delete holiday.');
       }
     }
-  };
-
-  const getPreviousStandup = () => {
-    if (!state.currentUser) return undefined;
-    const targetDate = editingStandup ? editingStandup.date : modalInitialDate;
-    
-    // Filter user's standups
-    const userStandups = state.standups.filter(s => s.userId === state.currentUser?.id);
-    
-    // Sort descending
-    const sorted = [...userStandups].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    // Find first one strictly before targetDate
-    return sorted.find(s => s.date < targetDate);
   };
 
   const handleLeaveClick = (leave: Leave) => {
@@ -758,6 +769,7 @@ const App: React.FC = () => {
           users={state.users}
           standups={sortedStandups}
           deadlines={state.deadlines}
+          leaves={state.leaves}
           onGenerateReport={() => setIsSummaryModalOpen(true)}
           onAddDeadline={() => {
             setEditingDeadline(null);
@@ -766,6 +778,7 @@ const App: React.FC = () => {
           onNewStandup={handleOpenNewStandup}
           onDeleteDeadline={handleDeleteDeadline}
           onEditDeadline={handleEditDeadline}
+          onViewDeadline={handleViewDeadline}
           onEditStandup={handleEditStandup}
           onDeleteStandup={handleDeleteStandup}
           onViewStandup={handleViewStandup}
@@ -801,7 +814,7 @@ const App: React.FC = () => {
           }}
           onDeleteLeave={handleDeleteLeave}
           onLeaveClick={handleLeaveClick}
-          onAddHoliday={() => setIsHolidayModalOpen(true)}
+          onAddHoliday={() => setIsHolidayManagerOpen(true)}
           onDeleteHoliday={handleDeleteHoliday}
         />
       )}
@@ -818,7 +831,7 @@ const App: React.FC = () => {
         initialData={editingStandup}
         initialDate={modalInitialDate}
         onDelete={editingStandup ? () => handleDeleteStandup(editingStandup.id) : undefined}
-        previousStandup={getPreviousStandup()}
+        userStandups={state.standups.filter(s => s.userId === state.currentUser?.id)}
       />
 
       <DeadlineModal
@@ -845,6 +858,22 @@ const App: React.FC = () => {
         onDelete={editingLeave ? () => handleDeleteLeave(editingLeave.id) : undefined}
       />
 
+      <ViewDeadlineModal
+        isOpen={isViewDeadlineModalOpen}
+        onClose={() => setIsViewDeadlineModalOpen(false)}
+        deadline={viewingDeadline}
+        creator={state.users.find(u => u.id === viewingDeadline?.creatorId)}
+        onEdit={(deadline) => {
+          setIsViewDeadlineModalOpen(false);
+          setEditingDeadline(deadline);
+          setIsDeadlineModalOpen(true);
+        }}
+        onDelete={(id) => {
+          setIsViewDeadlineModalOpen(false);
+          handleDeleteDeadline(id);
+        }}
+      />
+
       <ViewLeaveModal
         isOpen={isViewLeaveModalOpen}
         onClose={() => setIsViewLeaveModalOpen(false)}
@@ -864,8 +893,27 @@ const App: React.FC = () => {
 
       <HolidayModal
         isOpen={isHolidayModalOpen}
-        onClose={() => setIsHolidayModalOpen(false)}
+        onClose={() => {
+          setIsHolidayModalOpen(false);
+          setEditingHoliday(null);
+        }}
         onSubmit={handleSaveHoliday}
+        initialData={editingHoliday}
+      />
+
+      <HolidayManagerModal
+        isOpen={isHolidayManagerOpen}
+        onClose={() => setIsHolidayManagerOpen(false)}
+        holidays={state.holidays || []}
+        onAdd={() => {
+          setEditingHoliday(null);
+          setIsHolidayModalOpen(true);
+        }}
+        onEdit={(holiday) => {
+          setEditingHoliday(holiday);
+          setIsHolidayModalOpen(true);
+        }}
+        onDelete={handleDeleteHoliday}
       />
 
       {isSummaryModalOpen && (

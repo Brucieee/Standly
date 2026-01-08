@@ -27,11 +27,11 @@ export const ViewLeaveModal: React.FC<ViewLeaveModalProps> = ({
 
   const getLeaveLabel = (type: string) => {
     switch (type) {
-      case 'vacation': return '🏖️ Vacation';
+      case 'vacation': return '🏖️ Vacation Leave';
       case 'sick': return '🤒 Sick Leave';
-      case 'personal': return '🏠 Personal';
-      case 'wellness': return '🧘 Wellness';
-      case 'birthday': return '🎂 Birthday';
+      case 'personal': return '🏠 Personal Leave';
+      case 'wellness': return '🧘 Wellness Leave';
+      case 'birthday': return '🎂 Birthday Leave';
       default: return type;
     }
   };

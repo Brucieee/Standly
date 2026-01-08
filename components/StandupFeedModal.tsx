@@ -271,8 +271,6 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                     );
                   })}
                 </div>
-                <div className="h-8 w-px bg-slate-200"></div>
-                <div className="text-sm text-slate-500"><span className="font-bold text-slate-900">{standup.reactions?.length || 0}</span> reactions</div>
               </div>
 
               {/* Who Reacted Section */}

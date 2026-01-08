@@ -15,7 +15,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
   const [password, setPassword] = useState('');
   const [loginCode, setLoginCode] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<string>(UserRole.DEVELOPER);
+  const [role, setRole] = useState<string>('');
   const [customRole, setCustomRole] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -27,6 +27,10 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
         onCodeLogin(loginCode);
       }
     } else {
+      if (!role) {
+        alert('Please select your position');
+        return;
+      }
       const finalRole = role === 'Others' ? customRole : role;
       if (role === 'Others' && !customRole.trim()) {
         alert('Please specify your position');
@@ -100,12 +104,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all appearance-none bg-white"
+                      required
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all appearance-none bg-white invalid:text-slate-400"
                     >
+                      <option value="" disabled>Select Position</option>
                       {Object.values(UserRole).map((r) => (
-                        <option key={r} value={r}>{r}</option>
+                        <option key={r} value={r} className="text-slate-900">{r}</option>
                       ))}
-                      <option value="Others">Others</option>
+                      <option value="Others" className="text-slate-900">Others</option>
                     </select>
                   </div>
                 </div>
