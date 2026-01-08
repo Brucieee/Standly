@@ -368,12 +368,12 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                   <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{day}</span>
                   
                   {holiday && (
-                    <div className="mb-1">
+                    <div className="mb-1 min-w-0">
                       <div 
-                        className="text-[10px] font-bold text-red-500 flex items-start justify-between group/holiday relative"
+                        className="text-[10px] font-bold text-red-500 flex items-start justify-between group/holiday relative min-w-0"
                         title={holiday.name}
                       >
-                        <span className="whitespace-normal break-words leading-tight">{holiday.name}</span>
+                        <span className="whitespace-normal break-words leading-tight min-w-0 flex-1">{holiday.name}</span>
                         {currentUserIsAdmin && (
                           <button onClick={(e) => { e.stopPropagation(); onDeleteHoliday(holiday.id); }} className="hover:text-red-700 shrink-0 ml-1 mt-0.5"><Trash2 size={10} /></button>
                         )}
@@ -395,7 +395,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                           key={leave.id}
                           onClick={(e) => { e.stopPropagation(); onLeaveClick(leave); }}
                           className={`
-                            text-[10px] px-2 py-1 rounded-md flex items-start justify-between gap-1 transition-all cursor-pointer
+                            text-[10px] px-2 py-1 rounded-md flex items-start justify-between gap-1 transition-all cursor-pointer min-w-0
                             ${isHovered ? 'opacity-100 font-bold shadow-sm' : hoveredUserId ? 'opacity-30' : 'opacity-100'}
                             ${isHovered ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}
                           `}
