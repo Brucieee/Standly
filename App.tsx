@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Layout } from './components/Layout';
+import { StandupFeedModal } from './components/StandupFeedModal';
 import { StandupModal } from './components/StandupModal';
 import { AuthPage } from './components/AuthPage';
 import { Profile } from './components/Profile';
@@ -61,6 +62,7 @@ const App: React.FC = () => {
   const [isHolidayManagerOpen, setIsHolidayManagerOpen] = useState(false);
   const [editingHoliday, setEditingHoliday] = useState<{ id: string; date: string; name: string } | null>(null);
   const [authKey, setAuthKey] = useState(0); // Used to reset AuthPage state
+  const [historyViewingStandupId, setHistoryViewingStandupId] = useState<string | null>(null);
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
@@ -733,6 +735,24 @@ const App: React.FC = () => {
     }
   };
 
+  const onHistoryViewStandup = async (standup: Standup) => {
+    setHistoryViewingStandupId(standup.id);
+    // Mark as viewed in background
+    if (state.currentUser && !standup.views?.includes(state.currentUser.id)) {
+      try {
+        await apiStandups.markViewed(standup.id, state.currentUser.id);
+        setState(prev => ({
+          ...prev,
+          standups: prev.standups.map(s => 
+            s.id === standup.id ? { ...s, views: [...(s.views || []), state.currentUser!.id] } : s
+          )
+        }));
+      } catch (error) {
+        console.error('Failed to mark standup as viewed', error);
+      }
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-500">Loading...</div>;
   }
@@ -751,6 +771,8 @@ const App: React.FC = () => {
       </>
     );
   }
+
+  const viewingStandupObject = historyViewingStandupId ? state.standups.find(s => s.id === historyViewingStandupId) : null;
 
   return (
     <>
@@ -798,6 +820,7 @@ const App: React.FC = () => {
           currentUser={state.currentUser}
           onEditDeadline={handleEditDeadline}
           onDeleteDeadline={handleDeleteDeadline}
+          onViewStandup={onHistoryViewStandup}
         />
       )}
 
@@ -833,6 +856,19 @@ const App: React.FC = () => {
         onDelete={editingStandup ? () => handleDeleteStandup(editingStandup.id) : undefined}
         userStandups={state.standups.filter(s => s.userId === state.currentUser?.id)}
       />
+
+      {viewingStandupObject && (
+        <StandupFeedModal
+          standup={viewingStandupObject}
+          users={state.users}
+          currentUserId={state.currentUser.id}
+          onClose={() => setHistoryViewingStandupId(null)}
+          onReact={handleReact}
+          onComment={handleComment}
+          onEditComment={handleEditComment}
+          onDeleteComment={handleDeleteComment}
+        />
+      )}
 
       <DeadlineModal
         isOpen={isDeadlineModalOpen}

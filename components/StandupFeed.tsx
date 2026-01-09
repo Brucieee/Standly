@@ -65,8 +65,15 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
     }
   };
 
+  // Filter standups to show only today's entries
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local time
+  const todaysStandups = standups.filter(s => {
+    const standupDate = s.date.includes('T') ? s.date.split('T')[0] : s.date;
+    return standupDate === today;
+  });
+
   // Group standups by date to create sections
-  const groupedStandups = standups.reduce((groups, standup) => {
+  const groupedStandups = todaysStandups.reduce((groups, standup) => {
     // Check if date string already has time component (contains 'T') to avoid double appending
     const dateStr = standup.date && standup.date.includes('T') ? standup.date : (standup.date + 'T00:00:00');
     const dateObj = new Date(dateStr);
@@ -271,9 +278,9 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
         </div>
       ))}
       
-      {standups.length === 0 && (
+      {todaysStandups.length === 0 && (
         <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-          <p className="text-slate-500">No standups yet. Be the first to post!</p>
+          <p className="text-slate-500">No Standup entries posted for today</p>
         </div>
       )}
     </div>

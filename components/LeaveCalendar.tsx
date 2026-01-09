@@ -130,7 +130,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-auto w-full min-w-0">
       {/* Sidebar - Users List */}
-      <div className="w-full lg:w-80 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden flex-shrink-0 min-w-0 h-fit sticky top-6">
+      <div className="w-full lg:w-80 bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col overflow-hidden flex-shrink-0 min-w-0 h-fit lg:sticky lg:top-6">
         {/* Header with Mobile Actions */}
         <div className="p-4 lg:p-6 border-b border-slate-100 flex justify-between items-center">
           <div>

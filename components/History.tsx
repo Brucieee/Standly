@@ -10,9 +10,10 @@ interface HistoryProps {
   currentUser: User | null;
   onEditDeadline: (deadline: Deadline) => void;
   onDeleteDeadline: (id: string) => void;
+  onViewStandup: (standup: Standup) => void;
 }
 
-export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, currentUser, onEditDeadline, onDeleteDeadline }) => {
+export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, currentUser, onEditDeadline, onDeleteDeadline, onViewStandup }) => {
   const [activeTab, setActiveTab] = useState<'standups' | 'deadlines'>('standups');
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
@@ -59,7 +60,11 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {standups.map((standup) => (
-                    <tr key={standup.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr 
+                      key={standup.id} 
+                      className="hover:bg-slate-50/50 transition-colors cursor-pointer"
+                      onClick={() => onViewStandup(standup)}
+                    >
                       <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
                         {new Date(standup.date).toLocaleDateString()}
                       </td>
@@ -80,7 +85,14 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                         {standup.jiraLinks && standup.jiraLinks.length > 0 ? (
                           <div className="flex flex-col gap-1">
                             {standup.jiraLinks.map((link, i) => (
-                              <a key={i} href={link} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-xs whitespace-nowrap">
+                              <a 
+                                key={i} 
+                                href={link} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-indigo-600 hover:underline text-xs whitespace-nowrap"
+                                onClick={(e) => e.stopPropagation()} // Prevent row click
+                              >
                                 Ticket #{i + 1}
                               </a>
                             ))}
@@ -103,7 +115,11 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-slate-100">
               {standups.map((standup) => (
-                <div key={standup.id} className="p-4 space-y-3">
+                <div 
+                  key={standup.id} 
+                  className="p-4 space-y-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                  onClick={() => onViewStandup(standup)}
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-sm font-bold">
