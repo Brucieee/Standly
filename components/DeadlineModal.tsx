@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Flag, Link as LinkIcon } from 'lucide-react';
+import { X, Calendar, Flag, Link as LinkIcon, CheckCircle, MessageSquare } from 'lucide-react';
 import { Deadline } from '../types';
 
 interface DeadlineModalProps {
@@ -7,13 +7,16 @@ interface DeadlineModalProps {
   onClose: () => void;
   onSubmit: (data: Omit<Deadline, 'id' | 'creatorId'>) => void;
   initialData?: Deadline | null;
+  onDelete?: () => void;
 }
 
-export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
+export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, onSubmit, initialData, onDelete }) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [releaseLink, setReleaseLink] = useState('');
   const [description, setDescription] = useState('');
+  const [status, setStatus] = useState('Pending');
+  const [remarks, setRemarks] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -22,11 +25,15 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
         setDate(initialData.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '');
         setReleaseLink(initialData.releaseLink || '');
         setDescription(initialData.description || '');
+        setStatus(initialData.status || 'Pending');
+        setRemarks(initialData.remarks || '');
       } else {
         setTitle('');
         setDate('');
         setReleaseLink('');
         setDescription('');
+        setStatus('Pending');
+        setRemarks('');
       }
     }
   }, [isOpen, initialData]);
@@ -49,6 +56,8 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
         description: description || undefined,
         dueDate,
         releaseLink: releaseLink || undefined,
+        status,
+        remarks,
       });
     } catch (error) {
       console.error('Invalid date:', error);
@@ -90,22 +99,42 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Due Date
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-              <input 
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                onClick={(e) => {
-                  try { if(e.currentTarget.showPicker) e.currentTarget.showPicker(); } catch(err) {}
-                }}
-                className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900 cursor-pointer"
-              />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Due Date
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                <input 
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  onClick={(e) => {
+                    try { if(e.currentTarget.showPicker) e.currentTarget.showPicker(); } catch(err) {}
+                  }}
+                  className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">
+                Status
+              </label>
+              <div className="relative">
+                <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900 appearance-none"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -136,13 +165,37 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
               className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-none h-20 text-slate-900"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-1">
+              Remarks
+            </label>
+            <div className="relative">
+              <MessageSquare className="absolute left-3 top-3 text-slate-400 pointer-events-none" size={18} />
+              <textarea
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Any remarks..."
+                className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-none h-20 text-slate-900"
+              />
+            </div>
+          </div>
         </form>
         </div>
-        <div className="p-6 border-t border-slate-100 flex-shrink-0 bg-white rounded-b-2xl">
+        <div className="p-6 border-t border-slate-100 flex-shrink-0 bg-white rounded-b-2xl flex gap-3">
+          {initialData && onDelete && (
+             <button
+              type="button"
+              onClick={onDelete}
+              className="px-4 py-2.5 rounded-lg font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-all"
+            >
+              Delete
+            </button>
+          )}
           <button
             type="submit"
             form="deadline-form"
-            className="w-full bg-red-600 text-white py-2.5 rounded-lg font-semibold hover:bg-red-700 active:scale-[0.98] transition-all shadow-md shadow-red-200"
+            className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-semibold hover:bg-red-700 active:scale-[0.98] transition-all shadow-md shadow-red-200"
           >
             {initialData ? 'Save Changes' : 'Set Deadline'}
           </button>

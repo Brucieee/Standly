@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, Edit2, Trash2, Flag, Link as LinkIcon, User as UserIcon } from 'lucide-react';
+import { X, Calendar, Edit2, Trash2, Flag, Link as LinkIcon, User as UserIcon, CheckCircle, MessageSquare } from 'lucide-react';
 import { Deadline, User } from '../types';
 
 interface ViewDeadlineModalProps {
@@ -22,7 +22,15 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
   if (!isOpen || !deadline) return null;
 
   const dueDate = new Date(deadline.dueDate);
-  const isOverdue = dueDate < new Date();
+  const isOverdue = dueDate < new Date() && deadline.status !== 'Completed';
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'Completed': return 'text-emerald-700 bg-emerald-100';
+      case 'In Progress': return 'text-blue-700 bg-blue-100';
+      default: return 'text-amber-700 bg-amber-100'; // Pending
+    }
+  };
 
   return (
     <div 
@@ -30,10 +38,10 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up" 
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col" 
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className={`p-2.5 rounded-xl ${isOverdue ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-600'}`}>
               <Flag size={24} />
@@ -48,7 +56,7 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto">
           <div className="flex items-start gap-4">
             <div className="p-2 bg-slate-50 rounded-lg text-slate-500 mt-0.5">
               <Calendar size={20} />
@@ -66,10 +74,29 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
             </div>
           </div>
 
+          <div className="flex items-start gap-4">
+             <div className="p-2 bg-slate-50 rounded-lg text-slate-500 mt-0.5">
+               <CheckCircle size={20} />
+             </div>
+             <div>
+               <p className="text-sm font-semibold text-slate-900">Status</p>
+               <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusColor(deadline.status)}`}>
+                 {deadline.status || 'Pending'}
+               </span>
+             </div>
+          </div>
+
           {deadline.description && (
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
               <p className="text-xs text-slate-500 font-bold uppercase mb-2">Description</p>
               <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{deadline.description}</p>
+            </div>
+          )}
+
+          {deadline.remarks && (
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <p className="text-xs text-slate-500 font-bold uppercase mb-2">Remarks</p>
+              <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{deadline.remarks}</p>
             </div>
           )}
 

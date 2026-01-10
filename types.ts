@@ -63,6 +63,8 @@ export interface Deadline {
   description?: string;
   releaseLink?: string;
   creatorId: string;
+  status?: string;
+  remarks?: string;
 }
 
 export interface Leave {

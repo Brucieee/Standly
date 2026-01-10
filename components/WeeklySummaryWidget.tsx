@@ -39,6 +39,7 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
         title: d.title,
         description: d.description,
         date: d.dueDate,
+        status: d.status || 'Pending'
     }));
 
     const result = await generateWeeklySummary(relevantStandups, relevantDeadlines);
