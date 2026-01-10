@@ -81,7 +81,7 @@ const timelineIconVariants = cva(
 export interface TimelineItem {
   id: string;
   title: string;
-  description?: string;
+  description?: React.ReactNode;
   timestamp?: string | Date;
   status?: "default" | "completed" | "active" | "pending" | "error";
   icon?: React.ReactNode;
@@ -188,9 +188,13 @@ export function Timeline({
 
             {/* Description */}
             {item.description && (
-              <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">
-                {item.description}
-              </p>
+              typeof item.description === 'string' ? (
+                <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">
+                  {item.description}
+                </p>
+              ) : (
+                item.description
+              )
             )}
 
             {/* Custom Content */}

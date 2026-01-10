@@ -53,12 +53,12 @@ export const Layout: React.FC<LayoutProps> = ({
             onClick={() => onTabChange('dashboard')}
           >
             <img 
-              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo.png" 
+              src="/assets/logo.png" 
               alt="Standly" 
               className="h-8" 
             />
             <img 
-              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_text.png" 
+              src="/assets/logo_text.png" 
               alt="Standly" 
               className="h-6" 
             />
@@ -152,7 +152,7 @@ export const Layout: React.FC<LayoutProps> = ({
              onClick={() => onTabChange('dashboard')}
            >
             <img 
-              src="https://qizxqbaylaaatskyqzpl.supabase.co/storage/v1/object/public/Standly/assets/logo_1.png" 
+              src="/assets/logo_1.png" 
               alt="Standly" 
               className="h-6" 
             />

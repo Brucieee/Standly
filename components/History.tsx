@@ -164,25 +164,59 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 variant="spacious"
                 items={deadlines.map(deadline => {
                   const creator = users.find(u => u.id === deadline.creatorId);
+                  const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
+                  const isAdmin = !!currentUser?.isAdmin;
+                  const canEdit = isCreator || isAdmin;
+
+                  const getStatusColor = (status?: string) => {
+                    switch (status) {
+                      case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                      case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+                      default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Pending
+                    }
+                  };
+
                   return {
                     id: deadline.id,
                     title: deadline.title,
-                    description: deadline.description,
+                    description: (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(deadline.status)}`}>
+                            {deadline.status || 'Pending'}
+                          </span>
+                        </div>
+
+                        {deadline.description && (
+                          <div>
+                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Description</p>
+                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.description}</p>
+                          </div>
+                        )}
+                      </div>
+                    ),
                     timestamp: new Date(deadline.dueDate),
                     status: new Date(deadline.dueDate) < new Date() ? 'completed' : 'active',
                     content: (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        {deadline.remarks && (
+                          <div className="mt-2">
+                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Remarks</p>
+                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.remarks}</p>
+                          </div>
+                        )}
+
                         {deadline.releaseLink && (
                           <a href={deadline.releaseLink} target="_blank" rel="noreferrer" className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline inline-flex items-center gap-1">
                             View Release Link
                           </a>
                         )}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                           <div className="flex items-center gap-2">
                              <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
                              <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
                           </div>
-                          {currentUser?.isAdmin && (
+                          {canEdit && (
                             <div className="flex gap-1">
                               <button 
                                 onClick={() => onEditDeadline(deadline)} 

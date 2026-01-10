@@ -101,6 +101,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <DeadlinesWidget 
           deadlines={upcomingDeadlines} 
           users={users}
+          currentUser={currentUser}
           onDelete={(id) => onDeleteDeadline(id)}
           onEdit={onEditDeadline}
           onView={onViewDeadline}

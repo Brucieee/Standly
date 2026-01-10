@@ -5,12 +5,13 @@ import { Trash2, Edit2, Flag, Clock, ExternalLink, MessageSquare } from 'lucide-
 interface DeadlinesWidgetProps {
   deadlines: Deadline[];
   users: User[];
+  currentUser: User | null;
   onDelete: (id: string) => void;
   onEdit: (deadline: Deadline) => void;
   onView: (deadline: Deadline) => void;
 }
 
-export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, users, onDelete, onEdit, onView }) => {
+export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, users, currentUser, onDelete, onEdit, onView }) => {
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
@@ -31,10 +32,14 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const creator = users.find(u => u.id === deadline.creatorId);
           const dueDate = new Date(deadline.dueDate);
           const isOverdue = dueDate < new Date() && deadline.status !== 'Completed';
+          const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
+          const isAdmin = !!currentUser?.isAdmin;
+          const canEdit = isCreator || isAdmin;
 
           return (
             <div 
               key={deadline.id} 
+              title={`Debug: CanEdit=${canEdit} (Creator=${isCreator}, Admin=${isAdmin})`} 
               className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col gap-3"
             >
               {/* Header: Title, Date, Status */}
@@ -97,22 +102,24 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                        </a>
                      )}
                     
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); onEdit(deadline); }} 
-                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); onDelete(deadline.id); }} 
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {canEdit && (
+                      <div className="flex gap-1">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onEdit(deadline); }} 
+                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onDelete(deadline.id); }} 
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
                  </div>
               </div>
             </div>
