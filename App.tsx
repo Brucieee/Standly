@@ -8,7 +8,7 @@ import { Profile } from './components/Profile';
 import { Dashboard } from './components/Dashboard';
 import { AppState, User, Standup, Deadline, Leave } from './types';
 import { apiAuth, apiStandups, apiUsers, apiDeadlines, apiLeaves } from './services/api';
-import { supabase } from './services/supabase';
+import { supabase, initSupabaseWithCode } from './services/supabase';
 import { DeadlineModal } from './components/DeadlineModal';
 import { WeeklySummaryWidget } from './components/WeeklySummaryWidget';
 import { ConfirmationModal } from './components/ConfirmationModal';
@@ -89,6 +89,7 @@ const App: React.FC = () => {
     // Check for code login first, otherwise check supabase session
     const storedCode = localStorage.getItem('standly_login_code');
     if (storedCode) {
+      initSupabaseWithCode(storedCode);
       handleCodeLogin(storedCode);
     } else {
       checkSession();
@@ -784,6 +785,7 @@ const App: React.FC = () => {
       userAvatar={state.currentUser.avatar}
       userName={state.currentUser.name}
       userRole={state.currentUser.role}
+      isAdmin={state.currentUser.isAdmin}
     >
       {activeTab === 'dashboard' && (
         <Dashboard

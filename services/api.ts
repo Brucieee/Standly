@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { User, Standup, Task, UserRole, Deadline, Leave } from '../types';
+import { supabase, initSupabaseWithCode } from './supabase';
+import { User, Standup, Task, UserRole, Deadline, Leave, QuickLink } from '../types';
 
 // --- Auth & User ---
 
@@ -35,6 +35,9 @@ export const apiAuth = {
   },
 
   async loginWithCode(code: string): Promise<User> {
+    // Initialize supabase with the code header first
+    initSupabaseWithCode(code);
+    
     const { data, error } = await supabase.rpc('get_profile_by_code', { code_input: code });
     
     if (error) throw error;
@@ -376,6 +379,92 @@ export const apiLeaves = {
 
   async delete(id: string) {
     const { error } = await supabase.from('leaves').delete().eq('id', id);
+    if (error) throw error;
+  },
+};
+
+// --- Quick Links ---
+
+export const apiQuickLinks = {
+  async getAll(): Promise<QuickLink[]> {
+    const { data, error } = await supabase
+      .from('quick_links')
+      .select('*')
+      .order('category', { ascending: true }); // Order by category, then maybe title?
+
+    if (error) throw error;
+
+    return (data || []).map(q => ({
+      id: q.id,
+      title: q.title,
+      url: q.url,
+      iconUrl: q.icon_url,
+      category: q.category,
+      createdAt: q.created_at,
+      createdBy: q.created_by,
+    }));
+  },
+
+  async uploadIcon(file: File) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('quick-link-icons')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage.from('quick-link-icons').getPublicUrl(filePath);
+    return data.publicUrl;
+  },
+
+  async create(quickLink: Omit<QuickLink, 'id' | 'createdAt' | 'createdBy'>) {
+    const { data, error } = await supabase
+      .from('quick_links')
+      .insert({
+        title: quickLink.title,
+        url: quickLink.url,
+        icon_url: quickLink.iconUrl,
+        category: quickLink.category,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return {
+        id: data.id,
+        title: data.title,
+        url: data.url,
+        iconUrl: data.icon_url,
+        category: data.category,
+        createdAt: data.created_at,
+        createdBy: data.created_by,
+    };
+  },
+
+  async update(id: string, updates: Partial<QuickLink>) {
+    const dbUpdates: any = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.url !== undefined) dbUpdates.url = updates.url;
+    if (updates.iconUrl !== undefined) dbUpdates.icon_url = updates.iconUrl;
+    if (updates.category !== undefined) dbUpdates.category = updates.category;
+
+    const { error } = await supabase
+      .from('quick_links')
+      .update(dbUpdates)
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('quick_links')
+      .delete()
+      .eq('id', id);
+
     if (error) throw error;
   },
 };

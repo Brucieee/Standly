@@ -8,25 +8,51 @@ interface CalendarWidgetProps {
 }
 
 export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId, onDateClick }) => {
-  // Generate last 14 days
-  const days = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (13 - i));
+  // Helper to manually format YYYY-MM-DD from a local Date object
+  // This avoids timezone issues completely by using the browser's local interpretation
+  const formatYMD = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  // Generate current week (Sunday to Saturday) based on local time
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize to start of day
+  
+  const currentDay = today.getDay(); // 0 (Sun) to 6 (Sat)
+  const diff = today.getDate() - currentDay; 
+  
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(diff); // Set to Sunday of this week
+
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
     return d;
   });
 
   const userStandups = standups.filter(s => s.userId === userId);
 
   const getStatus = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    const hasStandup = userStandups.some(s => s.date.startsWith(dateStr));
-    const isToday = dateStr === new Date().toISOString().split('T')[0];
+    const dateStr = formatYMD(date);
+    const hasStandup = userStandups.some(s => s.date === dateStr);
+    
+    const todayStr = formatYMD(new Date());
+    const isToday = dateStr === todayStr;
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    
+    // Check if date is strictly in the future (tomorrow or later)
+    // We compare strings or timestamps. Since 'date' is normalized to 00:00:00
+    // and 'today' is normalized to 00:00:00, simple comparison works.
+    const isFuture = date > today;
 
     if (hasStandup) return 'present';
+    if (isFuture) return 'future';
     if (isWeekend) return 'weekend';
     if (!hasStandup && !isToday && !isWeekend) return 'missed';
-    return 'pending';
+    return 'pending'; // For today if no standup yet
   };
 
   return (
@@ -35,14 +61,16 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
       <div className="flex justify-between items-end h-24">
         {days.map((date, idx) => {
           const status = getStatus(date);
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = formatYMD(date);
+          
           let bgClass = 'bg-slate-100';
           if (status === 'present') bgClass = 'bg-green-500';
           if (status === 'missed') bgClass = 'bg-red-400 cursor-pointer hover:bg-red-500';
           if (status === 'weekend') bgClass = 'bg-slate-200';
           if (status === 'pending') bgClass = 'bg-slate-100 border border-slate-200';
+          if (status === 'future') bgClass = 'bg-slate-50 opacity-50';
           
-          const isInteractable = status === 'missed' || status === 'present' || status === 'pending';
+          const isInteractable = (status === 'missed' || status === 'present' || status === 'pending' || status === 'weekend') && status !== 'future';
 
           // Base height based on status
           const baseHeight = status === 'present' ? 'h-8' : 'h-2';
@@ -51,23 +79,26 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
             <div 
               key={idx} 
               onClick={() => isInteractable && onDateClick(dateStr)}
-              className="flex flex-col items-center justify-end h-full group relative cursor-pointer"
-              style={{ width: '20px' }}
+              className={`flex flex-col items-center justify-end h-full group relative ${isInteractable ? 'cursor-pointer' : 'cursor-default'}`}
+              style={{ width: '14%' }}
             >
               <div className="relative flex flex-col items-center justify-end w-full mb-2">
                 {/* The Bar */}
                 <div 
-                  className={`w-3 md:w-4 rounded-full transition-all duration-300 ease-out ${bgClass} ${baseHeight} group-hover:scale-y-125 origin-bottom`}
+                  className={`w-3 md:w-4 rounded-full transition-all duration-300 ease-out ${bgClass} ${baseHeight} ${isInteractable ? 'group-hover:scale-y-125' : ''} origin-bottom`}
                 ></div>
                 
-                {/* Tooltip - positioned absolutely above the bar area */}
-                <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-50 pointer-events-none shadow-xl">
-                  {date.toLocaleDateString()}
-                  {status === 'missed' && ' - Missed'}
-                </div>
+                {/* Tooltip */}
+                {status !== 'future' && (
+                  <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-50 pointer-events-none shadow-xl">
+                    {date.toLocaleDateString()}
+                    {status === 'missed' && ' - Missed'}
+                    {status === 'present' && ' - Posted'}
+                  </div>
+                )}
               </div>
               
-              <span className="text-[10px] text-slate-400 font-medium">
+              <span className={`text-[10px] font-medium ${date.getDate() === new Date().getDate() ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
                 {date.toLocaleDateString('en-US', { weekday: 'narrow' })}
               </span>
             </div>

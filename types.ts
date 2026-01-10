@@ -80,6 +80,19 @@ export interface AppState {
   currentUser: User | null;
   users: User[];
   standups: Standup[];
-  deadlines: Deadline[];
-  leaves: Leave[];
-}
+    deadlines: Deadline[];
+    leaves: Leave[];
+  }
+  
+  export type QuickLinkCategory = 'General' | 'Development' | 'Design' | 'Resources' | 'Social' | 'Tools';
+  
+  export interface QuickLink {
+    id: string;
+    title: string;
+    url: string;
+    iconUrl?: string;
+    category: QuickLinkCategory;
+    createdAt?: string;
+    createdBy?: string;
+  }
+  
