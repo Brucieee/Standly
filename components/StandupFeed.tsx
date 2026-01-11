@@ -153,7 +153,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                   onClick={() => {
                     setSelectedStandupId(standup.id);
                     onView(standup);
-                    updateReadCount(standup.id, comments.length);
+                    // Don't update read count here, do it on close so we can show unread highlights
                   }}
                   className={`
                     relative bg-white rounded-2xl p-6 cursor-pointer group transition-all duration-300
@@ -320,6 +320,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
         standup={selectedStandup}
         users={users}
         currentUserId={currentUserId}
+        initialReadCount={readCounts[selectedStandup.id] || 0}
         onClose={() => {
           if (selectedStandup) {
             updateReadCount(selectedStandup.id, (selectedStandup.comments || []).length);

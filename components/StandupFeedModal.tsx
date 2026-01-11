@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Standup, User, Comment, Reaction } from '../types';
 import { X, Clock, CheckCircle2, AlertCircle, ExternalLink, MessageCircle, Reply, Send, Eye, Smile, Meh, Frown, Trash2, Edit2 } from 'lucide-react';
-import { renderTextWithMentions } from './mentionUtils';
+import { renderTextWithMentions, isUserMentioned } from './mentionUtils';
 
 const REACTION_TYPES = [
   { id: 'like', icon: '👍', label: 'Like' },
@@ -16,6 +16,7 @@ interface StandupFeedModalProps {
   standup: Standup;
   users: User[];
   currentUserId: string;
+  initialReadCount: number;
   onClose: () => void;
   onReact: (standupId: string, reactionType: string) => void;
   onComment: (standupId: string, text: string, parentId?: string) => void;
@@ -27,6 +28,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
   standup,
   users,
   currentUserId,
+  initialReadCount,
   onClose,
   onReact,
   onComment,
@@ -41,8 +43,24 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
   
   // Mention states
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
-  const [mentionIndex, setMentionIndex] = useState<number>(-1); // To track which input triggered it? Or just simplify for main input first.
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   
+  type SuggestionItem = User | { name: string; isEveryone: boolean; id: string; role: string; avatar: string };
+
+  const filteredUsers: SuggestionItem[] = mentionQuery !== null 
+    ? [
+        ...(users
+            .filter(u => u.name.toLowerCase().includes(mentionQuery.toLowerCase()) && u.id !== currentUserId)
+            .map(u => ({ ...u, isEveryone: false }))),
+        ...('everyone'.includes(mentionQuery.toLowerCase()) ? [{ name: 'everyone', isEveryone: true, id: 'everyone', role: 'Notify all users', avatar: '' }] : [])
+      ]
+    : [];
+
+  // Reset highlighted index when query changes
+  React.useEffect(() => {
+    setHighlightedIndex(0);
+  }, [mentionQuery]);
+
   // We'll focus on the main "new comment" input for this feature to keep it clean first
   const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -60,32 +78,53 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
     }
   };
 
-  const handleSelectUser = (user: User) => {
+  const handleSelectUser = (user: SuggestionItem) => {
     if (mentionQuery === null) return;
     
     // Replace the last @partial with @Name
-    const words = newComment.split(' ');
-    // Find the last word that matches our query (simple approach)
-    // A more robust way is using the cursor position, but for this simpler UI:
-    const newWords = [...words];
-    // We assume the user is typing at the end or we replace the last matching token
-    // Let's use regex to replace the specific instance ending at cursor if possible, 
-    // or just the last occurrence of @query
-    
-    // Simplest reliable way for single-line input:
+    // Use First Name only unless it's "everyone"
+    const nameToInsert = 'isEveryone' in user && user.isEveryone ? 'everyone' : user.name.split(' ')[0];
+
     const lastIndex = newComment.lastIndexOf(`@${mentionQuery}`);
     if (lastIndex !== -1) {
       const prefix = newComment.substring(0, lastIndex);
       const suffix = newComment.substring(lastIndex + mentionQuery.length + 1);
-      const newValue = `${prefix}@${user.name} ${suffix}`;
+      const newValue = `${prefix}@${nameToInsert} ${suffix}`;
       setNewComment(newValue);
       setMentionQuery(null);
     }
   };
 
-  const filteredUsers = mentionQuery !== null 
-    ? users.filter(u => u.name.toLowerCase().includes(mentionQuery.toLowerCase()) && u.id !== currentUserId)
-    : [];
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (mentionQuery !== null && filteredUsers.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev + 1) % filteredUsers.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev - 1 + filteredUsers.length) % filteredUsers.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSelectUser(filteredUsers[highlightedIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionQuery(null);
+        return;
+      }
+    }
+
+    if (e.key === 'Enter' && newComment.trim()) {
+      onComment(standup.id, newComment);
+      setNewComment('');
+      setMentionQuery(null); // Ensure dropdown is closed on submit
+    }
+  };
 
   const getMoodIcon = (mood: string, size: number = 28) => {
     switch (mood) {
@@ -110,24 +149,38 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
     }
   };
 
-  const linkify = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.split(urlRegex).map((part, i) => {
-      if (part.match(urlRegex)) {
+  const renderCommentContent = (text: string) => {
+    // First, get the mentions processed
+    const nodes = renderTextWithMentions(text, users);
+    
+    // Then process links in any string nodes
+    return nodes.map((node, index) => {
+      if (typeof node === 'string') {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const parts = node.split(urlRegex);
         return (
-          <a
-            key={i}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-indigo-600 hover:underline break-all"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {part}
-          </a>
+          <React.Fragment key={index}>
+            {parts.map((part, partIndex) => {
+              if (part.match(urlRegex)) {
+                return (
+                  <a
+                    key={partIndex}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 hover:underline break-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {part}
+                  </a>
+                );
+              }
+              return part;
+            })}
+          </React.Fragment>
         );
       }
-      return part;
+      return <React.Fragment key={index}>{node}</React.Fragment>;
     });
   };
 
@@ -136,6 +189,14 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
     const user = users.find(u => u.id === comment.userId);
     const isAuthor = comment.userId === currentUserId;
     const isEditing = editingCommentId === comment.id;
+    
+    // Check for highlighting
+    const currentUser = users.find(u => u.id === currentUserId);
+    const originalIndex = standup.comments?.findIndex((c: any) => c.id === comment.id) ?? -1;
+    const isUnread = originalIndex !== -1 && originalIndex >= initialReadCount;
+    // We assume 'isUserMentioned' handles the logic correctly including @everyone
+    const isMentioned = currentUser ? isUserMentioned(comment.text, currentUser) : false;
+    const shouldHighlight = isUnread && isMentioned;
 
     return (
       <div key={comment.id} className={`flex gap-3 ${isReply ? 'mt-3' : ''}`}>
@@ -148,14 +209,33 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
           }}
         />
         <div className="flex-1 space-y-2">
-          <div className="bg-slate-50 rounded-2xl rounded-tl-none p-4 group relative break-words">
-            <div className="flex justify-between items-baseline mb-1">
-              <span className={`font-bold ${isReply ? 'text-xs' : 'text-sm'} text-slate-900`}>
-                {user?.name || 'Unknown'}
-              </span>
-              <span className="text-xs text-slate-400">
-                {new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-              </span>
+          <div className={`
+            rounded-2xl rounded-tl-none p-4 group relative break-words transition-colors duration-300
+            ${shouldHighlight ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-slate-50'}
+          `}>
+            <div className="flex justify-between items-start mb-1 gap-2">
+              <div className="flex items-baseline gap-2">
+                <span className={`font-bold ${isReply ? 'text-xs' : 'text-sm'} text-slate-900`}>
+                    {user?.name || 'Unknown'}
+                </span>
+                <span className="text-xs text-slate-400">
+                    {new Date(comment.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </span>
+              </div>
+
+              {/* Edit/Delete Actions - Moved here to avoid overlap */}
+              {isAuthor && !isEditing && (
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => handleStartEdit(comment)} className="p-1 text-slate-400 hover:text-indigo-600 rounded">
+                    <Edit2 size={12} />
+                  </button>
+                  {onDeleteComment && (
+                    <button onClick={() => onDeleteComment(comment.id)} className="p-1 text-slate-400 hover:text-red-600 rounded">
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
             
             {isEditing ? (
@@ -175,21 +255,9 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                 <button onClick={() => setEditingCommentId(null)} className="text-xs text-slate-500 px-2 py-1">Cancel</button>
               </div>
             ) : (
-              <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700 whitespace-pre-wrap`}>{linkify(comment.text)}</p>
-            )}
-
-            {/* Edit/Delete Actions */}
-            {isAuthor && !isEditing && (
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-slate-50 pl-2">
-                <button onClick={() => handleStartEdit(comment)} className="p-1 text-slate-400 hover:text-indigo-600 rounded">
-                  <Edit2 size={12} />
-                </button>
-                {onDeleteComment && (
-                  <button onClick={() => onDeleteComment(comment.id)} className="p-1 text-slate-400 hover:text-red-600 rounded">
-                    <Trash2 size={12} />
-                  </button>
-                )}
-              </div>
+              <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700 whitespace-pre-wrap leading-relaxed`}>
+                 {renderCommentContent(comment.text)}
+              </p>
             )}
           </div>
           
@@ -382,22 +450,28 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                   {mentionQuery !== null && filteredUsers.length > 0 && (
                     <div className="absolute bottom-full left-12 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20 animate-fade-in-up">
                       <div className="max-h-48 overflow-y-auto">
-                        {filteredUsers.map(user => (
+                        {filteredUsers.map((user, index) => (
                           <button
                             key={user.id}
                             onClick={() => handleSelectUser(user)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left"
+                            className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${index === highlightedIndex ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
                           >
-                            <img 
-                              src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} 
-                              alt={user.name}
-                              className="w-8 h-8 rounded-full bg-slate-100 object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
-                              }}
-                            />
+                            {'isEveryone' in user && user.isEveryone ? (
+                                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                    <span className="font-bold text-xs">ALL</span>
+                                </div>
+                            ) : (
+                                <img 
+                                src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} 
+                                alt={user.name}
+                                className="w-8 h-8 rounded-full bg-slate-100 object-cover"
+                                onError={(e) => {
+                                    e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                                }}
+                                />
+                            )}
                             <div>
-                              <p className="text-sm font-bold text-slate-900">{user.name}</p>
+                              <p className="text-sm font-bold text-slate-900">{'isEveryone' in user && user.isEveryone ? '@everyone' : user.name}</p>
                               <p className="text-xs text-slate-500">{user.role}</p>
                             </div>
                           </button>
@@ -421,9 +495,9 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                       onChange={handleCommentChange} 
                       placeholder="Write a comment... (Type @ to mention)" 
                       className="w-full bg-slate-50 border-0 rounded-xl pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" 
-                      onKeyDown={(e) => { if (e.key === 'Enter' && newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); } }} 
+                      onKeyDown={handleKeyDown} 
                     />
-                    <button className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${newComment.trim() ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`} disabled={!newComment.trim()} onClick={() => { if (newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); } }}><Send size={16} /></button>
+                    <button className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${newComment.trim() ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`} disabled={!newComment.trim()} onClick={() => { if (newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); setMentionQuery(null); } }}><Send size={16} /></button>
                   </div>
                 </div>
               </div>

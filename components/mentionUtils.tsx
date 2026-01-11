@@ -4,8 +4,12 @@ import { User } from '../types';
 /**
  * Checks if a specific user is mentioned in the text.
  * Uses word boundaries to ensure accurate matching (e.g., matches "@Rob" but not "@Robert").
+ * Also returns true if "@everyone" is mentioned.
  */
 export const isUserMentioned = (text: string, user: User): boolean => {
+  // Check for @everyone first
+  if (/@everyone\b/i.test(text)) return true;
+
   const name = user.name;
   const firstName = name.split(' ')[0];
   
@@ -24,19 +28,20 @@ export const isUserMentioned = (text: string, user: User): boolean => {
  */
 export const renderTextWithMentions = (text: string, users: User[]): React.ReactNode[] => {
   // Split by specific regex to capture the delimiters
-  // We want to split by (@[\w\s]+) but that's too greedy with spaces.
-  // The original logic in StandupFeedModal was specific to the UI rendering needs.
-  // Let's refine it to be robust:
-  // We will split by spaces to process words, or use a careful regex.
-  // Given names have spaces, the "split by space" approach in the previous turn was abandoned 
-  // for the `split(/(@[\w\s]+)/g)` approach which worked but needed refinement for "John Doe".
-  
-  // Let's stick to the implementation that was working in StandupFeedModal:
-  // It splits by `(@[\w\s]+)` which is greedy.
-  
   const parts = text.split(/(@[\w\s]+)/g);
   return parts.map((part, index) => {
      if (part.startsWith('@')) {
+        // Check for @everyone
+        if (/^@everyone\b/i.test(part)) {
+           const suffix = part.substring(9); // "@everyone".length
+           return (
+             <React.Fragment key={index}>
+               <span className="text-amber-600 font-bold bg-amber-50 px-1 rounded border border-amber-100">@everyone</span>
+               {suffix}
+             </React.Fragment>
+           );
+        }
+
         const sortedUsers = [...users].sort((a, b) => b.name.length - a.name.length);
         const matchedUser = sortedUsers.find(u => part.startsWith(`@${u.name}`) || part.startsWith(`@${u.name.split(' ')[0]}`));
         
@@ -45,7 +50,7 @@ export const renderTextWithMentions = (text: string, users: User[]): React.React
            const suffix = part.substring(matchName.length + 1);
            return (
              <React.Fragment key={index}>
-               <span className="text-indigo-600 font-semibold bg-indigo-50 px-1 rounded">@{matchName}</span>
+               <span className="text-purple-600 font-semibold bg-purple-50 px-1 rounded border border-purple-100">@{matchName}</span>
                {suffix}
              </React.Fragment>
            );
