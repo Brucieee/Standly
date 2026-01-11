@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Standup, User, Comment, Reaction } from '../types';
 import { X, Clock, CheckCircle2, AlertCircle, ExternalLink, MessageCircle, Reply, Send, Eye, Smile, Meh, Frown, Trash2, Edit2 } from 'lucide-react';
+import { renderTextWithMentions } from './mentionUtils';
 
 const REACTION_TYPES = [
   { id: 'like', icon: '👍', label: 'Like' },
@@ -37,6 +38,54 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
   const [replyText, setReplyText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentText, setEditCommentText] = useState('');
+  
+  // Mention states
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState<number>(-1); // To track which input triggered it? Or just simplify for main input first.
+  
+  // We'll focus on the main "new comment" input for this feature to keep it clean first
+  const handleCommentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewComment(value);
+
+    // Check for mention trigger
+    const cursorPosition = e.target.selectionStart || 0;
+    const textBeforeCursor = value.slice(0, cursorPosition);
+    const lastWord = textBeforeCursor.split(' ').pop();
+
+    if (lastWord && lastWord.startsWith('@')) {
+      setMentionQuery(lastWord.slice(1));
+    } else {
+      setMentionQuery(null);
+    }
+  };
+
+  const handleSelectUser = (user: User) => {
+    if (mentionQuery === null) return;
+    
+    // Replace the last @partial with @Name
+    const words = newComment.split(' ');
+    // Find the last word that matches our query (simple approach)
+    // A more robust way is using the cursor position, but for this simpler UI:
+    const newWords = [...words];
+    // We assume the user is typing at the end or we replace the last matching token
+    // Let's use regex to replace the specific instance ending at cursor if possible, 
+    // or just the last occurrence of @query
+    
+    // Simplest reliable way for single-line input:
+    const lastIndex = newComment.lastIndexOf(`@${mentionQuery}`);
+    if (lastIndex !== -1) {
+      const prefix = newComment.substring(0, lastIndex);
+      const suffix = newComment.substring(lastIndex + mentionQuery.length + 1);
+      const newValue = `${prefix}@${user.name} ${suffix}`;
+      setNewComment(newValue);
+      setMentionQuery(null);
+    }
+  };
+
+  const filteredUsers = mentionQuery !== null 
+    ? users.filter(u => u.name.toLowerCase().includes(mentionQuery.toLowerCase()) && u.id !== currentUserId)
+    : [];
 
   const getMoodIcon = (mood: string, size: number = 28) => {
     switch (mood) {
@@ -105,7 +154,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                 <button onClick={() => setEditingCommentId(null)} className="text-xs text-slate-500 px-2 py-1">Cancel</button>
               </div>
             ) : (
-              <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700`}>{comment.text}</p>
+              <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700`}>{renderTextWithMentions(comment.text, users)}</p>
             )}
 
             {/* Edit/Delete Actions */}
@@ -307,7 +356,35 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
               <div className="space-y-6">
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><MessageCircle size={14} /> Comments ({standup.comments?.length || 0})</h4>
                 <div className="space-y-6">{rootComments.map(comment => renderCommentItem(comment))}</div>
-                <div className="flex gap-3 pt-2">
+                <div className="flex gap-3 pt-2 relative">
+                  {/* Mention Suggestions */}
+                  {mentionQuery !== null && filteredUsers.length > 0 && (
+                    <div className="absolute bottom-full left-12 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20 animate-fade-in-up">
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredUsers.map(user => (
+                          <button
+                            key={user.id}
+                            onClick={() => handleSelectUser(user)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left"
+                          >
+                            <img 
+                              src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} 
+                              alt={user.name}
+                              className="w-8 h-8 rounded-full bg-slate-100 object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                              }}
+                            />
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{user.name}</p>
+                              <p className="text-xs text-slate-500">{user.role}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <img 
                     src={users.find(u => u.id === currentUserId)?.avatar || `https://ui-avatars.com/api/?name=${users.find(u => u.id === currentUserId)?.name || 'Me'}`} 
                     alt="Me" 
@@ -317,7 +394,14 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                     }}
                   />
                   <div className="flex-1 relative">
-                    <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Write a comment..." className="w-full bg-slate-50 border-0 rounded-xl pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" onKeyDown={(e) => { if (e.key === 'Enter' && newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); } }} />
+                    <input 
+                      type="text" 
+                      value={newComment} 
+                      onChange={handleCommentChange} 
+                      placeholder="Write a comment... (Type @ to mention)" 
+                      className="w-full bg-slate-50 border-0 rounded-xl pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" 
+                      onKeyDown={(e) => { if (e.key === 'Enter' && newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); } }} 
+                    />
                     <button className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${newComment.trim() ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`} disabled={!newComment.trim()} onClick={() => { if (newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); } }}><Send size={16} /></button>
                   </div>
                 </div>

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Standup, User, Comment, Reaction } from '../types';
 import { Trash2, Edit2, ExternalLink, Smile, Meh, Frown, MessageCircle } from 'lucide-react';
 import { StandupFeedModal } from './StandupFeedModal';
+import { isUserMentioned } from './mentionUtils';
 
 const REACTION_TYPES = [
   { id: 'like', icon: '👍', label: 'Like' },
@@ -113,9 +114,38 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
               const comments = standup.comments || [];
               const reactions = standup.reactions || [];
               
-              // Calculate unread comments
+              // Calculate unread comments and check for relevant notifications
               const lastReadCount = readCounts[standup.id] || 0;
-              const unreadComments = Math.max(0, comments.length - lastReadCount);
+              const rawUnreadCount = Math.max(0, comments.length - lastReadCount);
+              
+              let showNotification = false;
+              let notificationCount = 0;
+
+              if (rawUnreadCount > 0) {
+                 // Get the actual new comments based on count
+                 // We assume comments are appended, so the last 'rawUnreadCount' are new.
+                 const newComments = comments.slice(comments.length - rawUnreadCount);
+                 const currentUser = users.find(u => u.id === currentUserId);
+                 
+                 if (isCurrentUser) {
+                     // If it's my standup, notify me about any comments from others
+                     const commentsFromOthers = newComments.filter(c => c.userId !== currentUserId);
+                     if (commentsFromOthers.length > 0) {
+                         showNotification = true;
+                         notificationCount = commentsFromOthers.length;
+                     }
+                 } else {
+                     // If it's someone else's standup, only notify if I am tagged
+                     if (currentUser) {
+                         const taggedComments = newComments.filter(c => isUserMentioned(c.text, currentUser));
+                         
+                         if (taggedComments.length > 0) {
+                             showNotification = true;
+                             notificationCount = taggedComments.length;
+                         }
+                     }
+                 }
+              }
 
               return (
                 <div 
@@ -134,17 +164,17 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                   {/* Gradient Top Border Effect on Hover */}
                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-1 top-0 w-full rounded-t-2xl" />
                   
-                  {/* Unread Indicator */}
+                  {/* Unread Indicator (Blue Dot) - Shows if I haven't viewed the standup itself yet */}
                   {!isViewed && !isCurrentUser && (
                      <div className="absolute top-5 right-5 w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-lg shadow-indigo-200" />
                   )}
 
-                  {/* New Comments Ping Notification */}
-                  {unreadComments > 0 && (
+                  {/* New Comments Ping Notification (Red Badge) - Specific Logic */}
+                  {showNotification && (
                     <div className="absolute -top-2 -right-2 w-6 h-6 z-20">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                       <div className="relative inline-flex rounded-full h-6 w-6 bg-red-500 text-white text-xs font-bold items-center justify-center border-2 border-white shadow-md">
-                        {unreadComments}
+                        {notificationCount}
                       </div>
                     </div>
                   )}
