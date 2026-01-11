@@ -61,6 +61,27 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
     }
   };
 
+  const linkify = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.split(urlRegex).map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 hover:underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   // Helper to render a single comment item (used for both root comments and replies)
   const renderCommentItem = (comment: any, isReply = false) => {
     const user = users.find(u => u.id === comment.userId);
@@ -78,7 +99,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
           }}
         />
         <div className="flex-1 space-y-2">
-          <div className="bg-slate-50 rounded-2xl rounded-tl-none p-3 group relative">
+          <div className="bg-slate-50 rounded-2xl rounded-tl-none p-4 group relative break-words">
             <div className="flex justify-between items-baseline mb-1">
               <span className={`font-bold ${isReply ? 'text-xs' : 'text-sm'} text-slate-900`}>
                 {user?.name || 'Unknown'}
@@ -105,7 +126,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                 <button onClick={() => setEditingCommentId(null)} className="text-xs text-slate-500 px-2 py-1">Cancel</button>
               </div>
             ) : (
-              <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700`}>{comment.text}</p>
+              <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700 whitespace-pre-wrap`}>{linkify(comment.text)}</p>
             )}
 
             {/* Edit/Delete Actions */}
@@ -149,7 +170,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Write a reply..."
-                className="flex-1 bg-slate-50 border-0 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="flex-1 bg-slate-50 border-0 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && replyText.trim()) {
