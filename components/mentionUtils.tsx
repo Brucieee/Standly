@@ -26,7 +26,7 @@ export const isUserMentioned = (text: string, user: User): boolean => {
  * Renders text with user mentions highlighted.
  * Scans for @Name patterns and matches them against the provided users list.
  */
-export const renderTextWithMentions = (text: string, users: User[]): React.ReactNode[] => {
+export const renderTextWithMentions = (text: string, users: User[]): (string | React.ReactNode)[] => {
   // Split by specific regex to capture the delimiters
   const parts = text.split(/(@[\w\s]+)/g);
   return parts.map((part, index) => {
@@ -56,6 +56,7 @@ export const renderTextWithMentions = (text: string, users: User[]): React.React
            );
         }
      }
-     return <React.Fragment key={index}>{part}</React.Fragment>;
+     // Return plain string for non-matching parts
+     return part;
   });
 };
