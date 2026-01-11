@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2, FileText } from 'lucide-react';
+import { Sparkles, Loader2, FileText, CalendarRange } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { generateWeeklySummary } from '../services/geminiService';
 import { Standup, User, Deadline } from '../types';
@@ -17,12 +17,23 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
   const handleGenerate = async () => {
     setLoading(true);
     
-    // Filter for current week (last 7 days for simplicity)
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    // Filter for current week (Sunday to Today)
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Include all of today
     
+    const startOfWeek = new Date(today);
+    const day = today.getDay(); // 0 (Sun) - 6 (Sat)
+    const diff = today.getDate() - day;
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0); // Start of Sunday
+
     const relevantStandups = standups
-      .filter(s => new Date(s.date) >= oneWeekAgo)
+      .filter(s => {
+        const standupDate = new Date(s.date);
+        // We use string comparison for safety if objects are mixed, but Date comparison works if normalized
+        // Let's use string comparison based on YYYY-MM-DD for robustness
+        return standupDate >= startOfWeek && standupDate <= today;
+      })
       .map(s => {
         const user = users.find(u => u.id === s.userId);
         return {
@@ -34,7 +45,7 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
         };
       });
 
-    // Filter relevant deadlines (e.g., upcoming or recently passed)
+    // Filter relevant deadlines (e.g., upcoming within this week or next)
     const relevantDeadlines = deadlines.map(d => ({
         title: d.title,
         description: d.description,
@@ -48,51 +59,61 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
   };
 
   return (
-    <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-      {/* Decorative background */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-
-      <div className="relative z-10">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-             <h2 className="text-xl font-bold flex items-center gap-2">
-               <Sparkles className="text-yellow-300" size={24} />
-               Weekly AI Summary
-             </h2>
-             <p className="text-indigo-200 text-sm mt-1">Get a quick overview of the team's progress.</p>
-          </div>
-          <button 
-            onClick={handleGenerate}
-            disabled={loading}
-            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all backdrop-blur-md border border-white/20 flex items-center gap-2 disabled:opacity-50"
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
-            {loading ? 'Analyzing...' : 'Generate Report'}
-          </button>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
+      {/* Header Section */}
+      <div className="p-6 bg-gradient-to-r from-indigo-50 to-white border-b border-slate-100 flex justify-between items-center">
+        <div>
+           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+             <Sparkles className="text-indigo-500" size={20} />
+             Weekly AI Summary
+           </h2>
+           <p className="text-slate-500 text-sm mt-1">
+             Summarizing team progress for this week
+           </p>
         </div>
+        <button 
+          onClick={handleGenerate}
+          disabled={loading}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+          {loading ? 'Analyzing...' : 'Generate Report'}
+        </button>
+      </div>
 
-        {summary && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 animate-fade-in text-sm leading-relaxed text-indigo-50 max-h-60 overflow-y-auto custom-scrollbar">
+      {/* Content Section */}
+      <div className="p-6 flex-1 min-h-[300px] bg-slate-50/50">
+        {summary ? (
+          <div className="prose prose-sm max-w-none text-slate-700">
              <Markdown 
                components={{
-                 strong: ({node, ...props}) => <span className="font-bold text-white" {...props} />,
-                 p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-                 ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2 space-y-1" {...props} />,
-                 ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2 space-y-1" {...props} />,
-                 li: ({node, ...props}) => <li className="pl-1" {...props} />,
-                 h1: ({node, ...props}) => <h3 className="text-lg font-bold text-white mt-3 mb-2" {...props} />,
-                 h2: ({node, ...props}) => <h4 className="text-base font-bold text-white mt-2 mb-1" {...props} />,
-                 h3: ({node, ...props}) => <h5 className="text-sm font-bold text-white mt-2 mb-1" {...props} />,
+                 // Remove generic h1/h2 to avoid repetition if AI generates titles
+                 h1: ({node, ...props}) => <h3 className="text-lg font-bold text-indigo-900 mt-0 mb-4 pb-2 border-b border-indigo-100" {...props} />,
+                 h2: ({node, ...props}) => <h4 className="text-base font-bold text-slate-800 mt-6 mb-3 flex items-center gap-2" {...props} />,
+                 h3: ({node, ...props}) => <h5 className="text-sm font-bold text-slate-700 mt-4 mb-2" {...props} />,
+                 p: ({node, ...props}) => <p className="mb-3 text-slate-600 leading-relaxed" {...props} />,
+                 ul: ({node, ...props}) => <ul className="space-y-2 mb-4 bg-white p-4 rounded-xl border border-slate-100 shadow-sm" {...props} />,
+                 li: ({node, ...props}) => (
+                   <li className="flex items-start gap-2 text-slate-700" {...props}>
+                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                     <span>{props.children}</span>
+                   </li>
+                 ),
+                 strong: ({node, ...props}) => <span className="font-semibold text-slate-900" {...props} />,
                }}
              >
                {summary}
              </Markdown>
           </div>
-        )}
-        
-        {!summary && !loading && (
-           <div className="text-center py-6 text-indigo-200 text-sm border-2 border-dashed border-indigo-400/30 rounded-xl">
-             Hit generate to analyze {standups.length} standups from this week.
+        ) : (
+           <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12">
+             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+               <CalendarRange size={32} className="text-slate-300" />
+             </div>
+             <p className="font-medium text-slate-500">No report generated yet</p>
+             <p className="text-xs max-w-xs text-center mt-2">
+               Click "Generate Report" to analyze standups from the current week.
+             </p>
            </div>
         )}
       </div>

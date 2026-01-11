@@ -138,7 +138,7 @@ export const Layout: React.FC<LayoutProps> = ({
     { id: 'history', label: 'History', icon: History },
     { id: 'leaves', label: 'Leaves', icon: Palmtree },
     { id: 'virtual-office', label: 'Virtual Office', icon: Monitor },
-  ];
+  ].filter(item => !(item.id === 'leaves' && userRole === 'Intern'));
 
   const groupedLinks = CATEGORY_ORDER.reduce((acc, category) => {
     const links = quickLinks.filter(link => link.category === category);
@@ -439,15 +439,17 @@ export const Layout: React.FC<LayoutProps> = ({
                 <span className="text-[10px] font-medium">History</span>
               </button>
 
-              <button
-                onClick={() => onTabChange('leaves')}
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all w-16 ${
-                  activeTab === 'leaves' ? 'text-indigo-600' : 'text-slate-400'
-                }`}
-              >
-                <Palmtree size={24} strokeWidth={activeTab === 'leaves' ? 2.5 : 2} />
-                <span className="text-[10px] font-medium">Leaves</span>
-              </button>
+              {userRole !== 'Intern' && (
+                <button
+                  onClick={() => onTabChange('leaves')}
+                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all w-16 ${
+                    activeTab === 'leaves' ? 'text-indigo-600' : 'text-slate-400'
+                  }`}
+                >
+                  <Palmtree size={24} strokeWidth={activeTab === 'leaves' ? 2.5 : 2} />
+                  <span className="text-[10px] font-medium">Leaves</span>
+                </button>
+              )}
 
               <div className="relative -top-5">
                 <button
