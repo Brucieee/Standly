@@ -37,7 +37,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
 
   const getStatus = (date: Date) => {
     const dateStr = formatYMD(date);
-    const hasStandup = userStandups.some(s => s.date === dateStr);
+    const hasStandup = userStandups.some(s => s.date.startsWith(dateStr));
     
     const todayStr = formatYMD(new Date());
     const isToday = dateStr === todayStr;
@@ -70,7 +70,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
           if (status === 'pending') bgClass = 'bg-slate-100 border border-slate-200';
           if (status === 'future') bgClass = 'bg-slate-50 opacity-50';
           
-          const isInteractable = (status === 'missed' || status === 'present' || status === 'pending' || status === 'weekend') && status !== 'future';
+          const isInteractable = (status === 'missed' || status === 'present' || status === 'pending' || status === 'weekend');
 
           // Base height based on status
           const baseHeight = status === 'present' ? 'h-8' : 'h-2';
