@@ -9,6 +9,7 @@ interface ViewDeadlineModalProps {
   creator?: User;
   onEdit: (deadline: Deadline) => void;
   onDelete: (id: string) => void;
+  users: User[];
 }
 
 export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
@@ -17,12 +18,14 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
   deadline,
   creator,
   onEdit,
-  onDelete
+  onDelete,
+  users
 }) => {
   if (!isOpen || !deadline) return null;
 
   const dueDate = new Date(deadline.dueDate);
   const isOverdue = dueDate < new Date() && deadline.status !== 'Completed';
+  const assignee = users.find(u => u.id === deadline.assigneeId);
 
   const getStatusColor = (status?: string) => {
     switch (status) {
@@ -131,6 +134,20 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
                   <p className="text-sm font-medium text-slate-900">{creator?.name || 'Unknown'}</p>
                 </div>
              </div>
+             
+             {assignee && (
+               <div className="flex items-center gap-3 flex-1 border-l border-slate-100 pl-4">
+                  <img 
+                    src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
+                    alt={assignee.name}
+                    className="w-10 h-10 rounded-full bg-slate-100 object-cover border border-slate-200"
+                  />
+                  <div>
+                    <p className="text-xs text-slate-500">Assigned to</p>
+                    <p className="text-sm font-medium text-slate-900">{assignee.name}</p>
+                  </div>
+               </div>
+             )}
           </div>
 
           <div className="flex gap-3 pt-2">

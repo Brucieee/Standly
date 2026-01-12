@@ -168,6 +168,9 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   const isAdmin = !!currentUser?.isAdmin;
                   const canEdit = isCreator || isAdmin;
 
+                  const isAssignee = !!(currentUser?.id && deadline.assigneeId && currentUser.id === deadline.assigneeId);
+                  const assignee = users.find(u => u.id === deadline.assigneeId);
+
                   const getStatusColor = (status?: string) => {
                     switch (status) {
                       case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
@@ -181,10 +184,19 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     title: deadline.title,
                     description: (
                       <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 items-center">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(deadline.status)}`}>
                             {deadline.status || 'Pending'}
                           </span>
+                          {isAssignee && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold border border-indigo-100">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                              </span>
+                              Assigned to you
+                            </span>
+                          )}
                         </div>
 
                         {deadline.description && (
@@ -212,10 +224,19 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                           </a>
                         )}
                         <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                          <div className="flex items-center gap-2">
-                             <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
-                             <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                               <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
+                               <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
+                            </div>
+                            {assignee && (
+                              <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
+                                <img src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} alt={assignee.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
+                                <span className="text-xs text-slate-500">Assigned to {assignee.name}</span>
+                              </div>
+                            )}
                           </div>
+
                           {canEdit && (
                             <div className="flex gap-1">
                               <button 

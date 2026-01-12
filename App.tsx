@@ -884,6 +884,7 @@ const App: React.FC = () => {
         onSubmit={handleSaveDeadline}
         initialData={editingDeadline}
         onDelete={editingDeadline ? () => handleDeleteDeadline(editingDeadline.id) : undefined}
+        users={state.users}
       />
 
       <VirtualOfficeModal
@@ -913,6 +914,7 @@ const App: React.FC = () => {
           setIsViewDeadlineModalOpen(false);
           handleDeleteDeadline(id);
         }}
+        users={state.users}
       />
 
       <ViewLeaveModal

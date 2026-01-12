@@ -266,6 +266,7 @@ export const apiDeadlines = {
       creatorId: d.creator_id,
       status: d.status,
       remarks: d.remarks,
+      assigneeId: d.assignee_id,
     }));
   },
 
@@ -280,6 +281,7 @@ export const apiDeadlines = {
         creator_id: deadline.creatorId,
         status: deadline.status,
         remarks: deadline.remarks,
+        assignee_id: deadline.assigneeId,
       })
       .select()
       .single();
@@ -294,6 +296,7 @@ export const apiDeadlines = {
       creatorId: data.creator_id,
       status: data.status,
       remarks: data.remarks,
+      assigneeId: data.assignee_id,
     };
   },
 
@@ -305,6 +308,7 @@ export const apiDeadlines = {
     if (updates.releaseLink !== undefined) dbUpdates.release_link = updates.releaseLink;
     if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.remarks !== undefined) dbUpdates.remarks = updates.remarks;
+    if (updates.assigneeId !== undefined) dbUpdates.assignee_id = updates.assigneeId;
 
     const { error } = await supabase
       .from('deadlines')

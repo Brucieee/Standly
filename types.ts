@@ -59,12 +59,14 @@ export interface Task {
 export interface Deadline {
   id: string;
   title: string;
-  dueDate: string;
   description?: string;
-  releaseLink?: string;
-  creatorId: string;
-  status?: string;
+  dueDate: string;
+  status?: 'Pending' | 'In Progress' | 'Completed';
+  priority?: 'Low' | 'Medium' | 'High';
   remarks?: string;
+  creatorId: string;
+  releaseLink?: string;
+  assigneeId?: string | null;
 }
 
 export interface Leave {

@@ -36,15 +36,24 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const isAdmin = !!currentUser?.isAdmin;
           const canEdit = isCreator || isAdmin;
 
+          const isAssignee = !!(currentUser?.id && deadline.assigneeId && currentUser.id === deadline.assigneeId);
+          const assignee = users.find(u => u.id === deadline.assigneeId);
+
           return (
             <div 
               key={deadline.id} 
-              className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col gap-3"
+              className={`bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition-all group flex flex-col gap-3 relative ${isAssignee ? 'border-indigo-500 ring-1 ring-indigo-500/20' : 'border-slate-100'}`}
             >
+              {isAssignee && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                </span>
+              )}
               {/* Header: Title, Date, Status */}
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1 min-w-0">
-                   <h3 className="font-bold text-slate-900 text-base leading-snug break-words mb-1">
+                   <h3 className={`font-bold text-base leading-snug break-words mb-1 ${isAssignee ? 'text-indigo-700' : 'text-slate-900'}`}>
                      {deadline.title}
                    </h3>
                    <div className={`flex items-center gap-1.5 text-xs font-medium ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
@@ -75,16 +84,34 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
 
               {/* Footer: Created By & Actions */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-1">
-                 <div className="flex items-center gap-2">
-                    <img 
-                      src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} 
-                      alt={creator?.name}
-                      className="w-6 h-6 rounded-full bg-slate-100 object-cover border border-slate-100"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Created by</span>
-                      <span className="text-xs font-medium text-slate-700">{creator?.name || 'Unknown'}</span>
+                 <div className="flex items-center gap-4">
+                    {/* Creator */}
+                    <div className="flex items-center gap-2">
+                       <img 
+                         src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} 
+                         alt={creator?.name}
+                         className="w-6 h-6 rounded-full bg-slate-100 object-cover border border-slate-100"
+                       />
+                       <div className="flex flex-col">
+                         <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Created by</span>
+                         <span className="text-xs font-medium text-slate-700">{creator?.name || 'Unknown'}</span>
+                       </div>
                     </div>
+
+                    {/* Assignee (if exists) */}
+                    {assignee && (
+                      <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
+                         <img 
+                           src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
+                           alt={assignee.name}
+                           className="w-6 h-6 rounded-full bg-slate-100 object-cover border border-slate-100"
+                         />
+                         <div className="flex flex-col">
+                           <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Assigned to</span>
+                           <span className="text-xs font-medium text-slate-700">{assignee.name}</span>
+                         </div>
+                      </div>
+                    )}
                  </div>
 
                  <div className="flex items-center gap-3">
