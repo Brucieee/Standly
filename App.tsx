@@ -269,9 +269,12 @@ const App: React.FC = () => {
     };
   }, [state.currentUser?.id]);
 
-  const sortedStandups = [...state.standups].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const sortedStandups = [...state.standups].sort((a, b) => {
+    const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+    if (dateDiff !== 0) return dateDiff;
+    // Tie-breaker: sort by created_at descending (newest created first)
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
 
   // Handlers
   const handleLogin = async (email: string, password: string) => {
