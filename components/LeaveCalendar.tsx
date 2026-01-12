@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Leave } from '../types';
 import { ChevronLeft, ChevronRight, Plus, Palmtree, Trash2, CalendarPlus, List, LayoutGrid } from 'lucide-react';
+import { formatDate } from './utils';
 
 interface LeaveCalendarProps {
   users: User[];
@@ -300,11 +301,11 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-white p-2 rounded-lg border border-slate-100">
                         <span className="text-slate-400 block mb-0.5">From</span>
-                        <span className="font-semibold text-slate-700">{new Date(leave.startDate).toLocaleDateString()}</span>
+                        <span className="font-semibold text-slate-700">{formatDate(leave.startDate)}</span>
                       </div>
                       <div className="bg-white p-2 rounded-lg border border-slate-100">
                         <span className="text-slate-400 block mb-0.5">To</span>
-                        <span className="font-semibold text-slate-700">{new Date(leave.endDate).toLocaleDateString()}</span>
+                        <span className="font-semibold text-slate-700">{formatDate(leave.endDate)}</span>
                       </div>
                     </div>
 
@@ -357,7 +358,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                         </span>
                       </td>
                       <td className="py-3 text-slate-600">
-                        {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                        {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
                       </td>
                       <td className="py-3 text-slate-500 max-w-xs truncate">
                         {leave.reason || <span className="italic text-slate-400">No reason provided</span>}

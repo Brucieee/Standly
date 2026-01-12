@@ -39,7 +39,6 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           return (
             <div 
               key={deadline.id} 
-              title={`Debug: CanEdit=${canEdit} (Creator=${isCreator}, Admin=${isAdmin})`} 
               className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col gap-3"
             >
               {/* Header: Title, Date, Status */}

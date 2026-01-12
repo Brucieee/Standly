@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Calendar, Clock, Edit2, Trash2, Tag } from 'lucide-react';
 import { Leave, User } from '../types';
+import { formatDate, formatTime } from './utils';
 
 interface ViewLeaveModalProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ export const ViewLeaveModal: React.FC<ViewLeaveModalProps> = ({
             <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Calendar size={20} /></div>
             <div>
               <p className="text-xs text-slate-500 font-bold uppercase">Date Range</p>
-              <p className="font-medium">{leave.startDate} <span className="text-slate-400">to</span> {leave.endDate}</p>
+              <p className="font-medium">{formatDate(leave.startDate)} <span className="text-slate-400">to</span> {formatDate(leave.endDate)}</p>
             </div>
           </div>
 
@@ -77,7 +78,7 @@ export const ViewLeaveModal: React.FC<ViewLeaveModalProps> = ({
               <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Clock size={20} /></div>
               <div>
                 <p className="text-xs text-slate-500 font-bold uppercase">Time</p>
-                <p className="font-medium">{(leave as any).startTime || 'Start'} - {(leave as any).endTime || 'End'}</p>
+                <p className="font-medium">{formatTime((leave as any).startTime) || 'Start'} - {formatTime((leave as any).endTime) || 'End'}</p>
               </div>
             </div>
           )}
