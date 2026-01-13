@@ -62,6 +62,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     })
     .slice(0, 3);
 
+  const missedDeadlines = deadlines.filter(d => {
+    const dueDate = new Date(d.dueDate);
+    return dueDate < new Date() && d.status !== 'Completed';
+  });
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Main Feed */}
@@ -127,7 +132,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           userId={currentUser.id} 
           onDateClick={onCalendarDateClick}
         />
-        <AnnouncementsWidget users={users} leaves={leaves} />
+        <AnnouncementsWidget users={users} leaves={leaves} deadlines={missedDeadlines} />
       </div>
     </div>
   );

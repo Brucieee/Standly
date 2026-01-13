@@ -20,6 +20,14 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
 
+  const formatAssigneeNames = (assignees: User[]) => {
+    const names = assignees.map(a => a.name).filter(Boolean);
+    if (names.length === 0) return '';
+    if (names.length === 1) return names[0];
+    const last = names.pop();
+    return `${names.join(', ')} and ${last}`;
+  };
+
   const filteredStandups = standups.filter(standup => {
     const userName = getUserName(standup.userId);
     const matchesUser = userName.toLowerCase().includes(filterUser.toLowerCase());
@@ -233,14 +241,15 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
                   const isAdmin = !!currentUser?.isAdmin;
                   const canEdit = isCreator || isAdmin;
-
-                  const isAssignee = !!(currentUser?.id && deadline.assigneeId && currentUser.id === deadline.assigneeId);
-                  const assignee = users.find(u => u.id === deadline.assigneeId);
+                  const assignees = deadline.assigneeIds?.map(id => users.find(u => u.id === id)).filter(Boolean) as User[] || [];
+                  const isAssignee = !!(currentUser?.id && deadline.assigneeIds?.includes(currentUser.id));
 
                   const getStatusColor = (status?: string) => {
                     switch (status) {
                       case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
                       case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+                      case 'Ready for QA': return 'bg-purple-100 text-purple-700 border-purple-200';
+                      case 'Ready for UAT': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
                       default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Pending
                     }
                   };
@@ -295,10 +304,20 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                                <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
                                <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
                             </div>
-                            {assignee && (
+                            {assignees && assignees.length > 0 && (
                               <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
-                                <img src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} alt={assignee.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
-                                <span className="text-xs text-slate-500">Assigned to {assignee.name}</span>
+                                <div className="flex -space-x-2 overflow-hidden">
+                                  {assignees.map(assignee => (
+                                    <img 
+                                      key={assignee.id}
+                                      src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
+                                      alt={assignee.name}
+                                      title={assignee.name}
+                                      className="w-5 h-5 rounded-full bg-slate-100 object-cover border-2 border-white"
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs text-slate-500">Assigned to {formatAssigneeNames(assignees)}</span>
                               </div>
                             )}
                           </div>
