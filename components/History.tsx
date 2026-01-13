@@ -259,18 +259,38 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     title: deadline.title,
                     description: (
                       <div className="space-y-3">
-                        <div className="flex flex-wrap gap-2 items-center">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(deadline.status)}`}>
-                            {deadline.status || 'Pending'}
-                          </span>
-                          {isAssignee && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold border border-indigo-100">
-                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                              </span>
-                              Assigned to you
+                        <div className="flex justify-between items-start">
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(deadline.status)}`}>
+                              {deadline.status || 'Pending'}
                             </span>
+                            {isAssignee && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold border border-indigo-100">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                                </span>
+                                Assigned to you
+                              </span>
+                            )}
+                          </div>
+                          {canEdit && (
+                            <div className="flex gap-1">
+                              <button 
+                                onClick={() => onEditDeadline(deadline)} 
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                title="Edit Deadline"
+                              >
+                                <Edit2 size={14} />
+                              </button>
+                              <button 
+                                onClick={() => onDeleteDeadline(deadline.id)} 
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Delete Deadline"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           )}
                         </div>
 
@@ -322,24 +342,6 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                             )}
                           </div>
 
-                          {canEdit && (
-                            <div className="flex gap-1">
-                              <button 
-                                onClick={() => onEditDeadline(deadline)} 
-                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                title="Edit Deadline"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button 
-                                onClick={() => onDeleteDeadline(deadline.id)} 
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete Deadline"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     )

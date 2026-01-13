@@ -49,18 +49,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onEditComment,
   onDeleteComment,
 }) => {
-  // Filter deadlines: upcoming within 3 days, max 3 items
-  const upcomingDeadlines = deadlines
-    .filter(d => {
-      const due = new Date(d.dueDate);
-      const now = new Date();
-      now.setHours(0, 0, 0, 0); // Start of today
-      const threeDaysFromNow = new Date(now);
-      threeDaysFromNow.setDate(now.getDate() + 3);
-      threeDaysFromNow.setHours(23, 59, 59, 999); // End of 3rd day
-      return due >= now && due <= threeDaysFromNow;
-    })
-    .slice(0, 3);
+// Filter deadlines: upcoming within 5 days, max 3 items
+const upcomingDeadlines = deadlines
+  .filter(d => {
+    const dueDate = new Date(d.dueDate);
+    const today = new Date();
+    const fiveDaysFromNow = new Date();
+    fiveDaysFromNow.setDate(today.getDate() + 5);
+    return d.status !== 'Completed' && dueDate >= today && dueDate <= fiveDaysFromNow;
+  })
 
   const missedDeadlines = deadlines.filter(d => {
     const dueDate = new Date(d.dueDate);

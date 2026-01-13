@@ -34,7 +34,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
     <div className="space-y-4">
       <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
         <Flag className="text-red-500" size={20} />
-        Upcoming Deadlines (Next 3 Days)
+        Upcoming Deadlines (Next 5 Days)
       </h2>
       
       <div className="flex flex-col gap-3">
@@ -172,7 +172,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
         
         {deadlines.length === 0 && (
           <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-            <p className="text-sm text-slate-500">No upcoming deadlines within 3 days.</p>
+            <p className="text-sm text-slate-500">No upcoming deadlines within 5 days.</p>
           </div>
         )}
       </div>
