@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Standup, Deadline, User } from '../types';
 import { Timeline } from './timeline';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Search, Calendar, X } from 'lucide-react';
 
 interface HistoryProps {
   standups: Standup[];
@@ -15,8 +15,24 @@ interface HistoryProps {
 
 export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, currentUser, onEditDeadline, onDeleteDeadline, onViewStandup }) => {
   const [activeTab, setActiveTab] = useState<'standups' | 'deadlines'>('standups');
+  const [filterUser, setFilterUser] = useState('');
+  const [filterDate, setFilterDate] = useState('');
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
+
+  const filteredStandups = standups.filter(standup => {
+    const userName = getUserName(standup.userId);
+    const matchesUser = userName.toLowerCase().includes(filterUser.toLowerCase());
+    
+    let matchesDate = true;
+    if (filterDate) {
+      const d = new Date(standup.date);
+      const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      matchesDate = localDateStr === filterDate;
+    }
+    
+    return matchesUser && matchesDate;
+  });
 
   return (
     <div className="space-y-6">
@@ -45,6 +61,37 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {activeTab === 'standups' && (
           <>
+            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                  type="text"
+                  placeholder="Filter by user..."
+                  value={filterUser}
+                  onChange={(e) => setFilterUser(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+              </div>
+              <div className="relative flex-1 max-w-xs">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input
+                  type="date"
+                  value={filterDate}
+                  onChange={(e) => setFilterDate(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                />
+              </div>
+              {(filterUser || filterDate) && (
+                <button
+                  onClick={() => { setFilterUser(''); setFilterDate(''); }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X size={16} />
+                  Clear
+                </button>
+              )}
+            </div>
+
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -59,7 +106,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {standups.map((standup) => (
+                  {filteredStandups.map((standup) => (
                     <tr 
                       key={standup.id} 
                       className="hover:bg-slate-50/50 transition-colors cursor-pointer"
@@ -103,7 +150,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                       </td>
                     </tr>
                   ))}
-                  {standups.length === 0 && (
+                  {filteredStandups.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No standup records found.</td>
                     </tr>
@@ -114,7 +161,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-slate-100">
-              {standups.map((standup) => (
+              {filteredStandups.map((standup) => (
                 <div 
                   key={standup.id} 
                   className="p-4 space-y-3 cursor-pointer hover:bg-slate-50 transition-colors"
@@ -150,7 +197,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   </div>
                 </div>
               ))}
-              {standups.length === 0 && (
+              {filteredStandups.length === 0 && (
                 <div className="p-8 text-center text-slate-500">No standup records found.</div>
               )}
             </div>
