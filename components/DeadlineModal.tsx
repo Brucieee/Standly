@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Flag, Link as LinkIcon, CheckCircle, MessageSquare, User as UserIcon } from 'lucide-react';
+import { X, Calendar, Flag, Link as LinkIcon, CheckCircle, MessageSquare, User as UserIcon, Users } from 'lucide-react';
 import { Deadline, User } from '../types';
 
 interface DeadlineModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Deadline, 'id' | 'creatorId'>) => void;
+  onSubmit: (data: Omit<Deadline, 'id' | 'creatorId' | 'assigneeId'> & { assigneeIds: string[] | null }) => void;
   initialData?: Deadline | null;
   onDelete?: () => void;
   users: User[];
@@ -18,7 +18,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('Pending');
   const [remarks, setRemarks] = useState('');
-  const [assigneeId, setAssigneeId] = useState<string>('');
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -29,7 +29,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
         setDescription(initialData.description || '');
         setStatus(initialData.status || 'Pending');
         setRemarks(initialData.remarks || '');
-        setAssigneeId(initialData.assigneeId || '');
+        setAssigneeIds((initialData as any).assigneeIds || (initialData.assigneeId ? [initialData.assigneeId] : []));
       } else {
         setTitle('');
         setDate('');
@@ -37,10 +37,21 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
         setDescription('');
         setStatus('Pending');
         setRemarks('');
-        setAssigneeId('');
+        setAssigneeIds([]);
       }
     }
   }, [isOpen, initialData]);
+
+  const addAssignee = (id: string) => {
+    if (id && !assigneeIds.includes(id)) {
+      setAssigneeIds([...assigneeIds, id]);
+    }
+  };
+
+  const removeAssignee = (id: string) => {
+    setAssigneeIds(assigneeIds.filter(assigneeId => assigneeId !== id));
+  };
+
 
   if (!isOpen) return null;
 
@@ -62,12 +73,14 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
         releaseLink: releaseLink || undefined,
         status,
         remarks,
-        assigneeId: assigneeId || null,
+        assigneeIds: assigneeIds.length > 0 ? assigneeIds : null,
       });
     } catch (error) {
       console.error('Invalid date:', error);
     }
   };
+
+  const unassignedUsers = users.filter(u => !assigneeIds.includes(u.id));
 
   return (
     <div 
@@ -137,6 +150,8 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
                 >
                   <option value="Pending">Pending</option>
                   <option value="In Progress">In Progress</option>
+                  <option value="Ready for QA">Ready for QA</option>
+                  <option value="Ready for UAT">Ready for UAT</option>
                   <option value="Completed">Completed</option>
                 </select>
               </div>
@@ -145,20 +160,39 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
 
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1">
-              Assignee
+              Assignees
             </label>
-            <div className="relative">
-              <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-              <select
-                value={assigneeId}
-                onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900 appearance-none"
-              >
-                <option value="">Unassigned</option>
-                {users.map(user => (
-                  <option key={user.id} value={user.id}>{user.name}</option>
-                ))}
-              </select>
+            <div className="p-2 border border-slate-200 rounded-lg min-h-[42px] flex flex-col justify-center">
+              <div className="flex flex-wrap gap-2">
+                {assigneeIds.map(id => {
+                  const user = users.find(u => u.id === id);
+                  return (
+                    <div key={id} className="flex items-center gap-2 bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 text-sm font-medium animate-fade-in-up">
+                      <img src={user?.avatar} alt={user?.name} className="w-5 h-5 rounded-full object-cover" />
+                      <span>{user?.name || 'Unknown User'}</span>
+                      <button type="button" onClick={() => removeAssignee(id)} className="text-indigo-400 hover:text-indigo-600">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {unassignedUsers.length > 0 && (
+                <div className="relative mt-2">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                  <select
+                    value=""
+                    onChange={(e) => addAssignee(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 bg-white border-0 focus:ring-0 focus:border-transparent outline-none transition-all text-slate-900 appearance-none rounded-lg"
+                  >
+                    <option value="" disabled>Add an assignee...</option>
+                    {unassignedUsers.map(user => (
+                      <option key={user.id} value={user.id}>{user.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

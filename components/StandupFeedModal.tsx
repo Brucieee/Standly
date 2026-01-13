@@ -126,6 +126,25 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
     }
   };
 
+  const getLinkName = (link: string) => {
+    try {
+      const url = new URL(link);
+      const pathParts = url.pathname.split('/').filter(part => part);
+      const lastPart = pathParts.pop(); // Get the last part of the path
+
+      // Specifically look for Jira-style keys (e.g., ABC-123)
+      if (lastPart && /^[A-Z]+-[0-9]+$/.test(lastPart)) {
+        return lastPart;
+      }
+      
+      // Fallback for other URLs: return the last path segment or the hostname
+      return lastPart || url.hostname;
+    } catch (error) {
+      // If not a valid URL, return a truncated version of the original string
+      return link.length > 30 ? `${link.substring(0, 27)}...` : link;
+    }
+  };
+
   const getMoodIcon = (mood: string, size: number = 28) => {
     switch (mood) {
       case 'happy': return <Smile className="text-green-500" size={size} />;
@@ -149,7 +168,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
     }
   };
 
-  const renderCommentContent = (text: string) => {
+  const renderContent = (text: string) => {
     // First, get the mentions processed
     const nodes = renderTextWithMentions(text, users);
     
@@ -256,7 +275,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
               </div>
             ) : (
               <p className={`${isReply ? 'text-xs' : 'text-sm'} text-slate-700 whitespace-pre-wrap leading-relaxed`}>
-                 {renderCommentContent(comment.text)}
+                 {renderContent(comment.text)}
               </p>
             )}
           </div>
@@ -365,15 +384,15 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 gap-y-8">
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><CheckCircle2 size={14} className="text-green-500" /> Yesterday</h4>
-                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{standup.yesterday}</p>
+                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{renderContent(standup.yesterday)}</p>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><Clock size={14} className="text-indigo-500" /> Today</h4>
-                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{standup.today}</p>
+                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{renderContent(standup.today)}</p>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><AlertCircle size={14} className="text-red-500" /> Blockers</h4>
-                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{standup.blockers || <span className="text-slate-400 italic">None</span>}</p>
+                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{standup.blockers ? renderContent(standup.blockers) : <span className="text-slate-400 italic">None</span>}</p>
                 </div>
                 <div className="space-y-2">
                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mood</h4>
@@ -382,14 +401,17 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
            </div>
 
            {standup.jiraLinks && standup.jiraLinks.length > 0 && (
-              <div className="pt-4 border-t border-slate-100 space-y-2">
-                {standup.jiraLinks.map((link, index) => (
-                  <a key={index} href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:underline bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors mr-2 mb-2">
-                    <ExternalLink size={14} /> View Jira Ticket {standup.jiraLinks!.length > 1 ? `#${index + 1}` : ''}
-                  </a>
-                ))}
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Attached Links</h4>
+                <div className="flex flex-wrap gap-2">
+                  {standup.jiraLinks.map((link, index) => (
+                    <a key={index} href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                      <ExternalLink size={14} /> {getLinkName(link)}
+                    </a>
+                  ))}
+                </div>
               </div>
-           )}
+            )}
 
            {/* Reactions & Comments */}
            <div className="pt-6 border-t border-slate-100">

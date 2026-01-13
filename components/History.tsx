@@ -194,6 +194,25 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                         <p className="text-slate-700 line-clamp-2">{standup.blockers}</p>
                       </div>
                     )}
+                    {standup.jiraLinks && standup.jiraLinks.length > 0 && (
+                      <div>
+                        <span className="text-xs font-bold text-indigo-500 uppercase">Links</span>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {standup.jiraLinks.map((link, i) => (
+                            <a 
+                              key={i} 
+                              href={link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="text-indigo-600 hover:underline text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-100"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Ticket #{i + 1}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

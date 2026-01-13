@@ -266,7 +266,7 @@ export const apiDeadlines = {
       creatorId: d.creator_id,
       status: d.status,
       remarks: d.remarks,
-      assigneeId: d.assignee_id,
+      assigneeIds: d.assignee_ids,
     }));
   },
 
@@ -281,22 +281,19 @@ export const apiDeadlines = {
         creator_id: deadline.creatorId,
         status: deadline.status,
         remarks: deadline.remarks,
-        assignee_id: deadline.assigneeId,
+        assignee_ids: (deadline as any).assigneeIds,
       })
       .select()
       .single();
 
     if (error) throw error;
     return {
+      ...deadline,
       id: data.id,
-      title: data.title,
       dueDate: data.due_date,
-      description: data.description,
       releaseLink: data.release_link,
       creatorId: data.creator_id,
-      status: data.status,
-      remarks: data.remarks,
-      assigneeId: data.assignee_id,
+      assigneeIds: data.assignee_ids,
     };
   },
 
@@ -308,7 +305,7 @@ export const apiDeadlines = {
     if (updates.releaseLink !== undefined) dbUpdates.release_link = updates.releaseLink;
     if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.remarks !== undefined) dbUpdates.remarks = updates.remarks;
-    if (updates.assigneeId !== undefined) dbUpdates.assignee_id = updates.assigneeId;
+    if ((updates as any).assigneeIds !== undefined) dbUpdates.assignee_ids = (updates as any).assigneeIds;
 
     const { error } = await supabase
       .from('deadlines')

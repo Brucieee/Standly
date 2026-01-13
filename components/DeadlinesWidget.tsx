@@ -16,8 +16,18 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
     switch (status) {
       case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'Ready for QA': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'Ready for UAT': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Pending
     }
+  };
+
+  const formatAssigneeNames = (assignees: User[]) => {
+    const names = assignees.map(a => a.name);
+    if (names.length === 0) return '';
+    if (names.length === 1) return names[0];
+    const last = names.pop();
+    return `${names.join(', ')} and ${last}`;
   };
 
   return (
@@ -36,8 +46,8 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const isAdmin = !!currentUser?.isAdmin;
           const canEdit = isCreator || isAdmin;
 
-          const isAssignee = !!(currentUser?.id && deadline.assigneeId && currentUser.id === deadline.assigneeId);
-          const assignee = users.find(u => u.id === deadline.assigneeId);
+          const isAssignee = !!(currentUser?.id && deadline.assigneeIds?.includes(currentUser.id));
+          const assignees = deadline.assigneeIds?.map(id => users.find(u => u.id === id)).filter(Boolean) as User[] || [];
 
           return (
             <div 
@@ -98,17 +108,25 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                        </div>
                     </div>
 
-                    {/* Assignee (if exists) */}
-                    {assignee && (
+                    {/* Assignees (if exists) */}
+                    {assignees && assignees.length > 0 && (
                       <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
-                         <img 
-                           src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
-                           alt={assignee.name}
-                           className="w-6 h-6 rounded-full bg-slate-100 object-cover border border-slate-100"
-                         />
+                         <div className="flex -space-x-2 overflow-hidden">
+                           {assignees.map(assignee => (
+                             <img 
+                               key={assignee.id}
+                               src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
+                               alt={assignee.name}
+                               title={assignee.name}
+                               className="inline-block w-6 h-6 rounded-full bg-slate-100 object-cover border-2 border-white"
+                             />
+                           ))}
+                         </div>
                          <div className="flex flex-col">
                            <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Assigned to</span>
-                           <span className="text-xs font-medium text-slate-700">{assignee.name}</span>
+                           <span className="text-xs font-medium text-slate-700">
+                             {formatAssigneeNames(assignees)}
+                           </span>
                          </div>
                       </div>
                     )}

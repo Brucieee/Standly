@@ -46,27 +46,17 @@ export interface Standup {
   createdAt?: string;
 }
 
-export interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'todo' | 'in-progress' | 'done';
-  assigneeId: string; // Could be self or others
-  creatorId: string;
-  dueDate: string; // ISO String
-}
-
 export interface Deadline {
   id: string;
   title: string;
   description?: string;
   dueDate: string;
-  status?: 'Pending' | 'In Progress' | 'Completed';
+  status?: 'Pending' | 'In Progress' | 'Completed' | 'Ready for QA' | 'Ready for UAT';
   priority?: 'Low' | 'Medium' | 'High';
   remarks?: string;
   creatorId: string;
   releaseLink?: string;
-  assigneeId?: string | null;
+  assigneeIds?: string[] | null;
 }
 
 export interface Leave {
@@ -78,23 +68,30 @@ export interface Leave {
   type: 'vacation' | 'sick' | 'personal' | 'wellness';
 }
 
+export interface Holiday {
+    id: string;
+    date: string;
+    name: string;
+}
+
 export interface AppState {
   currentUser: User | null;
   users: User[];
   standups: Standup[];
-    deadlines: Deadline[];
-    leaves: Leave[];
-  }
-  
-  export type QuickLinkCategory = 'General' | 'Development' | 'Design' | 'Resources' | 'Social' | 'Tools';
-  
-  export interface QuickLink {
-    id: string;
-    title: string;
-    url: string;
-    iconUrl?: string;
-    category: QuickLinkCategory;
-    createdAt?: string;
-    createdBy?: string;
-  }
-  
+  deadlines: Deadline[];
+  leaves: Leave[];
+  holidays: Holiday[];
+  quickLinks: QuickLink[];
+}
+
+export type QuickLinkCategory = 'General' | 'Development' | 'Design' | 'Resources' | 'Social' | 'Tools';
+
+export interface QuickLink {
+  id: string;
+  title: string;
+  url: string;
+  iconUrl?: string;
+  category: QuickLinkCategory;
+  createdAt?: string;
+  createdBy?: string;
+}

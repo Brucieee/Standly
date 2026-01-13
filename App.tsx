@@ -205,7 +205,8 @@ const App: React.FC = () => {
           user: standupUser,
           comments,
           reactions,
-          createdAt: s.created_at
+          createdAt: s.created_at,
+          jiraLinks: s.jira_links, // Map snake_case to camelCase
         };
       });
 
@@ -353,10 +354,6 @@ const App: React.FC = () => {
     try {
       if (editingStandup) {
         await apiStandups.update(editingStandup.id, data);
-        setState(prev => ({
-          ...prev,
-          standups: prev.standups.map(s => s.id === editingStandup.id ? { ...s, ...data } : s)
-        }));
       } else {
         const newStandup = await apiStandups.create({
           userId: state.currentUser.id,

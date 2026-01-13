@@ -60,7 +60,13 @@ export const StandupModal: React.FC<StandupModalProps> = ({
         setYesterday(initialData.yesterday);
         setToday(initialData.today);
         setBlockers(initialData.blockers);
-        setJiraLinks(initialData.jiraLinks && initialData.jiraLinks.length > 0 ? initialData.jiraLinks : ['']);
+        // Use a copy of the array to be safe
+        const links = initialData.jiraLinks;
+        if (links && links.length > 0) {
+          setJiraLinks([...links]);
+        } else {
+          setJiraLinks(['']);
+        }
         setMood(initialData.mood);
       } else {
         setDate(initialDate);

@@ -66,6 +66,25 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
     }
   };
 
+  const getLinkName = (link: string) => {
+    try {
+      const url = new URL(link);
+      const pathParts = url.pathname.split('/').filter(part => part);
+      const lastPart = pathParts.pop(); // Get the last part of the path
+
+      // Specifically look for Jira-style keys (e.g., ABC-123)
+      if (lastPart && /^[A-Z]+-[0-9]+$/.test(lastPart)) {
+        return lastPart;
+      }
+      
+      // Fallback for other URLs: return the last path segment or the hostname
+      return lastPart || url.hostname;
+    } catch (error) {
+      // If not a valid URL, return a truncated version of the original string
+      return link.length > 30 ? `${link.substring(0, 27)}...` : link;
+    }
+  };
+
   // Filter standups to show only today's entries
   const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format in local time
   const todaysStandups = standups.filter(s => {
@@ -201,7 +220,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                         <p className="text-xs font-medium text-indigo-500 mb-0.5">
                           {user?.role || 'Software Developer'}
                         </p>
-                        <div className="flex justify-between items-end">
+                        <div className="flex justify-between items-end mt-2">
                           <p className="text-[10px] text-slate-400 flex items-center gap-1 font-medium uppercase tracking-wide">
                             {timeStr}
                           </p>
@@ -247,7 +266,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                           title={link}
                         >
                           <ExternalLink size={10} />
-                          Ticket {i + 1}
+                          {getLinkName(link)}
                         </a>
                       ))}
                     </div>
