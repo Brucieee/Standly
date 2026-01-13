@@ -88,7 +88,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col animate-fade-in-up"
+        className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col animate-fade-in-up"
         onClick={e => e.stopPropagation()}
       >
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
@@ -163,7 +163,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
               Assignees
             </label>
             <div className="p-2 border border-slate-200 rounded-lg min-h-[42px] flex flex-col justify-center">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-16 overflow-y-auto pr-2">
                 {assigneeIds.map(id => {
                   const user = users.find(u => u.id === id);
                   return (
