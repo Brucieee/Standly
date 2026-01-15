@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Standup, Deadline, User } from '../types';
 import { Timeline } from './timeline';
-import { Edit2, Trash2, Search, Calendar, X } from 'lucide-react';
+import { Edit2, Trash2, Search, Calendar, X, ChevronDown } from 'lucide-react';
 
 interface HistoryProps {
   standups: Standup[];
@@ -17,6 +17,17 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
   const [activeTab, setActiveTab] = useState<'standups' | 'deadlines'>('standups');
   const [filterUser, setFilterUser] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [expandedDeadlineIds, setExpandedDeadlineIds] = useState<Set<string>>(new Set());
+
+  const toggleDeadline = (id: string) => {
+    const newSet = new Set(expandedDeadlineIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setExpandedDeadlineIds(newSet);
+  };
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
 
@@ -41,6 +52,17 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
     
     return matchesUser && matchesDate;
   });
+
+  const deadlineStats = useMemo(() => {
+    return {
+      total: deadlines.length,
+      completed: deadlines.filter(d => d.status === 'Completed').length,
+      inProgress: deadlines.filter(d => d.status === 'In Progress').length,
+      pending: deadlines.filter(d => !d.status || d.status === 'Pending').length,
+      qa: deadlines.filter(d => d.status === 'Ready for QA').length,
+      uat: deadlines.filter(d => d.status === 'Ready for UAT').length,
+    };
+  }, [deadlines]);
 
   return (
     <div className="space-y-6">
@@ -233,6 +255,32 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
         {activeTab === 'deadlines' && (
           <div className="p-4 md:p-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+              <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                <div className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Pending</div>
+                <div className="text-2xl font-bold text-amber-700">{deadlineStats.pending}</div>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">In Progress</div>
+                <div className="text-2xl font-bold text-blue-700">{deadlineStats.inProgress}</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">QA</div>
+                <div className="text-2xl font-bold text-purple-700">{deadlineStats.qa}</div>
+              </div>
+              <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100">
+                <div className="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-1">UAT</div>
+                <div className="text-2xl font-bold text-cyan-700">{deadlineStats.uat}</div>
+              </div>
+              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Completed</div>
+                <div className="text-2xl font-bold text-emerald-700">{deadlineStats.completed}</div>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total</div>
+                <div className="text-2xl font-bold text-slate-900">{deadlineStats.total}</div>
+              </div>
+            </div>
             {deadlines.length > 0 ? (
               <Timeline 
                 variant="spacious"
@@ -243,6 +291,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   const canEdit = isCreator || isAdmin;
                   const assignees = deadline.assigneeIds?.map(id => users.find(u => u.id === id)).filter(Boolean) as User[] || [];
                   const isAssignee = !!(currentUser?.id && deadline.assigneeIds?.includes(currentUser.id));
+                  const isExpanded = expandedDeadlineIds.has(deadline.id);
 
                   const getStatusColor = (status?: string) => {
                     switch (status) {
@@ -259,7 +308,10 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     title: deadline.title,
                     description: (
                       <div className="space-y-3">
-                        <div className="flex justify-between items-start">
+                        <div 
+                          className="flex justify-between items-center cursor-pointer select-none"
+                          onClick={() => toggleDeadline(deadline.id)}
+                        >
                           <div className="flex flex-wrap gap-2 items-center">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getStatusColor(deadline.status)}`}>
                               {deadline.status || 'Pending'}
@@ -274,38 +326,42 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                               </span>
                             )}
                           </div>
-                          {canEdit && (
-                            <div className="flex gap-1">
-                              <button 
-                                onClick={() => onEditDeadline(deadline)} 
-                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                title="Edit Deadline"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button 
-                                onClick={() => onDeleteDeadline(deadline.id)} 
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete Deadline"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                          <div className="flex items-center gap-2">
+                            {canEdit && (
+                              <div className="flex gap-1 mr-2">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); onEditDeadline(deadline); }} 
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                  title="Edit Deadline"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); onDeleteDeadline(deadline.id); }} 
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Delete Deadline"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            )}
+                            <div className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                              <ChevronDown size={16} />
                             </div>
-                          )}
+                          </div>
                         </div>
-
+                      </div>
+                    ),
+                    timestamp: new Date(deadline.dueDate),
+                    status: new Date(deadline.dueDate) < new Date() ? 'completed' : 'active',
+                    content: isExpanded ? (
+                      <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                         {deadline.description && (
                           <div>
                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Description</p>
                              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.description}</p>
                           </div>
                         )}
-                      </div>
-                    ),
-                    timestamp: new Date(deadline.dueDate),
-                    status: new Date(deadline.dueDate) < new Date() ? 'completed' : 'active',
-                    content: (
-                      <div className="space-y-3">
                         {deadline.remarks && (
                           <div className="mt-2">
                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Remarks</p>
@@ -344,7 +400,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
                         </div>
                       </div>
-                    )
+                    ) : null
                   };
                 })}
               />

@@ -1,3 +1,4 @@
+import moment from 'moment-timezone';
 import React from 'react';
 import { User, Standup, Deadline, Leave } from '../types';
 import { Plus, Flag, FileText } from 'lucide-react';
@@ -5,6 +6,7 @@ import { DeadlinesWidget } from './DeadlinesWidget';
 import { StandupFeed } from './StandupFeed';
 import { CalendarWidget } from './CalendarWidget';
 import { AnnouncementsWidget } from './AnnouncementsWidget';
+import { MissedDeadlinesWidget } from './MissedDeadlinesWidget';
 
 interface DashboardProps {
   currentUser: User;
@@ -52,16 +54,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
 // Filter deadlines: upcoming within 5 days, max 3 items
 const upcomingDeadlines = deadlines
   .filter(d => {
-    const dueDate = new Date(d.dueDate);
-    const today = new Date();
-    const fiveDaysFromNow = new Date();
-    fiveDaysFromNow.setDate(today.getDate() + 5);
-    return d.status !== 'Completed' && dueDate >= today && dueDate <= fiveDaysFromNow;
-  })
+    const dueDate = moment(d.dueDate).startOf('day');
+    const today = moment().startOf('day');
+    const fiveDaysFromNow = moment().add(5, 'days').endOf('day');
+    return d.status !== 'Completed' && dueDate.isSameOrAfter(today) && dueDate.isSameOrBefore(fiveDaysFromNow);
+  });
 
   const missedDeadlines = deadlines.filter(d => {
-    const dueDate = new Date(d.dueDate);
-    return dueDate < new Date() && d.status !== 'Completed';
+    const dueDate = moment(d.dueDate).tz('Asia/Manila');
+    const now = moment().tz('Asia/Manila');
+    
+    // Set deadline to 5 PM of the due date
+    dueDate.set({
+      hour: 17,
+      minute: 0,
+      second: 0,
+      millisecond: 0
+    });
+    
+    return now.isAfter(dueDate) && d.status !== 'Completed';
   });
 
   return (
@@ -129,7 +140,8 @@ const upcomingDeadlines = deadlines
           userId={currentUser.id} 
           onDateClick={onCalendarDateClick}
         />
-        <AnnouncementsWidget users={users} leaves={leaves} deadlines={missedDeadlines} />
+        <MissedDeadlinesWidget users={users} deadlines={missedDeadlines} />
+        <AnnouncementsWidget users={users} leaves={leaves} />
       </div>
     </div>
   );
