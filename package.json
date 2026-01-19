@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.24.0",
     "lucide-react": "^0.562.0",
+    "moment-timezone": "^0.6.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-easy-crop": "^5.5.6",

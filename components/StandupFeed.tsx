@@ -110,7 +110,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
     <>
     <div className="space-y-10">
       {Object.entries(groupedStandups).map(([dateLabel, groupStandups]) => (
-        <div key={dateLabel} className="space-y-5 animate-fade-in-up">
+        <div key={dateLabel} className="space-y-3 animate-fade-in-up">
           {/* Date Header */}
           <div className="flex items-center gap-4">
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
