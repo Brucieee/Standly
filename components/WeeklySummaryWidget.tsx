@@ -13,26 +13,37 @@ interface WeeklySummaryWidgetProps {
 export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standups, users, deadlines }) => {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
 
   const handleGenerate = async () => {
     setLoading(true);
     
-    // Filter for current week (Sunday to Today)
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // Include all of today
-    
-    const startOfWeek = new Date(today);
-    const day = today.getDay(); // 0 (Sun) - 6 (Sat)
-    const diff = today.getDate() - day;
+    // Determine the week based on selectedDate
+    const referenceDate = new Date(selectedDate);
+    // Ensure we are working with local time interpretation or UTC? 
+    // Creating date from "YYYY-MM-DD" usually defaults to UTC in some parsers, but "YYYY-MM-DDT00:00" is local.
+    // Let's safe-parse by splitting
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    referenceDate.setFullYear(y, m - 1, d);
+    referenceDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone rollover issues with day calculation
+
+    const startOfWeek = new Date(referenceDate);
+    const day = referenceDate.getDay(); // 0 (Sun) - 6 (Sat)
+    const diff = referenceDate.getDate() - day;
     startOfWeek.setDate(diff);
     startOfWeek.setHours(0, 0, 0, 0); // Start of Sunday
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999); // End of Saturday
 
     const relevantStandups = standups
       .filter(s => {
         const standupDate = new Date(s.date);
-        // We use string comparison for safety if objects are mixed, but Date comparison works if normalized
-        // Let's use string comparison based on YYYY-MM-DD for robustness
-        return standupDate >= startOfWeek && standupDate <= today;
+        return standupDate >= startOfWeek && standupDate <= endOfWeek;
       })
       .map(s => {
         const user = users.find(u => u.id === s.userId);
@@ -58,27 +69,47 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
     setLoading(false);
   };
 
+  const getWeekLabel = () => {
+    if (!selectedDate) return 'this week';
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    const day = date.getDay();
+    const startDiff = date.getDate() - day;
+    const startOfWeek = new Date(date);
+    startOfWeek.setDate(startDiff);
+    
+    return `the week of ${startOfWeek.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}`;
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
       {/* Header Section */}
-      <div className="p-6 bg-gradient-to-r from-indigo-50 to-white border-b border-slate-100 flex justify-between items-center">
+      <div className="p-6 bg-gradient-to-r from-indigo-50 to-white border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
              <Sparkles className="text-indigo-500" size={20} />
              Weekly AI Summary
            </h2>
            <p className="text-slate-500 text-sm mt-1">
-             Summarizing team progress for this week
+             Summarizing team progress for {getWeekLabel()}
            </p>
         </div>
-        <button 
-          onClick={handleGenerate}
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
-          {loading ? 'Analyzing...' : 'Generate Report'}
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600 shadow-sm"
+          />
+          <button 
+            onClick={handleGenerate}
+            disabled={loading}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+            {loading ? 'Analyzing...' : 'Generate Report'}
+          </button>
+        </div>
       </div>
 
       {/* Content Section */}
