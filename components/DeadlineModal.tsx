@@ -68,9 +68,9 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
       
       onSubmit({
         title,
-        description: description || undefined,
+        description: description,
         dueDate,
-        releaseLink: releaseLink || undefined,
+        releaseLink: releaseLink,
         status,
         remarks,
         assigneeIds: assigneeIds.length > 0 ? assigneeIds : null,

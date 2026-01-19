@@ -60,7 +60,13 @@ serve(async (req) => {
       throw new Error("RESEND_API_KEY is not set in Supabase secrets.");
     }
 
-    const emailPromises = usersToRemind.map(async (user) => {
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    for (const [index, user] of usersToRemind.entries()) {
+      if (index > 0) {
+        await wait(5000); // Wait 5 seconds between requests
+      }
+
       console.log(`Sending reminder to: ${user.email}`);
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -86,10 +92,7 @@ serve(async (req) => {
         console.error(`Failed to send email to ${user.email}. Status: ${res.status}`);
         console.error('Resend Error:', errorBody);
       }
-      return res;
-    });
-
-    await Promise.all(emailPromises);
+    }
 
     const message = `Processed ${usersToRemind.length} reminder(s). Check logs for details.`;
     console.log(message);
