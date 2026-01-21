@@ -46,7 +46,10 @@ export const AnnouncementsWidget: React.FC<AnnouncementsWidgetProps> = ({ users,
             const startDate = new Date(leave.startDate);
             const endDate = new Date(leave.endDate);
             const today = new Date();
-            const isActive = startDate <= today && endDate >= today;
+            today.setHours(0, 0, 0, 0);
+            const sDate = new Date(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+            const eDate = new Date(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+            const isActive = sDate <= today && eDate >= today;
             
             const dateStr = startDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             const endStr = endDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -65,8 +68,9 @@ export const AnnouncementsWidget: React.FC<AnnouncementsWidgetProps> = ({ users,
                 />
                 <div>
                   <p className="font-medium text-sm text-slate-700">
-                    <span className="font-bold text-slate-900">{user.name.split(' ')[0]}</span> will be on 
+                    <span className="font-bold text-slate-900">{user.name.split(' ')[0]}</span> {isActive ? 'is on' : 'will be on'} 
                     <span className="lowercase"> {getLeaveTypeLabel(leave.type)}</span>
+                    {isActive && ' today'}
                   </p>
                   <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
                     <Calendar size={12} />

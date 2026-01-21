@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Standup, Deadline, User } from '../types';
 import { Timeline } from './timeline';
-import { Edit2, Trash2, Search, Calendar, X, Download, ChevronDown } from 'lucide-react';
+import { Edit2, Trash2, Search, Calendar, X, Download, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface HistoryProps {
   standups: Standup[];
@@ -17,7 +17,10 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
   const [activeTab, setActiveTab] = useState<'standups' | 'deadlines'>('standups');
   const [filterUser, setFilterUser] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
   const [expandedDeadlineIds, setExpandedDeadlineIds] = useState<Set<string>>(new Set());
+  const [hideCompleted, setHideCompleted] = useState(false);
 
   const toggleDeadline = (id: string) => {
     const newSet = new Set(expandedDeadlineIds);
@@ -52,6 +55,31 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
     
     return matchesUser && matchesDate;
   });
+
+  // Pagination logic
+  const uniqueDates = useMemo(() => {
+    const dates = Array.from(new Set(filteredStandups.map(s => new Date(s.date).toDateString())));
+    return dates.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  }, [filteredStandups]);
+
+  const totalPages = Math.ceil(uniqueDates.length / itemsPerPage);
+  
+  const paginatedDates = uniqueDates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const displayStandups = filteredStandups.filter(s => 
+    paginatedDates.includes(new Date(s.date).toDateString())
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterUser, filterDate]);
+
+  const visibleDeadlines = useMemo(() => {
+    return hideCompleted ? deadlines.filter(d => d.status !== 'Completed') : deadlines;
+  }, [deadlines, hideCompleted]);
 
   const deadlineStats = useMemo(() => {
     return {
@@ -207,7 +235,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredStandups.map((standup) => (
+                  {displayStandups.map((standup) => (
                     <tr 
                       key={standup.id} 
                       className="hover:bg-slate-50/50 transition-colors cursor-pointer"
@@ -224,9 +252,9 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                           <span className="font-medium text-slate-900">{getUserName(standup.userId)}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={standup.yesterday}>{standup.yesterday}</td>
-                      <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={standup.today}>{standup.today}</td>
-                      <td className="px-6 py-4 text-slate-600 max-w-xs truncate" title={standup.blockers}>
+                      <td className="px-6 py-4 text-slate-600 max-w-sm whitespace-pre-wrap">{standup.yesterday}</td>
+                      <td className="px-6 py-4 text-slate-600 max-w-sm whitespace-pre-wrap">{standup.today}</td>
+                      <td className="px-6 py-4 text-slate-600 max-w-sm whitespace-pre-wrap">
                         {standup.blockers || <span className="text-slate-400 italic">None</span>}
                       </td>
                       <td className="px-6 py-4">
@@ -251,7 +279,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                       </td>
                     </tr>
                   ))}
-                  {filteredStandups.length === 0 && (
+                  {displayStandups.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No standup records found.</td>
                     </tr>
@@ -262,7 +290,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-slate-100">
-              {filteredStandups.map((standup) => (
+              {displayStandups.map((standup) => (
                 <div 
                   key={standup.id} 
                   className="p-4 space-y-3 cursor-pointer hover:bg-slate-50 transition-colors"
@@ -317,10 +345,38 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   </div>
                 </div>
               ))}
-              {filteredStandups.length === 0 && (
+              {displayStandups.length === 0 && (
                 <div className="p-8 text-center text-slate-500">No standup records found.</div>
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50">
+                <div className="text-sm text-slate-500 hidden sm:block">
+                  Showing {paginatedDates.length} days of standups
+                </div>
+                <div className="flex items-center gap-2 mx-auto sm:mx-0">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-transparent hover:border-slate-200"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="text-sm font-medium text-slate-700">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-transparent hover:border-slate-200"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -352,10 +408,24 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 <div className="text-2xl font-bold text-slate-900">{deadlineStats.total}</div>
               </div>
             </div>
-            {deadlines.length > 0 ? (
+            
+            <div className="flex justify-end mb-6">
+              <label className="inline-flex items-center cursor-pointer select-none group">
+                <input 
+                  type="checkbox" 
+                  checked={hideCompleted} 
+                  onChange={(e) => setHideCompleted(e.target.checked)} 
+                  className="sr-only peer" 
+                />
+                <div className="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 group-hover:bg-slate-300 peer-checked:group-hover:bg-indigo-700"></div>
+                <span className="ms-3 text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">Hide Completed</span>
+              </label>
+            </div>
+
+            {visibleDeadlines.length > 0 ? (
               <Timeline 
                 variant="spacious"
-                items={deadlines.map(deadline => {
+                items={visibleDeadlines.map(deadline => {
                   const creator = users.find(u => u.id === deadline.creatorId);
                   const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
                   const isAdmin = !!currentUser?.isAdmin;
