@@ -45,14 +45,14 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
   const filteredStandups = standups.filter(standup => {
     const userName = getUserName(standup.userId);
     const matchesUser = userName.toLowerCase().includes(filterUser.toLowerCase());
-    
+
     let matchesDate = true;
     if (filterDate) {
       const d = new Date(standup.date);
       const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       matchesDate = localDateStr === filterDate;
     }
-    
+
     return matchesUser && matchesDate;
   });
 
@@ -63,13 +63,13 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
   }, [filteredStandups]);
 
   const totalPages = Math.ceil(uniqueDates.length / itemsPerPage);
-  
+
   const paginatedDates = uniqueDates.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const displayStandups = filteredStandups.filter(s => 
+  const displayStandups = filteredStandups.filter(s =>
     paginatedDates.includes(new Date(s.date).toDateString())
   );
 
@@ -87,8 +87,8 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
       completed: deadlines.filter(d => d.status === 'Completed').length,
       inProgress: deadlines.filter(d => d.status === 'In Progress').length,
       pending: deadlines.filter(d => !d.status || d.status === 'Pending').length,
-      qa: deadlines.filter(d => d.status === 'Ready for QA').length,
-      uat: deadlines.filter(d => d.status === 'Ready for UAT').length,
+      forQA: deadlines.filter(d => d.status === 'For QA').length,
+      completedBeyondSchedule: deadlines.filter(d => d.status === 'Completed Beyond Schedule').length,
     };
   }, [deadlines]);
 
@@ -99,9 +99,9 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
           <h1 className="text-2xl font-bold text-slate-900">History & Logs</h1>
           <p className="text-slate-500">View past activities and records.</p>
         </div>
-        
+
         <div className="flex items-center gap-3 bg-slate-100 p-1 rounded-xl self-start md:self-auto">
-           <button
+          <button
             onClick={() => {
               if (activeTab === 'standups') {
                 const headers = ['Date', 'User', 'Yesterday', 'Today', 'Blockers', 'Jira Links'];
@@ -120,7 +120,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     ].join(',');
                   })
                 ].join('\n');
-                
+
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 if (link.download !== undefined) {
@@ -151,7 +151,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     ].join(',');
                   })
                 ].join('\n');
-                
+
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 if (link.download !== undefined) {
@@ -236,8 +236,8 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {displayStandups.map((standup) => (
-                    <tr 
-                      key={standup.id} 
+                    <tr
+                      key={standup.id}
                       className="hover:bg-slate-50/50 transition-colors cursor-pointer"
                       onClick={() => onViewStandup(standup)}
                     >
@@ -261,11 +261,11 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                         {standup.jiraLinks && standup.jiraLinks.length > 0 ? (
                           <div className="flex flex-col gap-1">
                             {standup.jiraLinks.map((link, i) => (
-                              <a 
-                                key={i} 
-                                href={link} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
+                              <a
+                                key={i}
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-indigo-600 hover:underline text-xs whitespace-nowrap"
                                 onClick={(e) => e.stopPropagation()} // Prevent row click
                               >
@@ -291,8 +291,8 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-slate-100">
               {displayStandups.map((standup) => (
-                <div 
-                  key={standup.id} 
+                <div
+                  key={standup.id}
                   className="p-4 space-y-3 cursor-pointer hover:bg-slate-50 transition-colors"
                   onClick={() => onViewStandup(standup)}
                 >
@@ -307,7 +307,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="text-xs font-bold text-slate-500 uppercase">Yesterday</span>
@@ -328,11 +328,11 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                         <span className="text-xs font-bold text-indigo-500 uppercase">Links</span>
                         <div className="flex flex-wrap gap-2 mt-1">
                           {standup.jiraLinks.map((link, i) => (
-                            <a 
-                              key={i} 
-                              href={link} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
+                            <a
+                              key={i}
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className="text-indigo-600 hover:underline text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-100"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -392,12 +392,12 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 <div className="text-2xl font-bold text-blue-700">{deadlineStats.inProgress}</div>
               </div>
               <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">QA</div>
-                <div className="text-2xl font-bold text-purple-700">{deadlineStats.qa}</div>
+                <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">For QA</div>
+                <div className="text-2xl font-bold text-purple-700">{deadlineStats.forQA}</div>
               </div>
-              <div className="bg-cyan-50 p-4 rounded-xl border border-cyan-100">
-                <div className="text-xs font-bold text-cyan-600 uppercase tracking-wider mb-1">UAT</div>
-                <div className="text-2xl font-bold text-cyan-700">{deadlineStats.uat}</div>
+              <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Beyond Schedule</div>
+                <div className="text-2xl font-bold text-orange-700">{deadlineStats.completedBeyondSchedule}</div>
               </div>
               <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
                 <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Completed</div>
@@ -408,14 +408,14 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 <div className="text-2xl font-bold text-slate-900">{deadlineStats.total}</div>
               </div>
             </div>
-            
+
             <div className="flex justify-end mb-6">
               <label className="inline-flex items-center cursor-pointer select-none group">
-                <input 
-                  type="checkbox" 
-                  checked={hideCompleted} 
-                  onChange={(e) => setHideCompleted(e.target.checked)} 
-                  className="sr-only peer" 
+                <input
+                  type="checkbox"
+                  checked={hideCompleted}
+                  onChange={(e) => setHideCompleted(e.target.checked)}
+                  className="sr-only peer"
                 />
                 <div className="relative w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 group-hover:bg-slate-300 peer-checked:group-hover:bg-indigo-700"></div>
                 <span className="ms-3 text-sm font-medium text-slate-600 group-hover:text-slate-800 transition-colors">Hide Completed</span>
@@ -423,7 +423,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
             </div>
 
             {visibleDeadlines.length > 0 ? (
-              <Timeline 
+              <Timeline
                 variant="spacious"
                 items={visibleDeadlines.map(deadline => {
                   const creator = users.find(u => u.id === deadline.creatorId);
@@ -438,8 +438,8 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     switch (status) {
                       case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
                       case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
-                      case 'Ready for QA': return 'bg-purple-100 text-purple-700 border-purple-200';
-                      case 'Ready for UAT': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+                      case 'For QA': return 'bg-purple-100 text-purple-700 border-purple-200';
+                      case 'Completed Beyond Schedule': return 'bg-orange-100 text-orange-700 border-orange-200';
                       default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Pending
                     }
                   };
@@ -449,7 +449,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     title: deadline.title,
                     description: (
                       <div className="space-y-3">
-                        <div 
+                        <div
                           className="flex justify-between items-center cursor-pointer select-none"
                           onClick={() => toggleDeadline(deadline.id)}
                         >
@@ -470,15 +470,15 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                           <div className="flex items-center gap-2">
                             {canEdit && (
                               <div className="flex gap-1 mr-2">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); onEditDeadline(deadline); }} 
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onEditDeadline(deadline); }}
                                   className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                   title="Edit Deadline"
                                 >
                                   <Edit2 size={14} />
                                 </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); onDeleteDeadline(deadline.id); }} 
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); onDeleteDeadline(deadline.id); }}
                                   className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Delete Deadline"
                                 >
@@ -499,14 +499,14 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                       <div className="space-y-3 pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
                         {deadline.description && (
                           <div>
-                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Description</p>
-                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.description}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Description</p>
+                            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.description}</p>
                           </div>
                         )}
                         {deadline.remarks && (
                           <div className="mt-2">
-                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Remarks</p>
-                             <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.remarks}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Remarks</p>
+                            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{deadline.remarks}</p>
                           </div>
                         )}
 
@@ -518,16 +518,16 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                         <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                               <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
-                               <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
+                              <img src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} alt={creator?.name} className="w-5 h-5 rounded-full bg-slate-100 object-cover" />
+                              <span className="text-xs text-slate-500">Posted by {creator?.name || 'Unknown'}</span>
                             </div>
                             {assignees && assignees.length > 0 && (
                               <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
                                 <div className="flex -space-x-2 overflow-hidden">
                                   {assignees.map(assignee => (
-                                    <img 
+                                    <img
                                       key={assignee.id}
-                                      src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
+                                      src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`}
                                       alt={assignee.name}
                                       title={assignee.name}
                                       className="w-5 h-5 rounded-full bg-slate-100 object-cover border-2 border-white"

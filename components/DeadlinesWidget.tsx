@@ -16,8 +16,8 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
     switch (status) {
       case 'Completed': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       case 'In Progress': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Ready for QA': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'Ready for UAT': return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+      case 'For QA': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'Completed Beyond Schedule': return 'bg-orange-100 text-orange-700 border-orange-200';
       default: return 'bg-amber-100 text-amber-700 border-amber-200'; // Pending
     }
   };
@@ -36,14 +36,14 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
         <Flag className="text-red-500" size={20} />
         Upcoming Deadlines (Next 5 Days)
       </h2>
-      
+
       <div className="flex flex-col gap-3">
         {deadlines.map((deadline) => {
           const creator = users.find(u => u.id === deadline.creatorId);
           const dueDate = new Date(deadline.dueDate);
           const isOverdue = dueDate < new Date() && deadline.status !== 'Completed';
           const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
-          const isAdmin = !!currentUser?.isAdmin; 
+          const isAdmin = !!currentUser?.isAdmin;
           const canEdit = isCreator || isAdmin;
 
           const isAssignee = !!(currentUser?.id && deadline.assigneeIds?.includes(currentUser.id));
@@ -52,8 +52,8 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const isDueToday = new Date().toDateString() === dueDate.toDateString();
 
           return (
-            <div 
-              key={deadline.id} 
+            <div
+              key={deadline.id}
               className={`bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition-all group flex flex-col gap-3 relative ${isDueToday ? 'border-red-500 ring-1 ring-red-500/20' : isAssignee ? 'border-indigo-500 ring-1 ring-indigo-500/20' : 'border-slate-100'}`}
             >
               {isAssignee && (
@@ -65,27 +65,27 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
               {/* Header: Title, Date, Status */}
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1 min-w-0">
-                   <h3 className={`font-bold text-base leading-snug break-words mb-1 ${isAssignee ? 'text-indigo-700' : 'text-slate-900'}`}>
-                     {deadline.title}
-                   </h3>
-                   <div className={`flex items-center gap-1.5 text-xs font-medium ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
-                     <Clock size={14} />
-                     {dueDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                   </div>
+                  <h3 className={`font-bold text-base leading-snug break-words mb-1 ${isAssignee ? 'text-indigo-700' : 'text-slate-900'}`}>
+                    {deadline.title}
+                  </h3>
+                  <div className={`flex items-center gap-1.5 text-xs font-medium ${isOverdue ? 'text-red-600' : 'text-slate-500'}`}>
+                    <Clock size={14} />
+                    {dueDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {deadline.releaseLink && (
-                     <a 
-                       href={deadline.releaseLink}
-                       onClick={(e) => e.stopPropagation()}
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium hover:bg-indigo-100 transition-colors"
-                     >
-                       <ExternalLink size={12} />
-                       Link
-                     </a>
-                   )}
+                    <a
+                      href={deadline.releaseLink}
+                      onClick={(e) => e.stopPropagation()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium hover:bg-indigo-100 transition-colors"
+                    >
+                      <ExternalLink size={12} />
+                      Link
+                    </a>
+                  )}
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border shrink-0 ${getStatusColor(deadline.status)}`}>
                     {deadline.status || 'Pending'}
                   </span>
@@ -96,83 +96,83 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
               <div className="flex flex-col gap-3 min-w-0 w-full">
                 {deadline.description && (
                   <div className="min-w-0 w-full">
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Description</p>
-                     <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words">{deadline.description}</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Description</p>
+                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words">{deadline.description}</p>
                   </div>
                 )}
                 {deadline.remarks && (
                   <div className="min-w-0 w-full">
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Remarks</p>
-                     <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words">{deadline.remarks}</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide mb-1">Remarks</p>
+                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap break-words">{deadline.remarks}</p>
                   </div>
                 )}
               </div>
 
               {/* Footer: Created By & Actions */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-1">
-                 <div className="flex items-center gap-4">
-                    {/* Creator */}
-                    <div className="flex items-center gap-2">
-                       <img 
-                         src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} 
-                         alt={creator?.name}
-                         className="w-6 h-6 rounded-full bg-slate-100 object-cover border border-slate-100"
-                       />
-                       <div className="flex flex-col">
-                         <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Created by</span>
-                         <span className="text-xs font-medium text-slate-700">{creator?.name || 'Unknown'}</span>
-                       </div>
+                <div className="flex items-center gap-4">
+                  {/* Creator */}
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`}
+                      alt={creator?.name}
+                      className="w-6 h-6 rounded-full bg-slate-100 object-cover border border-slate-100"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Created by</span>
+                      <span className="text-xs font-medium text-slate-700">{creator?.name || 'Unknown'}</span>
                     </div>
+                  </div>
 
-                    {/* Assignees (if exists) */}
-                    {assignees && assignees.length > 0 && (
-                      <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
-                         <div className="flex -space-x-2 overflow-hidden">
-                           {assignees.map(assignee => (
-                             <img 
-                               key={assignee.id}
-                               src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
-                               alt={assignee.name}
-                               title={assignee.name}
-                               className="inline-block w-6 h-6 rounded-full bg-slate-100 object-cover border-2 border-white"
-                             />
-                           ))}
-                         </div>
-                         <div className="flex flex-col">
-                           <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Assigned to</span>
-                           <span className="text-xs font-medium text-slate-700">
-                             {formatAssigneeNames(assignees)}
-                           </span>
-                         </div>
+                  {/* Assignees (if exists) */}
+                  {assignees && assignees.length > 0 && (
+                    <div className="flex items-center gap-2 border-l border-slate-100 pl-4">
+                      <div className="flex -space-x-2 overflow-hidden">
+                        {assignees.map(assignee => (
+                          <img
+                            key={assignee.id}
+                            src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`}
+                            alt={assignee.name}
+                            title={assignee.name}
+                            className="inline-block w-6 h-6 rounded-full bg-slate-100 object-cover border-2 border-white"
+                          />
+                        ))}
                       </div>
-                    )}
-                 </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Assigned to</span>
+                        <span className="text-xs font-medium text-slate-700">
+                          {formatAssigneeNames(assignees)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                 <div className="flex items-center gap-3">
-                    {canEdit && (
-                      <div className="flex gap-1">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); onEdit(deadline); }} 
-                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); onDelete(deadline.id); }} 
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    )}
-                 </div>
+                <div className="flex items-center gap-3">
+                  {canEdit && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(deadline); }}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(deadline.id); }}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
-        
+
         {deadlines.length === 0 && (
           <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
             <p className="text-sm text-slate-500">No upcoming deadlines within 5 days.</p>
