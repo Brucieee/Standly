@@ -78,7 +78,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
   }, [filterUser, filterDate]);
 
   const visibleDeadlines = useMemo(() => {
-    return hideCompleted ? deadlines.filter(d => d.status !== 'Completed') : deadlines;
+    return hideCompleted ? deadlines.filter(d => d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule') : deadlines;
   }, [deadlines, hideCompleted]);
 
   const deadlineStats = useMemo(() => {

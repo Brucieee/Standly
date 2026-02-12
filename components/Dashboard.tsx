@@ -7,6 +7,7 @@ import { StandupFeed } from './StandupFeed';
 import { CalendarWidget } from './CalendarWidget';
 import { AnnouncementsWidget } from './AnnouncementsWidget';
 import { MissedDeadlinesWidget } from './MissedDeadlinesWidget';
+import { OfficeVisualizer } from './OfficeVisualizer';
 
 interface DashboardProps {
   currentUser: User;
@@ -51,19 +52,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onEditComment,
   onDeleteComment,
 }) => {
-// Filter deadlines: upcoming within 5 days, max 3 items
-const upcomingDeadlines = deadlines
-  .filter(d => {
-    const dueDate = moment(d.dueDate).startOf('day');
-    const today = moment().startOf('day');
-    const fiveDaysFromNow = moment().add(5, 'days').endOf('day');
-    return d.status !== 'Completed' && dueDate.isSameOrAfter(today) && dueDate.isSameOrBefore(fiveDaysFromNow);
-  });
+  // Filter deadlines: upcoming within 5 days, max 3 items
+  const upcomingDeadlines = deadlines
+    .filter(d => {
+      const dueDate = moment(d.dueDate).startOf('day');
+      const today = moment().startOf('day');
+      const fiveDaysFromNow = moment().add(5, 'days').endOf('day');
+      return d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule' && dueDate.isSameOrAfter(today) && dueDate.isSameOrBefore(fiveDaysFromNow);
+    });
 
   const missedDeadlines = deadlines.filter(d => {
     const dueDate = moment(d.dueDate).tz('Asia/Manila');
     const now = moment().tz('Asia/Manila');
-    
+
     // Set deadline to 5 PM of the due date
     dueDate.set({
       hour: 17,
@@ -71,57 +72,66 @@ const upcomingDeadlines = deadlines
       second: 0,
       millisecond: 0
     });
-    
-    return now.isAfter(dueDate) && d.status !== 'Completed';
+
+    return now.isAfter(dueDate) && d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule';
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lg:col-span-3">
+        <OfficeVisualizer
+          users={users}
+          standups={standups}
+          deadlines={deadlines}
+          onViewStandup={onViewStandup}
+        />
+      </div>
+
       {/* Main Feed */}
-      <div className="lg:col-span-2 space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="lg:col-span-2 space-y-6">
+        <div className="flex justify-between items-center px-1">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-500">Welcome back, {currentUser.name.split(' ')[0]}</p>
+            <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+            <p className="text-sm text-slate-500">Welcome back, {currentUser.name.split(' ')[0]}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {currentUser.isAdmin && (
-              <button 
+              <button
                 onClick={onGenerateReport}
-                className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
+                className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 p-2 rounded-lg shadow-sm transition-all active:scale-[0.98]"
+                title="Generate Report"
               >
-                <FileText size={20} className="text-indigo-500" />
-                <span className="hidden sm:inline">Weekly AI Summary</span>
+                <FileText size={18} className="text-indigo-500" />
               </button>
             )}
-            <button 
+            <button
               onClick={onAddDeadline}
-              className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
             >
-              <Flag size={20} className="text-red-500" />
+              <Flag size={16} className="text-red-500" />
               <span className="hidden sm:inline">Add Deadline</span>
             </button>
-            <button 
+            <button
               onClick={onNewStandup}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-200 flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-200 flex items-center gap-2 transition-all active:scale-[0.98]"
             >
-              <Plus size={20} />
+              <Plus size={16} />
               <span className="hidden sm:inline">New Standup</span>
             </button>
           </div>
         </div>
-        
-        <DeadlinesWidget 
-          deadlines={upcomingDeadlines} 
+
+        <DeadlinesWidget
+          deadlines={upcomingDeadlines}
           users={users}
           currentUser={currentUser}
           onDelete={(id) => onDeleteDeadline(id)}
           onEdit={onEditDeadline}
           onView={onViewDeadline}
         />
-        <StandupFeed 
-          standups={standups} 
-          users={users} 
+        <StandupFeed
+          standups={standups}
+          users={users}
           currentUserId={currentUser.id}
           onDelete={onDeleteStandup}
           onEdit={onEditStandup}
@@ -134,10 +144,10 @@ const upcomingDeadlines = deadlines
       </div>
 
       {/* Sidebar Widgets */}
-      <div className="space-y-8">
-        <CalendarWidget 
-          standups={standups} 
-          userId={currentUser.id} 
+      <div className="space-y-6">
+        <CalendarWidget
+          standups={standups}
+          userId={currentUser.id}
           onDateClick={onCalendarDateClick}
         />
         <MissedDeadlinesWidget users={users} deadlines={missedDeadlines} />

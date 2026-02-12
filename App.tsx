@@ -84,7 +84,7 @@ const App: React.FC = () => {
     isOpen: false,
     title: "",
     message: "",
-    onConfirm: () => {},
+    onConfirm: () => { },
     isDestructive: false,
   });
 
@@ -291,7 +291,7 @@ const App: React.FC = () => {
         // Refresh current user role from latest profile data
         currentUser: prev.currentUser
           ? mappedUsers.find((u) => u.id === prev.currentUser.id) ||
-            prev.currentUser
+          prev.currentUser
           : prev.currentUser,
         standups: mappedStandups as any,
         deadlines,
@@ -479,6 +479,9 @@ const App: React.FC = () => {
   };
 
   const handleViewStandup = async (standup: Standup) => {
+    // Open the modal
+    setHistoryViewingStandupId(standup.id);
+
     if (!state.currentUser) return;
     if (standup.views?.includes(state.currentUser.id)) return;
 

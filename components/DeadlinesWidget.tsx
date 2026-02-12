@@ -41,7 +41,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
         {deadlines.map((deadline) => {
           const creator = users.find(u => u.id === deadline.creatorId);
           const dueDate = new Date(deadline.dueDate);
-          const isOverdue = dueDate < new Date() && deadline.status !== 'Completed';
+          const isOverdue = dueDate < new Date() && deadline.status !== 'Completed' && deadline.status !== 'Completed Beyond Schedule';
           const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
           const isAdmin = !!currentUser?.isAdmin;
           const canEdit = isCreator || isAdmin;

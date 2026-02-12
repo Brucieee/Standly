@@ -14,6 +14,8 @@ export interface User {
   role: UserRole;
   isAdmin: boolean;
   loginCode?: string;
+  avatarColor?: string;
+  pet?: string;
 }
 
 export interface Comment {
