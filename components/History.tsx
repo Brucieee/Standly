@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Standup, Deadline, User } from '../types';
 import { Timeline } from './timeline';
-import { Edit2, Trash2, Search, Calendar, X, Download, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Edit2, Trash2, Search, Calendar, X, Download, ChevronDown, ChevronLeft, ChevronRight, User as UserIcon } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 interface HistoryProps {
   standups: Standup[];
@@ -15,12 +16,31 @@ interface HistoryProps {
 
 export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, currentUser, onEditDeadline, onDeleteDeadline, onViewStandup }) => {
   const [activeTab, setActiveTab] = useState<'standups' | 'deadlines'>('standups');
-  const [filterUser, setFilterUser] = useState('');
-  const [filterDate, setFilterDate] = useState('');
+
+  // Filters
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3;
+  // Show more items if a user is selected, otherwise default to 3 days
+  const itemsPerPage = selectedUserId ? 50 : 3;
   const [expandedDeadlineIds, setExpandedDeadlineIds] = useState<Set<string>>(new Set());
   const [hideCompleted, setHideCompleted] = useState(false);
+
+  // Initialize dates to past 3 days on mount
+  useEffect(() => {
+    const today = new Date();
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(today.getDate() - 3);
+
+    const formatDate = (date: Date) => {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    };
+
+    setEndDate(formatDate(today));
+    setStartDate(formatDate(threeDaysAgo));
+  }, []);
 
   const toggleDeadline = (id: string) => {
     const newSet = new Set(expandedDeadlineIds);
@@ -42,19 +62,32 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
     return `${names.join(', ')} and ${last}`;
   };
 
-  const filteredStandups = standups.filter(standup => {
-    const userName = getUserName(standup.userId);
-    const matchesUser = userName.toLowerCase().includes(filterUser.toLowerCase());
+  const filteredStandups = useMemo(() => {
+    return standups.filter(standup => {
+      // 1. User Filter (Priority)
+      if (selectedUserId) {
+        return standup.userId === selectedUserId;
+      }
 
-    let matchesDate = true;
-    if (filterDate) {
-      const d = new Date(standup.date);
-      const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      matchesDate = localDateStr === filterDate;
-    }
+      // 2. Date Range Filter (Default)
+      if (startDate && endDate) {
+        const standupDate = new Date(standup.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        // Include end date by setting it to end of day or just comparing dates stringwise if format matches
+        // Let's stick to string comparison for YYYY-MM-DD which matches ISO start
+        // Or better, standard JS Date comparison
+        // Normalize times to midnight
+        standupDate.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
 
-    return matchesUser && matchesDate;
-  });
+        return standupDate >= start && standupDate <= end;
+      }
+
+      return true;
+    });
+  }, [standups, selectedUserId, startDate, endDate]);
 
   // Pagination logic
   const uniqueDates = useMemo(() => {
@@ -75,7 +108,51 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterUser, filterDate]);
+  }, [selectedUserId, startDate, endDate]);
+
+  const handleExport = () => {
+    if (activeTab === 'standups') {
+      const data = filteredStandups.map(s => ({
+        Date: new Date(s.date).toLocaleDateString(),
+        User: getUserName(s.userId),
+        Yesterday: s.yesterday,
+        Today: s.today,
+        Blockers: s.blockers,
+        Likes: s.reactions?.filter(r => r.type === 'like').length || 0,
+        JiraLinks: s.jiraLinks?.join(', ') || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Standups");
+      XLSX.writeFile(wb, `standups_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    } else {
+      // Filter deadlines based on current visibility (though filters currently only apply to standups in UI, 
+      // usually history filters might want to apply to deadlines too, but requirement was specific to "Shows past 3 days")
+      // The current deadline list is passed as `deadlines` prop and filtered by `hideCompleted` in `visibleDeadlines`
+      // We will export `visibleDeadlines`
+      const data = visibleDeadlines.map(d => {
+        const assignees = d.assigneeIds?.map(id => users.find(u => u.id === id)?.name).filter(Boolean).join('; ') || '';
+        const creator = users.find(u => u.id === d.creatorId)?.name || '';
+        return {
+          Title: d.title,
+          Status: d.status,
+          DueDate: new Date(d.dueDate).toLocaleDateString(),
+          Assignees: assignees,
+          Creator: creator,
+          Description: d.description,
+          Remarks: d.remarks,
+          ReleaseLink: d.releaseLink
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Deadlines");
+      XLSX.writeFile(wb, `deadlines_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+  };
 
   const visibleDeadlines = useMemo(() => {
     return hideCompleted ? deadlines.filter(d => d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule') : deadlines;
@@ -102,74 +179,12 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
         <div className="flex items-center gap-3 bg-slate-100 p-1 rounded-xl self-start md:self-auto">
           <button
-            onClick={() => {
-              if (activeTab === 'standups') {
-                const headers = ['Date', 'User', 'Yesterday', 'Today', 'Blockers', 'Jira Links'];
-                const csvContent = [
-                  headers.join(','),
-                  ...filteredStandups.map(s => {
-                    const userName = getUserName(s.userId);
-                    const links = s.jiraLinks?.join('; ') || '';
-                    return [
-                      `"${new Date(s.date).toLocaleDateString()}"`,
-                      `"${userName}"`,
-                      `"${s.yesterday.replace(/"/g, '""')}"`,
-                      `"${s.today.replace(/"/g, '""')}"`,
-                      `"${(s.blockers || '').replace(/"/g, '""')}"`,
-                      `"${links}"`
-                    ].join(',');
-                  })
-                ].join('\n');
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                if (link.download !== undefined) {
-                  const url = URL.createObjectURL(blob);
-                  link.setAttribute('href', url);
-                  link.setAttribute('download', `standups_export_${new Date().toISOString().split('T')[0]}.csv`);
-                  link.style.visibility = 'hidden';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }
-              } else {
-                const headers = ['Title', 'Status', 'Due Date', 'Assignees', 'Creator', 'Description', 'Remarks', 'Release Link'];
-                const csvContent = [
-                  headers.join(','),
-                  ...deadlines.map(d => {
-                    const assignees = d.assigneeIds?.map(id => users.find(u => u.id === id)?.name).filter(Boolean).join('; ') || '';
-                    const creator = users.find(u => u.id === d.creatorId)?.name || '';
-                    return [
-                      `"${d.title.replace(/"/g, '""')}"`,
-                      `"${d.status || 'Pending'}"`,
-                      `"${new Date(d.dueDate).toLocaleDateString()}"`,
-                      `"${assignees}"`,
-                      `"${creator}"`,
-                      `"${(d.description || '').replace(/"/g, '""')}"`,
-                      `"${(d.remarks || '').replace(/"/g, '""')}"`,
-                      `"${d.releaseLink || ''}"`
-                    ].join(',');
-                  })
-                ].join('\n');
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                if (link.download !== undefined) {
-                  const url = URL.createObjectURL(blob);
-                  link.setAttribute('href', url);
-                  link.setAttribute('download', `deadlines_export_${new Date().toISOString().split('T')[0]}.csv`);
-                  link.style.visibility = 'hidden';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }
-              }
-            }}
+            onClick={handleExport}
             className="mr-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
-            title="Export to CSV"
+            title="Export to Excel"
           >
             <Download size={16} />
-            <span className="hidden sm:inline">Export CSV</span>
+            <span className="hidden sm:inline">Export Excel</span>
           </button>
           <div className="w-px h-6 bg-slate-300 mx-1"></div>
           <button
@@ -191,32 +206,70 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
         {activeTab === 'standups' && (
           <>
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4">
+              {/* User Dropdown */}
               <div className="relative flex-1 max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Filter by user..."
-                  value={filterUser}
-                  onChange={(e) => setFilterUser(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white text-slate-600"
+                >
+                  <option value="">All Users</option>
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>{user.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               </div>
-              <div className="relative flex-1 max-w-xs">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
-                />
-              </div>
-              {(filterUser || filterDate) && (
+
+              {/* Date Range - Only show if no user is selected */}
+              {!selectedUserId && (
+                <div className="flex items-center gap-2 flex-1">
+                  <div className="relative flex-1 max-w-xs">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                      placeholder="Start Date"
+                    />
+                  </div>
+                  <span className="text-slate-400">-</span>
+                  <div className="relative flex-1 max-w-xs">
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                      placeholder="End Date"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Clear Button */}
+              {(selectedUserId || startDate || endDate) && (
                 <button
-                  onClick={() => { setFilterUser(''); setFilterDate(''); }}
+                  onClick={() => {
+                    setSelectedUserId('');
+                    // Reset to default 3 days
+                    const today = new Date();
+                    const threeDaysAgo = new Date();
+                    threeDaysAgo.setDate(today.getDate() - 3);
+
+                    const formatDate = (date: Date) => {
+                      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                    };
+
+                    setEndDate(formatDate(today));
+                    setStartDate(formatDate(threeDaysAgo));
+                  }}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   <X size={16} />
-                  Clear
+                  Reset
                 </button>
               )}
             </div>
