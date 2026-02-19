@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import { X, Calendar, Image as ImageIcon, Save, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Announcement, UserRole } from '../types';
 
