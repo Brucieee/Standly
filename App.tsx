@@ -14,6 +14,7 @@ import {
   apiUsers,
   apiDeadlines,
   apiLeaves,
+  apiAnnouncements,
 } from "./services/api";
 import { supabase, initSupabaseWithCode } from "./services/supabase";
 import { DeadlineModal } from "./components/DeadlineModal";
@@ -30,6 +31,9 @@ import { ViewDeadlineModal } from "./components/ViewDeadlineModal";
 import { HolidayModal } from "./components/HolidayModal";
 import { HolidayManagerModal } from "./components/HolidayManagerModal";
 import { AnnouncementsWidget } from "./components/AnnouncementsWidget";
+import { AnnouncementModal } from "./components/AnnouncementModal";
+import { AnnouncementsManager } from "./components/AnnouncementsManager";
+import { Announcement } from "./types";
 
 interface ConfirmModalState {
   isOpen: boolean;
@@ -48,6 +52,7 @@ const App: React.FC = () => {
     leaves: [],
     holidays: [],
     quickLinks: [],
+    announcements: [],
   });
 
   const [loading, setLoading] = useState(true);
@@ -78,6 +83,10 @@ const App: React.FC = () => {
   const [historyViewingStandupId, setHistoryViewingStandupId] = useState<
     string | null
   >(null);
+
+  const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [viewingAnnouncement, setViewingAnnouncement] = useState<Announcement | null>(null); // For auto-popup
 
   // Confirmation Modal State
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
@@ -283,7 +292,10 @@ const App: React.FC = () => {
         endTime: l.end_time,
       }));
 
-      const [deadlines] = await Promise.all([apiDeadlines.getAll()]);
+      const [deadlines, announcements] = await Promise.all([
+        apiDeadlines.getAll(),
+        apiAnnouncements.getAll()
+      ]);
 
       setState((prev) => ({
         ...prev,
@@ -297,7 +309,29 @@ const App: React.FC = () => {
         deadlines,
         leaves: mappedLeaves,
         holidays: holidaysData || [],
+        announcements,
       }));
+
+      // Auto-open latest active announcement logic
+      const now = new Date();
+      const activeAnnouncements = (announcements || [])
+        .filter((a: Announcement) => a.isActive)
+        .filter((a: Announcement) => !a.scheduledDate || new Date(a.scheduledDate) <= now)
+        .filter((a: Announcement) => !a.expiryDate || new Date(a.expiryDate) > now)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      if (activeAnnouncements.length > 0) {
+        const latest = activeAnnouncements[0];
+        // Check if already seen in this session (or forever? "first thing they see is this")
+        // Let's use localStorage to track "lastSeenAnnouncementId"
+        const lastSeenId = localStorage.getItem('standly_last_seen_announcement');
+        if (lastSeenId !== latest.id) {
+          setViewingAnnouncement(latest);
+          setIsAnnouncementModalOpen(true);
+          localStorage.setItem('standly_last_seen_announcement', latest.id);
+        }
+      }
+
     } catch (error) {
       console.error("Failed to load data", error);
     }
@@ -771,6 +805,8 @@ const App: React.FC = () => {
     delete (dbData as any).startTime;
     delete (dbData as any).endTime;
 
+
+
     try {
       if (editingLeave) {
         await supabase.from("leaves").update(dbData).eq("id", editingLeave.id);
@@ -813,6 +849,80 @@ const App: React.FC = () => {
       console.error("Failed to save leave", error);
       alert("Failed to save leave.");
     }
+  };
+
+
+
+  // --- Announcement Handlers ---
+
+  // --- Announcement Handlers ---
+
+  const handleOpenAnnouncementsManager = () => {
+    setActiveTab("announcements");
+  };
+
+  const handleSaveAnnouncement = async (data: Omit<Announcement, 'id' | 'createdAt' | 'views'>) => {
+    if (!state.currentUser) return;
+    try {
+      if (editingAnnouncement) {
+        // Update existing
+        const { error } = await supabase
+          .from('announcements')
+          .update({
+            title: data.title,
+            content: data.content,
+            scheduled_date: data.scheduledDate,
+            expiry_date: data.expiryDate,
+            image_url: data.imageUrl,
+            is_active: data.isActive
+          })
+          .eq('id', editingAnnouncement.id);
+
+        if (error) throw error;
+
+        setState(prev => ({
+          ...prev,
+          announcements: prev.announcements.map(a => a.id === editingAnnouncement.id ? { ...a, ...data, id: editingAnnouncement.id, createdAt: editingAnnouncement.createdAt, views: editingAnnouncement.views } : a)
+        }));
+        toast.success("Announcement updated!");
+      } else {
+        // Create new
+        const newAnnouncement = await apiAnnouncements.create({
+          ...data,
+          createdBy: state.currentUser.id
+        });
+        setState(prev => ({
+          ...prev,
+          announcements: [newAnnouncement, ...prev.announcements]
+        }));
+        toast.success("Announcement posted!");
+      }
+      setIsAnnouncementModalOpen(false);
+      setEditingAnnouncement(null);
+    } catch (error) {
+      console.error("Failed to save announcement", error);
+      toast.error("Failed to save announcement.");
+    }
+  };
+
+  const handleDeleteAnnouncement = async (id: string) => {
+    try {
+      const { error } = await supabase.from('announcements').delete().eq('id', id);
+      if (error) throw error;
+
+      setState(prev => ({
+        ...prev,
+        announcements: prev.announcements.filter(a => a.id !== id)
+      }));
+      toast.success("Announcement deleted");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to delete");
+    }
+  };
+
+  const handleUploadAnnouncementImage = async (file: File): Promise<string> => {
+    return await apiAnnouncements.uploadImage(file);
   };
 
   const handleDeleteLeave = async (id: string) => {
@@ -968,6 +1078,7 @@ const App: React.FC = () => {
         onTabChange={setActiveTab}
         onLogout={handleLogout}
         onOpenVirtualOffice={() => setIsVirtualOfficeModalOpen(true)}
+        onOpenAnnouncements={handleOpenAnnouncementsManager}
         userAvatar={state.currentUser.avatar}
         userName={state.currentUser.name}
         userRole={state.currentUser.role}
@@ -1032,6 +1143,23 @@ const App: React.FC = () => {
 
         {activeTab === "profile" && (
           <Profile user={state.currentUser} onUpdate={handleUpdateProfile} />
+        )}
+        {activeTab === "announcements" && (
+          <AnnouncementsManager
+            announcements={state.announcements}
+            onEdit={(announcement) => {
+              setEditingAnnouncement(announcement);
+              setViewingAnnouncement(null);
+              setIsAnnouncementModalOpen(true);
+            }}
+            onDelete={handleDeleteAnnouncement}
+            onCreate={() => {
+              setEditingAnnouncement(null);
+              setViewingAnnouncement(null);
+              setIsAnnouncementModalOpen(true);
+            }}
+            users={state.users}
+          />
         )}
       </Layout>
 
@@ -1179,6 +1307,16 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AnnouncementModal
+        isOpen={isAnnouncementModalOpen}
+        onClose={() => setIsAnnouncementModalOpen(false)}
+        onSubmit={handleSaveAnnouncement}
+        initialData={viewingAnnouncement || editingAnnouncement}
+        currentUserRole={state.currentUser?.role || ''}
+        isManager={['Product Owner', 'Product Manager', 'Software Developer'].includes(state.currentUser?.role || '') && !viewingAnnouncement}
+        onUploadImage={handleUploadAnnouncementImage}
+      />
 
       <ConfirmationModal
         isOpen={confirmModal.isOpen}

@@ -86,6 +86,7 @@ export interface AppState {
   leaves: Leave[];
   holidays: Holiday[];
   quickLinks: QuickLink[];
+  announcements: Announcement[];
 }
 
 export type QuickLinkCategory = 'General' | 'Development' | 'Design' | 'Resources' | 'Social' | 'Tools';
@@ -98,4 +99,17 @@ export interface QuickLink {
   category: QuickLinkCategory;
   createdAt?: string;
   createdBy?: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string; // HTML string
+  imageUrl?: string;
+  createdBy: string;
+  createdAt: string;
+  isActive: boolean;
+  scheduledDate?: string; // ISO String: When to start showing
+  expiryDate?: string; // ISO String: When to stop showing
+  views?: string[]; // Array of user IDs who have seen it
 }

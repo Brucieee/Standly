@@ -1,5 +1,5 @@
 import { supabase, initSupabaseWithCode } from './supabase';
-import { User, Standup, Task, UserRole, Deadline, Leave, QuickLink } from '../types';
+import { User, Standup, UserRole, Deadline, Leave, QuickLink, Announcement } from '../types';
 
 // --- Auth & User ---
 
@@ -468,4 +468,117 @@ export const apiQuickLinks = {
 
     if (error) throw error;
   },
+};
+
+// --- Announcements ---
+
+export const apiAnnouncements = {
+  async uploadImage(file: File): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log('Uploading Announcement Image as User:', user?.id, user?.email);
+
+    const { error: uploadError } = await supabase.storage
+      .from('announcements')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage.from('announcements').getPublicUrl(filePath);
+    return data.publicUrl;
+  },
+
+  async getAll(): Promise<Announcement[]> {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map(a => ({
+        id: a.id,
+        title: a.title,
+        content: a.content,
+        imageUrl: a.image_url,
+        createdBy: a.created_by,
+        createdAt: a.created_at,
+        isActive: a.is_active,
+        scheduledDate: a.scheduled_date,
+        expiryDate: a.expiry_date,
+        views: a.views || []
+      }));
+    } catch (error: any) {
+      console.warn("Failed to fetch announcements (table might be missing), using fallback.", error);
+      // Fallback for development / missing table
+      return [];
+    }
+  },
+
+  async create(announcement: Omit<Announcement, 'id' | 'createdAt' | 'views'>) {
+    // Optimistic return if table missing
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .insert({
+          title: announcement.title,
+          content: announcement.content,
+          image_url: announcement.imageUrl,
+          created_by: announcement.createdBy,
+          is_active: announcement.isActive,
+          scheduled_date: announcement.scheduledDate,
+          expiry_date: announcement.expiryDate,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return {
+        ...announcement,
+        id: data.id,
+        createdAt: data.created_at,
+        imageUrl: data.image_url,
+        createdBy: data.created_by,
+        isActive: data.is_active,
+        scheduledDate: data.scheduled_date,
+        expiryDate: data.expiry_date,
+        views: []
+      } as Announcement;
+    } catch (error) {
+       console.error("Failed to create announcement. Payload:", announcement);
+       console.error("Error details:", error);
+       throw error;
+    }
+  },
+
+  async markViewed(id: string, userId: string) {
+     try {
+        const { data: current } = await supabase.from('announcements').select('views').eq('id', id).single();
+         const currentViews: string[] = current?.views || [];
+        
+        if (!currentViews.includes(userId)) {
+          await supabase
+            .from('announcements')
+            .update({ views: [...currentViews, userId] })
+            .eq('id', id);
+        }
+     } catch (e) {
+         // ignore
+     }
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('announcements')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
 };
