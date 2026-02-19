@@ -64,28 +64,28 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
   const filteredStandups = useMemo(() => {
     return standups.filter(standup => {
-      // 1. User Filter (Priority)
+      let matchUser = true;
+      let matchDate = true;
+
+      // 1. User Filter
       if (selectedUserId) {
-        return standup.userId === selectedUserId;
+        matchUser = standup.userId === selectedUserId;
       }
 
-      // 2. Date Range Filter (Default)
+      // 2. Date Range Filter
       if (startDate && endDate) {
         const standupDate = new Date(standup.date);
         const start = new Date(startDate);
         const end = new Date(endDate);
-        // Include end date by setting it to end of day or just comparing dates stringwise if format matches
-        // Let's stick to string comparison for YYYY-MM-DD which matches ISO start
-        // Or better, standard JS Date comparison
         // Normalize times to midnight
         standupDate.setHours(0, 0, 0, 0);
         start.setHours(0, 0, 0, 0);
         end.setHours(0, 0, 0, 0);
 
-        return standupDate >= start && standupDate <= end;
+        matchDate = standupDate >= start && standupDate <= end;
       }
 
-      return true;
+      return matchUser && matchDate;
     });
   }, [standups, selectedUserId, startDate, endDate]);
 
@@ -211,7 +211,13 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <select
                   value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedUserId(e.target.value);
+                    if (e.target.value) {
+                      setStartDate('');
+                      setEndDate('');
+                    }
+                  }}
                   className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white text-slate-600"
                 >
                   <option value="">All Users</option>
@@ -222,32 +228,30 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               </div>
 
-              {/* Date Range - Only show if no user is selected */}
-              {!selectedUserId && (
-                <div className="flex items-center gap-2 flex-1">
-                  <div className="relative flex-1 max-w-xs">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
-                      placeholder="Start Date"
-                    />
-                  </div>
-                  <span className="text-slate-400">-</span>
-                  <div className="relative flex-1 max-w-xs">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
-                      placeholder="End Date"
-                    />
-                  </div>
+              {/* Date Range */}
+              <div className="flex items-center gap-2 flex-1">
+                <div className="relative flex-1 max-w-xs">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                    placeholder="Start Date"
+                  />
                 </div>
-              )}
+                <span className="text-slate-400">-</span>
+                <div className="relative flex-1 max-w-xs">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                    placeholder="End Date"
+                  />
+                </div>
+              </div>
 
               {/* Clear Button */}
               {(selectedUserId || startDate || endDate) && (

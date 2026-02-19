@@ -67,7 +67,9 @@ export interface Leave {
   startDate: string; // ISO Date string (YYYY-MM-DD)
   endDate: string;   // ISO Date string (YYYY-MM-DD)
   reason?: string;
-  type: 'vacation' | 'sick' | 'personal' | 'wellness';
+  type: 'vacation' | 'sick' | 'personal' | 'wellness' | 'birthday';
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface Holiday {

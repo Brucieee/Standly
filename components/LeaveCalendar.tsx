@@ -50,18 +50,18 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
     const start = parseLocalDate(leave.startDate);
     const end = parseLocalDate(leave.endDate);
     // Reset hours for accurate comparison
-    checkDate.setHours(0,0,0,0);
-    start.setHours(0,0,0,0);
-    end.setHours(0,0,0,0);
-    
+    checkDate.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
     const isActive = checkDate >= start && checkDate <= end;
-    
+
     // Exclude weekends for wellness leaves
     if (isActive && leave.type === 'wellness') {
       const dayOfWeek = checkDate.getDay();
       if (dayOfWeek === 0 || dayOfWeek === 6) return false;
     }
-    
+
     return isActive;
   };
 
@@ -88,26 +88,26 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
 
     // Try to find the leave that matches the current view exactly (same start date)
     let currentIndex = sortedLeaves.findIndex(l => {
-        const d = parseLocalDate(l.startDate);
-        return d.getTime() === currentDate.getTime();
+      const d = parseLocalDate(l.startDate);
+      return d.getTime() === currentDate.getTime();
     });
 
     // If not found, try to find a leave in the current month view
     if (currentIndex === -1) {
-         currentIndex = sortedLeaves.findIndex(l => {
-            const d = parseLocalDate(l.startDate);
-            return d.getFullYear() === currentDate.getFullYear() && d.getMonth() === currentDate.getMonth();
-        });
+      currentIndex = sortedLeaves.findIndex(l => {
+        const d = parseLocalDate(l.startDate);
+        return d.getFullYear() === currentDate.getFullYear() && d.getMonth() === currentDate.getMonth();
+      });
     }
 
     // Determine the next leave to show (Cycle through them)
     let nextIndex = 0;
     if (currentIndex !== -1) {
-        nextIndex = (currentIndex + 1) % sortedLeaves.length;
+      nextIndex = (currentIndex + 1) % sortedLeaves.length;
     } else {
-        // If no leave is currently in view, find the first upcoming one
-        const upcomingIndex = sortedLeaves.findIndex(l => parseLocalDate(l.endDate) >= now);
-        nextIndex = upcomingIndex !== -1 ? upcomingIndex : sortedLeaves.length - 1;
+      // If no leave is currently in view, find the first upcoming one
+      const upcomingIndex = sortedLeaves.findIndex(l => parseLocalDate(l.endDate) >= now);
+      nextIndex = upcomingIndex !== -1 ? upcomingIndex : sortedLeaves.length - 1;
     }
 
     setCurrentDate(parseLocalDate(sortedLeaves[nextIndex].startDate));
@@ -141,7 +141,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
             </h2>
             <p className="text-xs text-slate-500 mt-1 hidden lg:block">Hover to highlight leaves</p>
           </div>
-          
+
           {/* Mobile Actions */}
           <div className="flex gap-2 lg:hidden">
             <button
@@ -168,24 +168,23 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
           {users.map(user => {
             const userLeaves = leaves.filter(l => l.userId === user.id);
             const upcomingLeaves = userLeaves.filter(l => new Date(l.endDate) >= new Date());
-            
+
             return (
               <div
                 key={user.id}
                 onClick={() => handleUserClick(user.id)}
                 onMouseEnter={() => setHoveredUserId(user.id)}
                 onMouseLeave={() => setHoveredUserId(null)}
-                className={`p-2 lg:p-3 rounded-xl transition-all cursor-pointer border lg:min-w-0 flex-shrink-0 ${
-                  hoveredUserId === user.id 
-                    ? 'bg-indigo-50 border-indigo-200 shadow-sm scale-[1.02]' 
+                className={`p-2 lg:p-3 rounded-xl transition-all cursor-pointer border lg:min-w-0 flex-shrink-0 ${hoveredUserId === user.id
+                    ? 'bg-indigo-50 border-indigo-200 shadow-sm scale-[1.02]'
                     : 'bg-white border-transparent hover:bg-slate-50 hover:border-slate-100 border-slate-100 lg:border-transparent'
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-2 lg:gap-3">
-                  <img 
-                    src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
-                    alt={user.name} 
-                    className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 object-cover" 
+                  <img
+                    src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
+                    alt={user.name}
+                    className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-slate-100 object-cover"
                     onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
                   />
                   <div className="flex-1 min-w-0">
@@ -204,7 +203,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
             );
           })}
         </div>
-        
+
         {/* Desktop Actions */}
         <div className="hidden lg:block p-4 border-t border-slate-100 space-y-2">
           <button
@@ -214,7 +213,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
             <Plus size={18} />
             Post Leave
           </button>
-          
+
           {currentUserIsAdmin && (
             <button
               onClick={onAddHoliday}
@@ -235,17 +234,17 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
             <button onClick={() => setViewMode(viewMode === 'calendar' ? 'months' : 'calendar')} className="text-2xl font-bold text-slate-900 hover:text-indigo-600 transition-colors flex items-center gap-2">
               {monthName} <span className="text-slate-400">{year}</span>
             </button>
-            
+
             <div className="flex bg-slate-100 p-1 rounded-lg">
-              <button 
-                onClick={() => setDisplayMode('calendar')} 
+              <button
+                onClick={() => setDisplayMode('calendar')}
                 className={`p-1.5 rounded-md transition-all ${displayMode === 'calendar' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
                 title="Calendar View"
               >
                 <LayoutGrid size={18} />
               </button>
-              <button 
-                onClick={() => setDisplayMode('list')} 
+              <button
+                onClick={() => setDisplayMode('list')}
                 className={`p-1.5 rounded-md transition-all ${displayMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
                 title="List View"
               >
@@ -255,14 +254,14 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
           </div>
 
           {displayMode === 'calendar' && (
-          <div className={`flex gap-2 ${viewMode === 'months' ? 'invisible' : ''}`}>
-            <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors" >
-              <ChevronLeft size={24} />
-            </button>
-            <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
-              <ChevronRight size={24} />
-            </button>
-          </div>
+            <div className={`flex gap-2 ${viewMode === 'months' ? 'invisible' : ''}`}>
+              <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors" >
+                <ChevronLeft size={24} />
+              </button>
+              <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors">
+                <ChevronRight size={24} />
+              </button>
+            </div>
           )}
         </div>
 
@@ -274,19 +273,19 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
               {[...leaves].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(leave => {
                 const user = users.find(u => u.id === leave.userId);
                 if (!user) return null;
-                
+
                 return (
-                  <div 
-                    key={leave.id} 
+                  <div
+                    key={leave.id}
                     onClick={() => onLeaveClick(leave)}
                     className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3 active:scale-[0.98] transition-all"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
-                          alt={user.name} 
-                          className="w-10 h-10 rounded-full bg-white object-cover shadow-sm" 
+                        <img
+                          src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
+                          alt={user.name}
+                          className="w-10 h-10 rounded-full bg-white object-cover shadow-sm"
                           onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
                         />
                         <div>
@@ -297,7 +296,7 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-white p-2 rounded-lg border border-slate-100">
                         <span className="text-slate-400 block mb-0.5">From</span>
@@ -334,43 +333,43 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                   </tr>
                 </thead>
                 <tbody className="text-sm divide-y divide-slate-50">
-                {[...leaves].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(leave => {
-                  const user = users.find(u => u.id === leave.userId);
-                  if (!user) return null;
-                  const isCurrentUser = currentUserId === leave.userId;
-                  
-                  return (
-                    <tr key={leave.id} className="group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onLeaveClick(leave)}>
-                      <td className="py-3 pl-2">
-                        <div className="flex items-center gap-3">
-                           <img 
-                            src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`} 
-                            alt={user.name} 
-                            className="w-8 h-8 rounded-full bg-slate-100 object-cover" 
-                            onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
-                          />
-                          <span className="font-medium text-slate-900">{user.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-medium">
-                          {getLeaveEmoji(leave.type)} <span className="capitalize">{leave.type === 'sick' ? 'Sick Leave' : `${leave.type} Leave`}</span>
-                        </span>
-                      </td>
-                      <td className="py-3 text-slate-600">
-                        {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
-                      </td>
-                      <td className="py-3 text-slate-500 max-w-xs truncate">
-                        {leave.reason || <span className="italic text-slate-400">No reason provided</span>}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            {leaves.length === 0 && (
+                  {[...leaves].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(leave => {
+                    const user = users.find(u => u.id === leave.userId);
+                    if (!user) return null;
+                    const isCurrentUser = currentUserId === leave.userId;
+
+                    return (
+                      <tr key={leave.id} className="group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => onLeaveClick(leave)}>
+                        <td className="py-3 pl-2">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`}
+                              alt={user.name}
+                              className="w-8 h-8 rounded-full bg-slate-100 object-cover"
+                              onError={(e) => { e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`; }}
+                            />
+                            <span className="font-medium text-slate-900">{user.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-medium">
+                            {getLeaveEmoji(leave.type)} <span className="capitalize">{leave.type === 'sick' ? 'Sick Leave' : `${leave.type} Leave`}</span>
+                          </span>
+                        </td>
+                        <td className="py-3 text-slate-600">
+                          {formatDate(leave.startDate)} - {formatDate(leave.endDate)}
+                        </td>
+                        <td className="py-3 text-slate-500 max-w-xs truncate">
+                          {leave.reason || <span className="italic text-slate-400">No reason provided</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {leaves.length === 0 && (
                 <div className="text-center py-12 text-slate-400">No leaves found.</div>
-            )}
+              )}
             </div>
           </div>
         ) : viewMode === 'months' ? (
@@ -390,86 +389,86 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
             })}
           </div>
         ) : (
-        <div className="flex-1 p-0 lg:p-6 flex flex-col min-h-0 animate-fade-in-up w-full max-w-full min-w-0">
-          <div className="grid grid-cols-7 gap-px lg:gap-4 mb-2 flex-shrink-0 w-full">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-xs lg:text-sm font-bold text-slate-400 uppercase tracking-wider">
-                {day.slice(0, 3)}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-px lg:gap-4 flex-1 lg:min-h-0 w-full max-w-full pr-1" style={{ gridTemplateRows: `repeat(${numRows}, minmax(110px, 1fr))` }}>
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="" />
-            ))}
-            {Array.from({ length: days }).map((_, i) => {
-              const day = i + 1;
-              const dayLeaves = leaves.filter(l => isLeaveDay(day, l));
-              const isHoveredUserOnLeave = hoveredUserId && dayLeaves.some(l => l.userId === hoveredUserId);
-              const isToday = new Date().getDate() === day && new Date().getMonth() === currentDate.getMonth() && new Date().getFullYear() === currentDate.getFullYear();
-              const holiday = holidays.find(h => parseLocalDate(h.date).getDate() === day && parseLocalDate(h.date).getMonth() === currentDate.getMonth() && parseLocalDate(h.date).getFullYear() === currentDate.getFullYear());
+          <div className="flex-1 p-0 lg:p-6 flex flex-col min-h-0 animate-fade-in-up w-full max-w-full min-w-0">
+            <div className="grid grid-cols-7 gap-px lg:gap-4 mb-2 flex-shrink-0 w-full">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="text-center text-xs lg:text-sm font-bold text-slate-400 uppercase tracking-wider">
+                  {day.slice(0, 3)}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-px lg:gap-4 flex-1 lg:min-h-0 w-full max-w-full pr-1" style={{ gridTemplateRows: `repeat(${numRows}, minmax(110px, 1fr))` }}>
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <div key={`empty-${i}`} className="" />
+              ))}
+              {Array.from({ length: days }).map((_, i) => {
+                const day = i + 1;
+                const dayLeaves = leaves.filter(l => isLeaveDay(day, l));
+                const isHoveredUserOnLeave = hoveredUserId && dayLeaves.some(l => l.userId === hoveredUserId);
+                const isToday = new Date().getDate() === day && new Date().getMonth() === currentDate.getMonth() && new Date().getFullYear() === currentDate.getFullYear();
+                const holiday = holidays.find(h => parseLocalDate(h.date).getDate() === day && parseLocalDate(h.date).getMonth() === currentDate.getMonth() && parseLocalDate(h.date).getFullYear() === currentDate.getFullYear());
 
-              return (
-                <div 
-                  key={day} 
-                  className={`
+                return (
+                  <div
+                    key={day}
+                    className={`
                     p-0.5 lg:p-2 rounded-md lg:rounded-xl border transition-all duration-300 relative group flex flex-col overflow-hidden min-w-0 min-h-[80px] lg:min-h-[110px]
-                    ${holiday ? 'bg-red-50 border-red-100' : isHoveredUserOnLeave 
-                      ? 'bg-indigo-50 border-indigo-200 shadow-md scale-105 z-10' 
-                      : isToday 
-                        ? 'bg-white border-indigo-500 ring-1 ring-indigo-500/20' 
-                        : 'bg-white border-slate-100 hover:border-slate-200'
-                    }
+                    ${holiday ? 'bg-red-50 border-red-100' : isHoveredUserOnLeave
+                        ? 'bg-indigo-50 border-indigo-200 shadow-md scale-105 z-10'
+                        : isToday
+                          ? 'bg-white border-indigo-500 ring-1 ring-indigo-500/20'
+                          : 'bg-white border-slate-100 hover:border-slate-200'
+                      }
                   `}
-                >
-                  <span className={`text-xs lg:text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{day}</span>
-                  
-                  {holiday && (
-                    <div className="mb-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSelectedHoliday(holiday)}>
-                      <div 
-                        className="text-[10px] font-bold text-red-500 w-full truncate"
-                        title={holiday.name}
-                      >
-                        {holiday.name}
+                  >
+                    <span className={`text-xs lg:text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{day}</span>
+
+                    {holiday && (
+                      <div className="mb-1 min-w-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSelectedHoliday(holiday)}>
+                        <div
+                          className="text-[10px] font-bold text-red-500 w-full truncate"
+                          title={holiday.name}
+                        >
+                          {holiday.name}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar flex-1">
-                    {dayLeaves.map(leave => {
-                      const user = users.find(u => u.id === leave.userId);
-                      if (!user) return null;
-                      const isHovered = hoveredUserId === leave.userId;
-                      const isCurrentUser = currentUserId === leave.userId;
-                      const isMorning = (leave as any).startTime?.startsWith('08') || (leave as any).startTime?.startsWith('8');
-                      const isAfternoon = (leave as any).startTime?.startsWith('13');
+                    <div className="mt-1 space-y-1 overflow-y-auto custom-scrollbar flex-1">
+                      {dayLeaves.map(leave => {
+                        const user = users.find(u => u.id === leave.userId);
+                        if (!user) return null;
+                        const isHovered = hoveredUserId === leave.userId;
+                        const isCurrentUser = currentUserId === leave.userId;
+                        const isMorning = leave.startTime?.startsWith('08') || leave.startTime?.startsWith('8');
+                        const isAfternoon = leave.startTime?.startsWith('13');
 
-                      return (
-                        <div 
-                          key={leave.id}
-                          onClick={(e) => { e.stopPropagation(); onLeaveClick(leave); }}
-                          className={`
+                        return (
+                          <div
+                            key={leave.id}
+                            onClick={(e) => { e.stopPropagation(); onLeaveClick(leave); }}
+                            className={`
                             text-[10px] px-2 py-1 rounded-md flex items-start justify-between gap-1 transition-all cursor-pointer min-w-0
                             ${isHovered ? 'opacity-100 font-bold shadow-sm' : hoveredUserId ? 'opacity-30' : 'opacity-100'}
                             ${isHovered ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}
                           `}
-                          title={`${user.name} - ${leave.type}`}
-                        >
-                          <span className="flex items-center gap-1 w-full min-w-0">
-                            <span className="shrink-0">{getLeaveEmoji(leave.type)}</span>
-                            <span className="truncate">{user.name.split(' ')[0]}</span>
-                            {isMorning && <span className="px-1 rounded bg-amber-200 text-amber-800 text-[8px] font-bold leading-none shrink-0 hidden lg:inline">AM</span>}
-                            {isAfternoon && <span className="px-1 rounded bg-blue-200 text-blue-800 text-[8px] font-bold leading-none shrink-0 hidden lg:inline">PM</span>}
-                          </span>
-                        </div>
-                      );
-                    })}
+                            title={`${user.name} - ${leave.type}`}
+                          >
+                            <span className="flex items-center gap-1 w-full min-w-0">
+                              <span className="shrink-0">{getLeaveEmoji(leave.type)}</span>
+                              <span className="truncate">{user.name.split(' ')[0]}</span>
+                              {isMorning && <span className="px-1 rounded bg-amber-200 text-amber-800 text-[8px] font-bold leading-none shrink-0 hidden lg:inline">AM</span>}
+                              {isAfternoon && <span className="px-1 rounded bg-blue-200 text-blue-800 text-[8px] font-bold leading-none shrink-0 hidden lg:inline">PM</span>}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
         )}
       </div>
 
@@ -482,20 +481,20 @@ export const LeaveCalendar: React.FC<LeaveCalendarProps> = ({ users, leaves, hol
                 <CalendarPlus size={20} />
                 Holiday Details
               </h3>
-              <button 
+              <button
                 onClick={() => setSelectedHoliday(null)}
                 className="p-1 text-red-400 hover:bg-red-100 rounded-full transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="mb-6">
                 <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Holiday Name</h4>
                 <p className="text-xl font-bold text-slate-900">{selectedHoliday.name}</p>
               </div>
-              
+
               <div className="mb-6">
                 <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">Date</h4>
                 <p className="text-base font-medium text-slate-700 flex items-center gap-2">
