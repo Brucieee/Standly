@@ -1177,6 +1177,7 @@ const App: React.FC = () => {
         userStandups={state.standups.filter(
           (s) => s.userId === state.currentUser?.id,
         )}
+        users={state.users}
       />
 
       {viewingStandupObject && (

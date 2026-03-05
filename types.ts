@@ -53,7 +53,7 @@ export interface Deadline {
   title: string;
   description?: string;
   dueDate: string;
-  status?: 'Pending' | 'In Progress' | 'Completed' | 'For QA' | 'Completed Beyond Schedule';
+  status?: 'Pending' | 'In Progress' | 'Completed' | 'For QA' | 'For Approval' | 'Completed Beyond Schedule';
   priority?: 'Low' | 'Medium' | 'High';
   remarks?: string;
   creatorId: string;

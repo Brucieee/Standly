@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Calendar, Link as LinkIcon, Plus, Info } from 'lucide-react';
-import { Standup } from '../types';
+import { Standup, User } from '../types';
 
 interface StandupModalProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ interface StandupModalProps {
   initialDate: string;
   onDelete?: () => void;
   userStandups: Standup[];
+  users: User[];
 }
 
 export const StandupModal: React.FC<StandupModalProps> = ({
@@ -27,6 +28,7 @@ export const StandupModal: React.FC<StandupModalProps> = ({
   initialDate,
   onDelete,
   userStandups,
+  users,
 }) => {
   const [date, setDate] = useState(initialDate);
   const [yesterday, setYesterday] = useState('');
@@ -35,6 +37,23 @@ export const StandupModal: React.FC<StandupModalProps> = ({
   const [mood, setMood] = useState<'happy' | 'neutral' | 'stressed'>('happy');
   const [jiraLinks, setJiraLinks] = useState<string[]>(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  type SuggestionItem = import('../types').User | { name: string; isEveryone: boolean; id: string; role: string; avatar: string };
+
+  const filteredUsers: SuggestionItem[] = mentionQuery !== null && users
+    ? [
+      ...(users
+        .filter(u => u.name.toLowerCase().includes(mentionQuery.toLowerCase()))
+        .map(u => ({ ...u, isEveryone: false }))),
+      ...('everyone'.includes(mentionQuery.toLowerCase()) ? [{ name: 'everyone', isEveryone: true, id: 'everyone', role: 'Notify all users', avatar: '' }] : [])
+    ]
+    : [];
+
+  useEffect(() => {
+    setHighlightedIndex(0);
+  }, [mentionQuery]);
 
   // Calculate previous standup dynamically based on selected date
   const previousStandup = React.useMemo(() => {
@@ -43,7 +62,7 @@ export const StandupModal: React.FC<StandupModalProps> = ({
 
     // Sort descending
     const sorted = [...userStandups].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
+
     // Find first one strictly before current date
     return sorted.find(s => {
       // Normalize standup date to YYYY-MM-DD for comparison
@@ -109,9 +128,65 @@ export const StandupModal: React.FC<StandupModalProps> = ({
   const blockersPlaceholder = previousStandup?.blockers || "Any blockers? (Optional)";
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, setValue: (val: string) => void, placeholder: string) => {
+    // Mentions dropdown navigation
+    if (mentionQuery !== null && filteredUsers.length > 0 && setValue === setBlockers) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev + 1) % filteredUsers.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setHighlightedIndex(prev => (prev - 1 + filteredUsers.length) % filteredUsers.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSelectUser(filteredUsers[highlightedIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionQuery(null);
+        return;
+      }
+    }
+
     if (e.key === 'Tab' && !e.shiftKey && e.currentTarget.value === '' && placeholder) {
       e.preventDefault();
       setValue(placeholder);
+    }
+  };
+
+  const handleBlockersChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setBlockers(value);
+
+    // Check for mention trigger
+    const cursorPosition = e.target.selectionStart || 0;
+    const textBeforeCursor = value.slice(0, cursorPosition);
+    const lastWord = textBeforeCursor.split(' ').pop();
+
+    if (lastWord && lastWord.startsWith('@')) {
+      setMentionQuery(lastWord.slice(1));
+    } else {
+      setMentionQuery(null);
+    }
+  };
+
+  const handleSelectUser = (user: SuggestionItem) => {
+    if (mentionQuery === null) return;
+
+    // Replace the last @partial with @Name
+    const nameToInsert = 'isEveryone' in user && user.isEveryone ? 'everyone' : user.name.split(' ')[0];
+
+    const lastIndex = blockers.lastIndexOf(`@${mentionQuery}`);
+    if (lastIndex !== -1) {
+      const prefix = blockers.substring(0, lastIndex);
+      const suffix = blockers.substring(lastIndex + mentionQuery.length + 1);
+      const newValue = `${prefix}@${nameToInsert} ${suffix}`;
+      setBlockers(newValue);
+      setMentionQuery(null);
     }
   };
 
@@ -132,7 +207,7 @@ export const StandupModal: React.FC<StandupModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1"><Calendar size={12} className="inline"/>Date</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1"><Calendar size={12} className="inline" />Date</label>
             <input
               type="date"
               required
@@ -187,18 +262,54 @@ export const StandupModal: React.FC<StandupModalProps> = ({
                 </div>
               )}
             </label>
-            <textarea
-              value={blockers}
-              onChange={(e) => setBlockers(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, setBlockers, blockersPlaceholder)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[60px]"
-              placeholder={blockersPlaceholder}
-            />
+            <div className="relative">
+              <textarea
+                value={blockers}
+                onChange={handleBlockersChange}
+                onKeyDown={(e) => handleKeyDown(e, setBlockers, blockersPlaceholder)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[60px]"
+                placeholder={blockersPlaceholder}
+              />
+              {/* Mention Suggestions */}
+              {mentionQuery !== null && filteredUsers.length > 0 && (
+                <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-[60] animate-fade-in-up">
+                  <div className="max-h-48 overflow-y-auto">
+                    {filteredUsers.map((user, index) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => handleSelectUser(user)}
+                        className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${index === highlightedIndex ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                      >
+                        {'isEveryone' in user && user.isEveryone ? (
+                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                            <span className="font-bold text-xs">ALL</span>
+                          </div>
+                        ) : (
+                          <img
+                            src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`}
+                            alt={user.name}
+                            className="w-8 h-8 rounded-full bg-slate-100 object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                            }}
+                          />
+                        )}
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">{'isEveryone' in user && user.isEveryone ? '@everyone' : user.name}</p>
+                          <p className="text-xs text-slate-500">{user.role}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
-              <LinkIcon size={12} className="inline"/> Jira Tickets (Optional)
+              <LinkIcon size={12} className="inline" /> Jira Tickets (Optional)
             </label>
             <div className="space-y-2">
               {jiraLinks.map((link, index) => (
@@ -235,11 +346,10 @@ export const StandupModal: React.FC<StandupModalProps> = ({
                   key={m.value}
                   type="button"
                   onClick={() => setMood(m.value as any)}
-                  className={`flex-1 p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                    mood === m.value
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-slate-100 hover:border-slate-200 text-slate-600'
-                  }`}
+                  className={`flex-1 p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${mood === m.value
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-100 hover:border-slate-200 text-slate-600'
+                    }`}
                 >
                   <span className="text-2xl">{m.emoji}</span>
                   <span className="text-sm font-medium">{m.label}</span>
@@ -259,9 +369,9 @@ export const StandupModal: React.FC<StandupModalProps> = ({
                 <span>Delete Standup</span>
               </button>
             ) : (
-              <div></div> 
+              <div></div>
             )}
-            
+
             <div className="flex gap-3">
               <button
                 type="button"

@@ -25,23 +25,28 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
 
   const dueDate = new Date(deadline.dueDate);
   const isOverdue = dueDate < new Date() && deadline.status !== 'Completed';
-  const assignee = users.find(u => u.id === deadline.assigneeId);
+  const assignees = deadline.assigneeIds
+    ? deadline.assigneeIds.map(id => users.find(u => u.id === id)).filter(Boolean) as User[]
+    : [];
 
   const getStatusColor = (status?: string) => {
     switch (status) {
       case 'Completed': return 'text-emerald-700 bg-emerald-100';
       case 'In Progress': return 'text-blue-700 bg-blue-100';
+      case 'For QA': return 'text-purple-700 bg-purple-100';
+      case 'For Approval': return 'text-cyan-700 bg-cyan-100';
+      case 'Completed Beyond Schedule': return 'text-orange-700 bg-orange-100';
       default: return 'text-amber-700 bg-amber-100'; // Pending
     }
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" 
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div 
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col" 
+      <div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in-up max-h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50/50 flex-shrink-0">
@@ -70,23 +75,23 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
                 {dueDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
               {isOverdue && (
-                 <span className="inline-block mt-1 text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                   Overdue
-                 </span>
+                <span className="inline-block mt-1 text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                  Overdue
+                </span>
               )}
             </div>
           </div>
 
           <div className="flex items-start gap-4">
-             <div className="p-2 bg-slate-50 rounded-lg text-slate-500 mt-0.5">
-               <CheckCircle size={20} />
-             </div>
-             <div>
-               <p className="text-sm font-semibold text-slate-900">Status</p>
-               <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusColor(deadline.status)}`}>
-                 {deadline.status || 'Pending'}
-               </span>
-             </div>
+            <div className="p-2 bg-slate-50 rounded-lg text-slate-500 mt-0.5">
+              <CheckCircle size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Status</p>
+              <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusColor(deadline.status)}`}>
+                {deadline.status || 'Pending'}
+              </span>
+            </div>
           </div>
 
           {deadline.description && (
@@ -110,7 +115,7 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-slate-900">Release Link</p>
-                <a 
+                <a
                   href={deadline.releaseLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -123,48 +128,56 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
           )}
 
           <div className="flex items-center gap-4 pt-2 border-t border-slate-100">
-             <div className="flex items-center gap-3 flex-1">
-                <img 
-                  src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`} 
-                  alt={creator?.name}
-                  className="w-10 h-10 rounded-full bg-slate-100 object-cover border border-slate-200"
-                />
-                <div>
-                  <p className="text-xs text-slate-500">Created by</p>
-                  <p className="text-sm font-medium text-slate-900">{creator?.name || 'Unknown'}</p>
+            <div className="flex items-center gap-3 flex-1">
+              <img
+                src={creator?.avatar || `https://ui-avatars.com/api/?name=${creator?.name || 'User'}`}
+                alt={creator?.name}
+                className="w-10 h-10 rounded-full bg-slate-100 object-cover border border-slate-200"
+              />
+              <div>
+                <p className="text-xs text-slate-500">Created by</p>
+                <p className="text-sm font-medium text-slate-900">{creator?.name || 'Unknown'}</p>
+              </div>
+            </div>
+
+            {assignees.length > 0 && (
+              <div className="flex items-center gap-3 flex-1 border-l border-slate-100 pl-4">
+                <div className="flex -space-x-2 overflow-hidden">
+                  {assignees.map(assignee => (
+                    <img
+                      key={assignee.id}
+                      src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`}
+                      alt={assignee.name}
+                      title={assignee.name}
+                      className="inline-block w-8 h-8 rounded-full bg-slate-100 object-cover border-2 border-white"
+                    />
+                  ))}
                 </div>
-             </div>
-             
-             {assignee && (
-               <div className="flex items-center gap-3 flex-1 border-l border-slate-100 pl-4">
-                  <img 
-                    src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`} 
-                    alt={assignee.name}
-                    className="w-10 h-10 rounded-full bg-slate-100 object-cover border border-slate-200"
-                  />
-                  <div>
-                    <p className="text-xs text-slate-500">Assigned to</p>
-                    <p className="text-sm font-medium text-slate-900">{assignee.name}</p>
-                  </div>
-               </div>
-             )}
+                <div>
+                  <p className="text-xs text-slate-500">Assigned to</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {assignees.length === 1 ? assignees[0].name : `${assignees.length} people`}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button 
+            <button
               onClick={() => {
                 onEdit(deadline);
                 onClose();
-              }} 
+              }}
               className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
             >
               <Edit2 size={16} /> Edit
             </button>
-            <button 
+            <button
               onClick={() => {
                 onDelete(deadline.id);
                 onClose();
-              }} 
+              }}
               className="flex-1 py-2.5 bg-white border border-red-200 text-red-600 rounded-xl font-medium hover:bg-red-50 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
             >
               <Trash2 size={16} /> Delete
