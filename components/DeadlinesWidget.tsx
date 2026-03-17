@@ -48,7 +48,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const canEdit = isCreator || isAdmin;
 
           const isAssignee = !!(currentUser?.id && deadline.assigneeIds?.includes(currentUser.id));
-          const assignees = deadline.assigneeIds?.map(id => users.find(u => u.id === id)).filter(Boolean) as User[] || [];
+          const assignees = (deadline.assigneeIds || []).map(id => users.find(u => u.id === id)).filter(Boolean) as User[];
 
           const isDueToday = new Date().toDateString() === dueDate.toDateString();
 

@@ -133,7 +133,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
       // The current deadline list is passed as `deadlines` prop and filtered by `hideCompleted` in `visibleDeadlines`
       // We will export `visibleDeadlines`
       const data = visibleDeadlines.map(d => {
-        const assignees = d.assigneeIds?.map(id => users.find(u => u.id === id)?.name).filter(Boolean).join('; ') || '';
+        const assignees = (d.assigneeIds || []).map(id => users.find(u => u.id === id)?.name).filter(Boolean).join('; ');
         const creator = users.find(u => u.id === d.creatorId)?.name || '';
         return {
           Title: d.title,
@@ -487,7 +487,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                   const isCreator = !!(currentUser?.id && deadline.creatorId && currentUser.id === deadline.creatorId);
                   const isAdmin = !!currentUser?.isAdmin;
                   const canEdit = isCreator || isAdmin;
-                  const assignees = deadline.assigneeIds?.map(id => users.find(u => u.id === id)).filter(Boolean) as User[] || [];
+                  const assignees = (deadline.assigneeIds || []).map(id => users.find(u => u.id === id)).filter(Boolean) as User[];
                   const isAssignee = !!(currentUser?.id && deadline.assigneeIds?.includes(currentUser.id));
                   const isExpanded = expandedDeadlineIds.has(deadline.id);
 
