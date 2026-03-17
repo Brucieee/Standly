@@ -764,6 +764,8 @@ const App: React.FC = () => {
             deadlines: prev.deadlines.filter((t) => t.id !== taskId),
           }));
           setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+          setIsDeadlineModalOpen(false);
+          setEditingDeadline(null);
         } catch (error: any) {
           console.error("Failed to delete deadline", error);
           alert(
