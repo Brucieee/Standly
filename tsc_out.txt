@@ -1,0 +1,15 @@
+﻿components/LeaveCalendar.tsx(74,12): error TS2678: Type '"birthday"' is not comparable to type '"vacation" | "sick" | "personal" | "wellness"'.
+components/LeaveCalendar.tsx(122,12): error TS2678: Type '"birthday"' is not comparable to type '"vacation" | "sick" | "personal" | "wellness"'.
+components/TasksWidget.tsx(2,10): error TS2305: Module '"../types"' has no exported member 'Task'.
+components/ViewDeadlineModal.tsx(28,54): error TS2551: Property 'assigneeId' does not exist on type 'Deadline'. Did you mean 'assigneeIds'?
+services/api.ts(2,25): error TS2305: Module '"../types"' has no exported member 'Task'.
+supabase/functions/resend-email/index.ts(1,23): error TS2307: Cannot find module 'https://deno.land/std@0.168.0/http/server.ts' or its corresponding type declarations.
+supabase/functions/resend-email/index.ts(2,30): error TS2307: Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations.
+supabase/functions/resend-email/index.ts(19,7): error TS2304: Cannot find name 'Deno'.
+supabase/functions/resend-email/index.ts(20,7): error TS2304: Cannot find name 'Deno'.
+supabase/functions/resend-email/index.ts(58,26): error TS2304: Cannot find name 'Deno'.
+supabase/functions/standup-reminder/index.ts(1,23): error TS2307: Cannot find module 'https://deno.land/std@0.168.0/http/server.ts' or its corresponding type declarations.
+supabase/functions/standup-reminder/index.ts(2,30): error TS2307: Cannot find module 'https://esm.sh/@supabase/supabase-js@2' or its corresponding type declarations.
+supabase/functions/standup-reminder/index.ts(19,7): error TS2304: Cannot find name 'Deno'.
+supabase/functions/standup-reminder/index.ts(20,7): error TS2304: Cannot find name 'Deno'.
+supabase/functions/standup-reminder/index.ts(58,26): error TS2304: Cannot find name 'Deno'.

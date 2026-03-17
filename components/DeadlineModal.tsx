@@ -154,7 +154,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
                     <option value="For QA">For QA</option>
-                    <option value="For Approval">For Approval</option>
+                    <option value="Submitted for Approval">Submitted for Approval</option>
                     <option value="Completed">Completed</option>
                     <option value="Completed Beyond Schedule">Completed Beyond Schedule</option>
                   </select>

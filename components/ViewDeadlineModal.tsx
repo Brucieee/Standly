@@ -34,7 +34,7 @@ export const ViewDeadlineModal: React.FC<ViewDeadlineModalProps> = ({
       case 'Completed': return 'text-emerald-700 bg-emerald-100';
       case 'In Progress': return 'text-blue-700 bg-blue-100';
       case 'For QA': return 'text-purple-700 bg-purple-100';
-      case 'For Approval': return 'text-cyan-700 bg-cyan-100';
+      case 'Submitted for Approval': return 'text-cyan-700 bg-cyan-100';
       case 'Completed Beyond Schedule': return 'text-orange-700 bg-orange-100';
       default: return 'text-amber-700 bg-amber-100'; // Pending
     }

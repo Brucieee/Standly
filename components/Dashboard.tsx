@@ -57,7 +57,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       const dueDate = moment(d.dueDate).startOf('day');
       const today = moment().startOf('day');
       const fiveDaysFromNow = moment().add(5, 'days').endOf('day');
-      return d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule' && dueDate.isSameOrAfter(today) && dueDate.isSameOrBefore(fiveDaysFromNow);
+      return d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule' && d.status !== 'Submitted for Approval' && dueDate.isSameOrAfter(today) && dueDate.isSameOrBefore(fiveDaysFromNow);
     });
 
   const missedDeadlines = deadlines.filter(d => {
@@ -72,7 +72,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       millisecond: 0
     });
 
-    return now.isAfter(dueDate) && d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule';
+    return now.isAfter(dueDate) && d.status !== 'Completed' && d.status !== 'Completed Beyond Schedule' && d.status !== 'Submitted for Approval';
   });
 
   return (

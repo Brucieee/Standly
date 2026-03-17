@@ -1,9 +1,9 @@
 export enum UserRole {
-  DEVELOPER = 'Software Developer',
-  QA = 'Quality Assurance',
-  PRODUCT_OWNER = 'Product Owner',
-  PRODUCT_MANAGER = 'Product Manager',
-  INTERN = 'Intern'
+  DEVELOPER = "Software Developer",
+  QA = "Quality Assurance",
+  PRODUCT_OWNER = "Product Owner",
+  PRODUCT_MANAGER = "Product Manager",
+  INTERN = "Intern",
 }
 
 export interface User {
@@ -53,8 +53,14 @@ export interface Deadline {
   title: string;
   description?: string;
   dueDate: string;
-  status?: 'Pending' | 'In Progress' | 'Completed' | 'For QA' | 'For Approval' | 'Completed Beyond Schedule';
-  priority?: 'Low' | 'Medium' | 'High';
+  status?:
+    | "Pending"
+    | "In Progress"
+    | "Completed"
+    | "For QA"
+    | "Submitted for Approval"
+    | "Completed Beyond Schedule";
+  priority?: "Low" | "Medium" | "High";
   remarks?: string;
   creatorId: string;
   releaseLink?: string;
@@ -65,17 +71,17 @@ export interface Leave {
   id: string;
   userId: string;
   startDate: string; // ISO Date string (YYYY-MM-DD)
-  endDate: string;   // ISO Date string (YYYY-MM-DD)
+  endDate: string; // ISO Date string (YYYY-MM-DD)
   reason?: string;
-  type: 'vacation' | 'sick' | 'personal' | 'wellness' | 'birthday';
+  type: "vacation" | "sick" | "personal" | "wellness" | "birthday";
   startTime?: string;
   endTime?: string;
 }
 
 export interface Holiday {
-    id: string;
-    date: string;
-    name: string;
+  id: string;
+  date: string;
+  name: string;
 }
 
 export interface AppState {
@@ -89,7 +95,13 @@ export interface AppState {
   announcements: Announcement[];
 }
 
-export type QuickLinkCategory = 'General' | 'Development' | 'Design' | 'Resources' | 'Social' | 'Tools';
+export type QuickLinkCategory =
+  | "General"
+  | "Development"
+  | "Design"
+  | "Resources"
+  | "Social"
+  | "Tools";
 
 export interface QuickLink {
   id: string;
