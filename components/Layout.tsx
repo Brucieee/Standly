@@ -156,7 +156,7 @@ export const Layout: React.FC<LayoutProps> = ({
       <aside className="w-64 bg-slate-200 fixed h-full z-10 hidden md:flex flex-col overflow-y-auto custom-scrollbar border-none shadow-neo">
         <div className="p-6">
           <div
-            className="flex items-center gap-3 mb-8 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center justify-center gap-3 mb-8 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => onTabChange('dashboard')}
           >
             <img
@@ -182,9 +182,9 @@ export const Layout: React.FC<LayoutProps> = ({
                     onTabChange(item.id);
                   }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${activeTab === item.id
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-300 border border-transparent ${activeTab === item.id
                   ? 'bg-slate-200 text-red-500 shadow-neo-inner'
-                  : 'bg-slate-200 text-slate-500 shadow-neo hover:text-red-400'
+                  : 'text-slate-500 hover:bg-slate-200 hover:text-red-400 hover:shadow-neo'
                   }`}
               >
                 <item.icon size={20} />
@@ -195,7 +195,7 @@ export const Layout: React.FC<LayoutProps> = ({
             {(userRole === 'Software Developer' || userRole === 'Product Owner' || userRole === 'Product Manager') && (
               <button
                 onClick={onOpenAnnouncements}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-500 bg-slate-200 shadow-neo hover:text-red-400 transition-all duration-300 text-left mt-4"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-500 hover:bg-slate-200 hover:shadow-neo hover:text-red-400 transition-all duration-300 text-left mt-4 border border-transparent"
               >
                 <FileText size={20} />
                 Announcements
@@ -242,7 +242,7 @@ export const Layout: React.FC<LayoutProps> = ({
                           <div key={link.id} className="group relative">
                             <button
                               onClick={() => window.open(link.url, '_blank')}
-                              className="w-[95%] mx-auto flex items-center gap-3 px-4 py-2 mt-2 rounded-xl text-sm font-medium text-slate-500 bg-slate-200 shadow-neo-sm hover:text-red-400 transition-all pr-14 text-left"
+                              className="w-[95%] mx-auto flex items-center gap-3 px-4 py-2 mt-2 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-200 hover:shadow-neo hover:text-red-400 transition-all pr-14 text-left border border-transparent"
                             >
                               {link.iconUrl ? (
                                 <img src={link.iconUrl} alt="" className="w-5 h-5 object-contain rounded-md flex-shrink-0" />
@@ -293,7 +293,7 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="mt-auto p-4 shadow-[0_-10px_15px_-3px_rgba(255,255,255,0.7)] relative z-20 bg-slate-200">
           <div className="flex items-center gap-2">
             <div
-              className="flex-1 flex items-center gap-2 cursor-pointer rounded-2xl p-2 transition-all shadow-neo hover:shadow-neo-inner group bg-slate-200"
+              className="flex-1 flex items-center gap-2 cursor-pointer rounded-2xl p-2 transition-all hover:shadow-neo-inner group hover:bg-slate-200 border border-transparent"
               onClick={() => onTabChange('profile')}
             >
               <img

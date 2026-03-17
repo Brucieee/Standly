@@ -150,6 +150,9 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
       case 'happy': return <Smile className="text-green-500" size={size} />;
       case 'neutral': return <Meh className="text-yellow-500" size={size} />;
       case 'stressed': return <Frown className="text-red-500" size={size} />;
+      case 'sad': return <span style={{ fontSize: `${size * 0.8}px` }}>😔</span>;
+      case 'hungry': return <span style={{ fontSize: `${size * 0.8}px` }}>🤤</span>;
+      case 'excited': return <span style={{ fontSize: `${size * 0.8}px` }}>🤩</span>;
       default: return <Smile className="text-slate-400" size={size} />;
     }
   };

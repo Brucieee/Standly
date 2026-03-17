@@ -34,7 +34,7 @@ export const StandupModal: React.FC<StandupModalProps> = ({
   const [yesterday, setYesterday] = useState('');
   const [today, setToday] = useState('');
   const [blockers, setBlockers] = useState('');
-  const [mood, setMood] = useState<'happy' | 'neutral' | 'stressed'>('happy');
+  const [mood, setMood] = useState<'happy' | 'neutral' | 'stressed' | 'sad' | 'hungry' | 'excited'>('happy');
   const [jiraLinks, setJiraLinks] = useState<string[]>(['']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -103,7 +103,7 @@ export const StandupModal: React.FC<StandupModalProps> = ({
     setIsSubmitting(true);
     try {
       const validLinks = jiraLinks.map(l => l.trim()).filter(l => l.length > 0);
-      await onSubmit({ date, yesterday, today, blockers, mood, jiraLinks: validLinks });
+      await onSubmit({ date, yesterday, today, blockers, mood: mood as any, jiraLinks: validLinks });
     } finally {
       setIsSubmitting(false);
     }
@@ -338,23 +338,26 @@ export const StandupModal: React.FC<StandupModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Mood</label>
-            <div className="flex gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
                 { value: 'happy', emoji: '😄', label: 'Happy' },
+                { value: 'excited', emoji: '🤩', label: 'Excited' },
                 { value: 'neutral', emoji: '😐', label: 'Neutral' },
+                { value: 'sad', emoji: '😔', label: 'Sad' },
                 { value: 'stressed', emoji: '😫', label: 'Stressed' },
+                { value: 'hungry', emoji: '🤤', label: 'Hungry' },
               ].map((m) => (
                 <button
                   key={m.value}
                   type="button"
                   onClick={() => setMood(m.value as any)}
-                  className={`flex-1 p-3 rounded-2xl border-none transition-all flex flex-col items-center gap-2 ${mood === m.value
-                    ? 'shadow-neo-inner text-indigo-600 bg-slate-200'
-                    : 'shadow-neo hover:shadow-neo-inner text-slate-500 bg-slate-200'
+                  className={`p-3 rounded-2xl border-none transition-all flex flex-col items-center gap-2 ${mood === m.value
+                    ? 'shadow-neo-inner text-indigo-600 bg-slate-200 scale-100'
+                    : 'shadow-neo hover:shadow-neo-inner text-slate-500 bg-slate-200 hover:scale-[0.98]'
                     }`}
                 >
                   <span className="text-2xl">{m.emoji}</span>
-                  <span className="text-sm font-medium">{m.label}</span>
+                  <span className="text-xs font-bold">{m.label}</span>
                 </button>
               ))}
             </div>

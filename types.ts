@@ -40,7 +40,7 @@ export interface Standup {
   yesterday: string;
   today: string;
   blockers: string;
-  mood: 'happy' | 'neutral' | 'stressed';
+  mood: 'happy' | 'neutral' | 'stressed' | 'sad' | 'hungry' | 'excited';
   jiraLinks?: string[];
   views?: string[];
   comments?: Comment[];
