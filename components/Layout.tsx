@@ -309,7 +309,7 @@ export const Layout: React.FC<LayoutProps> = ({
             
             <button
               onClick={onLogout}
-              className="p-3 text-slate-400 hover:text-red-500 hover:shadow-neo-inner bg-slate-200 shadow-neo rounded-xl transition-all flex items-center justify-center shrink-0 active:scale-95"
+              className="p-3 text-slate-400 hover:text-red-500 hover:shadow-neo-inner bg-slate-200 shadow-neo rounded-xl transition-all flex items-center justify-center shrink-0 border border-transparent"
               title="Sign Out"
             >
               <LogOut size={20} />
@@ -323,7 +323,7 @@ export const Layout: React.FC<LayoutProps> = ({
         {/* Mobile Header */}
         <header className="md:hidden bg-slate-200 shadow-neo-sm p-4 flex justify-between items-center sticky top-0 z-20 rounded-b-2xl mb-4">
           <div
-            className="flex items-center gap-2 cursor-pointer active:shadow-neo-sm-inner transition-all p-2 rounded-xl"
+            className="flex items-center gap-2 cursor-pointer transition-all p-2 rounded-xl"
             onClick={() => onTabChange('dashboard')}
           >
             <img
