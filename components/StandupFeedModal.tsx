@@ -230,7 +230,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
         <div className="flex-1 space-y-2">
           <div className={`
             rounded-2xl rounded-tl-none p-4 group relative break-words transition-colors duration-300
-            ${shouldHighlight ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-slate-50'}
+            ${shouldHighlight ? 'bg-indigo-50 shadow-neo-inner' : 'bg-slate-200 shadow-neo-sm'}
           `}>
             <div className="flex justify-between items-start mb-1 gap-2">
               <div className="flex items-baseline gap-2">
@@ -263,7 +263,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                   type="text"
                   value={editCommentText}
                   onChange={(e) => setEditCommentText(e.target.value)}
-                  className="flex-1 bg-white border border-indigo-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  className="flex-1 bg-slate-200 shadow-neo-sm-inner border-none rounded-xl px-3 py-2 text-sm focus:outline-none focus:shadow-neo"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSaveEdit();
@@ -293,7 +293,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
 
           {/* Render Replies */}
           {!isReply && comment.replies && comment.replies.length > 0 && (
-            <div className="pl-4 border-l-2 border-slate-100">
+            <div className="pl-4 border-l-2 border-slate-300/50">
               {comment.replies.map((reply: any) => renderCommentItem(reply, true))}
             </div>
           )}
@@ -306,7 +306,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder="Write a reply..."
-                className="flex-1 bg-slate-50 border-0 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="flex-1 bg-slate-200 border-none shadow-neo-sm-inner rounded-xl px-4 py-2 text-sm focus:outline-none focus:shadow-neo transition-all"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && replyText.trim()) {
@@ -324,7 +324,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                     setReplyingTo(null);
                   }
                 }}
-                className="p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors"
+                className="p-2 bg-slate-200 text-indigo-500 rounded-xl shadow-neo hover:shadow-neo-inner transition-all border-none"
               >
                 <Send size={14} />
               </button>
@@ -354,10 +354,10 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-up" onClick={e => e.stopPropagation()}>
+      <div className="bg-slate-200 rounded-3xl shadow-neo border-none w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-up" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center flex-shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="p-6 border-none flex justify-between items-center flex-shrink-0 bg-transparent">
+          <div className="flex items-center gap-4">
             <img 
               src={users.find(u => u.id === standup.userId)?.avatar || `https://ui-avatars.com/api/?name=${users.find(u => u.id === standup.userId)?.name || 'User'}`} 
               alt="User"
@@ -367,8 +367,8 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
               }}
             />
             <div>
-              <h3 className="font-bold text-slate-900">{users.find(u => u.id === standup.userId)?.name || 'Unknown User'}</h3>
-              <p className="text-xs text-slate-500 flex items-center gap-1">
+              <h3 className="font-bold text-slate-800 text-lg">{users.find(u => u.id === standup.userId)?.name || 'Unknown User'}</h3>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1 mt-0.5">
                 <Clock size={12} />
                 {new Date(standup.createdAt || standup.date + 'T00:00:00').toLocaleString(undefined, { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' })}
               </p>
@@ -414,7 +414,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
             )}
 
            {/* Reactions & Comments */}
-           <div className="pt-6 border-t border-slate-100">
+           <div className="pt-6 border-none">
               <div className="flex items-center gap-4 mb-6">
                 <div className="flex gap-2">
                   {REACTION_TYPES.map((reaction) => {
@@ -423,7 +423,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                       <button 
                         key={reaction.id} 
                         onClick={() => onReact(standup.id, reaction.id)} 
-                        className={`w-10 h-10 flex items-center justify-center rounded-full text-xl transition-all hover:scale-110 active:scale-95 ${isSelected ? 'bg-indigo-100 border-2 border-indigo-200 shadow-inner' : 'bg-slate-50 hover:bg-slate-100'}`} 
+                        className={`w-10 h-10 flex items-center justify-center rounded-full text-xl transition-all hover:scale-110 active:scale-95 border-none ${isSelected ? 'shadow-neo-inner bg-slate-200' : 'shadow-neo hover:shadow-neo-inner bg-slate-200'}`} 
                         title={reaction.label}
                       >
                         {reaction.icon}
@@ -443,7 +443,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                       return acc;
                     }, {})
                   ).map(([type, reactions]: [string, any]) => (
-                    <div key={type} className="flex items-center gap-2 bg-slate-50 rounded-full pl-2 pr-3 py-1 border border-slate-100">
+                    <div key={type} className="flex items-center gap-2 bg-slate-200 shadow-neo-sm rounded-full pl-2 pr-3 py-1 border-none">
                       <span className="text-sm">{REACTION_TYPES.find(t => t.id === type)?.icon}</span>
                       <div className="flex -space-x-2">
                         {reactions.map((r: any) => (
@@ -470,7 +470,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                 <div className="flex gap-3 pt-2 relative">
                   {/* Mention Suggestions */}
                   {mentionQuery !== null && filteredUsers.length > 0 && (
-                    <div className="absolute bottom-full left-12 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-20 animate-fade-in-up">
+                    <div className="absolute bottom-full left-12 mb-3 w-64 bg-slate-200 rounded-2xl shadow-neo border-none overflow-hidden z-20 animate-fade-in-up">
                       <div className="max-h-48 overflow-y-auto">
                         {filteredUsers.map((user, index) => (
                           <button
@@ -516,10 +516,10 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                       value={newComment} 
                       onChange={handleCommentChange} 
                       placeholder="Write a comment... (Type @ to mention)" 
-                      className="w-full bg-slate-50 border-0 rounded-xl pl-4 pr-12 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all" 
+                      className="w-full bg-slate-200 border-none shadow-neo-sm-inner rounded-xl pl-5 pr-12 py-4 text-sm focus:shadow-neo outline-none transition-all text-slate-700" 
                       onKeyDown={handleKeyDown} 
                     />
-                    <button className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-all ${newComment.trim() ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`} disabled={!newComment.trim()} onClick={() => { if (newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); setMentionQuery(null); } }}><Send size={16} /></button>
+                    <button className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all border-none ${newComment.trim() ? 'bg-slate-200 text-indigo-500 shadow-neo hover:shadow-neo-inner' : 'bg-slate-200 text-slate-400 shadow-neo-sm-inner cursor-not-allowed'}`} disabled={!newComment.trim()} onClick={() => { if (newComment.trim()) { onComment(standup.id, newComment); setNewComment(''); setMentionQuery(null); } }}><Send size={16} /></button>
                   </div>
                 </div>
               </div>
@@ -536,7 +536,7 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
                     src={viewer.avatar || `https://ui-avatars.com/api/?name=${viewer.name || 'User'}`} 
                     alt={viewer.name} 
                     title={viewer.name} 
-                    className="w-8 h-8 rounded-full border-2 border-white shadow-sm" 
+                    className="w-8 h-8 rounded-full shadow-neo-sm object-cover border border-slate-200" 
                     onError={(e) => {
                       e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(viewer.name || 'User')}&background=random`;
                     }}

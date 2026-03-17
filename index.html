@@ -10,7 +10,8 @@
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #f8fafc;
+        background-color: #E2E8F0; /* Neomorphism base gray */
+        color: #475569; /* slate-600 */
       }
       /* Custom scrollbar for webkit */
       ::-webkit-scrollbar {
@@ -28,6 +29,23 @@
         background: #94a3b8; 
       }
     </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'neo-base': '#E2E8F0', // Match base bg
+            },
+            boxShadow: {
+              'neo': '7px 7px 15px -5px #a6abb1, -7px -7px 15px -5px #ffffff',
+              'neo-inner': 'inset 5px 5px 10px -5px #a6abb1, inset -5px -5px 10px -5px #ffffff',
+              'neo-sm': '4px 4px 8px -3px #a6abb1, -4px -4px 8px -3px #ffffff',
+              'neo-sm-inner': 'inset 4px 4px 8px -3px #a6abb1, inset -4px -4px 8px -3px #ffffff',
+            }
+          }
+        }
+      }
+    </script>
   <script type="importmap">
 {
   "imports": {

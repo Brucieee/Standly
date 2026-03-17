@@ -194,9 +194,9 @@ export const StandupModal: React.FC<StandupModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-slate-900">
+      <div className="bg-slate-200 rounded-3xl shadow-neo border-none w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 py-4 border-none flex justify-between items-center sticky top-0 bg-transparent z-10">
+          <h2 className="text-xl font-bold text-slate-800">
 
             {initialData ? 'Edit Standup' : 'New Standup'}
           </h2>
@@ -205,49 +205,51 @@ export const StandupModal: React.FC<StandupModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="px-5 pb-5 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1"><Calendar size={12} className="inline" />Date</label>
-            <input
+              <input
               type="date"
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
-              Yesterday
-              {previousStandup?.today && (
-                <div className="group relative flex items-center">
-                  <Info size={14} className="text-slate-400 hover:text-indigo-500 cursor-help" />
-                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
-                    Press Tab to autofill from previous standup
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-1">
+                Yesterday
+                {previousStandup?.today && (
+                  <div className="group relative flex items-center">
+                    <Info size={14} className="text-slate-400 hover:text-indigo-500 cursor-help" />
+                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-48 p-2 bg-slate-800 text-white text-xs rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+                      Press Tab to autofill from previous standup
+                    </div>
                   </div>
-                </div>
-              )}
-            </label>
-            <textarea
-              required
-              value={yesterday}
-              onChange={(e) => setYesterday(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, setYesterday, yesterdayPlaceholder)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[80px]"
-              placeholder={yesterdayPlaceholder}
-            />
-          </div>
+                )}
+              </label>
+              <textarea
+                required
+                value={yesterday}
+                onChange={(e) => setYesterday(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e, setYesterday, yesterdayPlaceholder)}
+                className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all min-h-[80px] text-slate-700 resize-none"
+                placeholder={yesterdayPlaceholder}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Today</label>
-            <textarea
-              required
-              value={today}
-              onChange={(e) => setToday(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[80px]"
-              placeholder="What will you work on today?"
-            />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Today</label>
+              <textarea
+                required
+                value={today}
+                onChange={(e) => setToday(e.target.value)}
+                className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all min-h-[80px] text-slate-700 resize-none"
+                placeholder="What will you work on today?"
+              />
+            </div>
           </div>
 
           <div>
@@ -267,29 +269,29 @@ export const StandupModal: React.FC<StandupModalProps> = ({
                 value={blockers}
                 onChange={handleBlockersChange}
                 onKeyDown={(e) => handleKeyDown(e, setBlockers, blockersPlaceholder)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all min-h-[60px]"
+                className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all min-h-[60px] text-slate-700 resize-none"
                 placeholder={blockersPlaceholder}
               />
               {/* Mention Suggestions */}
               {mentionQuery !== null && filteredUsers.length > 0 && (
-                <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-[60] animate-fade-in-up">
+                <div className="absolute top-full left-0 mt-2 w-64 bg-slate-200 rounded-2xl shadow-neo border-none overflow-hidden z-[60] animate-fade-in-up">
                   <div className="max-h-48 overflow-y-auto">
                     {filteredUsers.map((user, index) => (
                       <button
                         key={user.id}
                         type="button"
                         onClick={() => handleSelectUser(user)}
-                        className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${index === highlightedIndex ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                        className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${index === highlightedIndex ? 'bg-indigo-50/50' : 'hover:bg-slate-100/50'}`}
                       >
                         {'isEveryone' in user && user.isEveryone ? (
-                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shadow-neo-sm">
                             <span className="font-bold text-xs">ALL</span>
                           </div>
                         ) : (
                           <img
                             src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`}
                             alt={user.name}
-                            className="w-8 h-8 rounded-full bg-slate-100 object-cover"
+                            className="w-8 h-8 rounded-full bg-slate-100 object-cover shadow-neo-sm"
                             onError={(e) => {
                               e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
                             }}
@@ -318,17 +320,17 @@ export const StandupModal: React.FC<StandupModalProps> = ({
                     type="text"
                     value={link}
                     onChange={(e) => handleLinkChange(index, e.target.value)}
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    className="flex-1 px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700"
                     placeholder="Paste Jira link here..."
                   />
                   {jiraLinks.length > 1 && (
-                    <button type="button" onClick={() => removeLinkField(index)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                    <button type="button" onClick={() => removeLinkField(index)} className="p-3 text-slate-400 hover:text-red-500 hover:shadow-neo-sm-inner rounded-xl transition-all shadow-neo-sm bg-slate-200">
                       <Trash2 size={18} />
                     </button>
                   )}
                 </div>
               ))}
-              <button type="button" onClick={addLinkField} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 px-1">
+              <button type="button" onClick={addLinkField} className="text-sm text-indigo-500 hover:text-indigo-600 font-bold flex items-center gap-1 px-2 py-1.5 rounded-lg hover:shadow-neo-sm-inner transition-all">
                 <Plus size={16} /> Add another ticket
               </button>
             </div>
@@ -346,9 +348,9 @@ export const StandupModal: React.FC<StandupModalProps> = ({
                   key={m.value}
                   type="button"
                   onClick={() => setMood(m.value as any)}
-                  className={`flex-1 p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${mood === m.value
-                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-100 hover:border-slate-200 text-slate-600'
+                  className={`flex-1 p-3 rounded-2xl border-none transition-all flex flex-col items-center gap-2 ${mood === m.value
+                    ? 'shadow-neo-inner text-indigo-600 bg-slate-200'
+                    : 'shadow-neo hover:shadow-neo-inner text-slate-500 bg-slate-200'
                     }`}
                 >
                   <span className="text-2xl">{m.emoji}</span>
@@ -358,12 +360,12 @@ export const StandupModal: React.FC<StandupModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-6 border-none mt-2">
             {initialData && onDelete ? (
               <button
                 type="button"
                 onClick={onDelete}
-                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 font-bold text-red-500 bg-slate-200 rounded-xl shadow-neo hover:shadow-neo-inner transition-all border-none active:scale-[0.98]"
               >
                 <Trash2 size={20} />
                 <span>Delete Standup</span>
@@ -372,18 +374,18 @@ export const StandupModal: React.FC<StandupModalProps> = ({
               <div></div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
+                className="px-6 py-3 font-bold text-slate-500 bg-slate-200 rounded-xl shadow-neo hover:shadow-neo-inner transition-all border-none active:scale-[0.98]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-8 py-3 bg-gradient-to-r from-orange-400 to-red-500 text-white font-bold rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[4px_4px_10px_rgba(239,68,68,0.3),-4px_-4px_10px_rgba(255,255,255,0.8)] border-none active:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1),inset_-4px_-4px_10px_rgba(255,255,255,0.2)]"
               >
                 {isSubmitting ? 'Saving...' : initialData ? 'Save Changes' : 'Post Standup'}
               </button>

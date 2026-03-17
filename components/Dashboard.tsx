@@ -7,7 +7,6 @@ import { StandupFeed } from './StandupFeed';
 import { CalendarWidget } from './CalendarWidget';
 import { AnnouncementsWidget } from './AnnouncementsWidget';
 import { MissedDeadlinesWidget } from './MissedDeadlinesWidget';
-import { OfficeVisualizer } from './OfficeVisualizer';
 
 interface DashboardProps {
   currentUser: User;
@@ -77,28 +76,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-3">
-        <OfficeVisualizer
-          users={users}
-          standups={standups}
-          deadlines={deadlines}
-          onViewStandup={onViewStandup}
-        />
-      </div>
-
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Main Feed */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="lg:col-span-2 space-y-8">
         <div className="flex justify-between items-center px-1">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-sm text-slate-500">Welcome back, {currentUser.name.split(' ')[0]}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {currentUser.isAdmin && (
               <button
                 onClick={onGenerateReport}
-                className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 p-2 rounded-lg shadow-sm transition-all active:scale-[0.98]"
+                className="bg-slate-200 text-slate-500 p-2.5 rounded-2xl shadow-neo hover:shadow-neo-inner hover:text-indigo-500 transition-all active:scale-95 border-none"
                 title="Generate Report"
               >
                 <FileText size={18} className="text-indigo-500" />
@@ -106,14 +96,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             )}
             <button
               onClick={onAddDeadline}
-              className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="bg-slate-200 text-slate-500 hover:text-red-500 px-4 py-2.5 rounded-2xl text-sm font-semibold shadow-neo hover:shadow-neo-inner flex items-center gap-2 transition-all active:scale-95 border-none"
             >
               <Flag size={16} className="text-red-500" />
               <span className="hidden sm:inline">Add Deadline</span>
             </button>
             <button
               onClick={onNewStandup}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-indigo-200 flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white px-4 py-2.5 rounded-2xl text-sm font-semibold shadow-[4px_4px_10px_rgba(239,68,68,0.3),-4px_-4px_10px_rgba(255,255,255,0.8)] active:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1),inset_-4px_-4px_10px_rgba(255,255,255,0.2)] flex items-center gap-2 transition-all active:scale-95 border-none"
             >
               <Plus size={16} />
               <span className="hidden sm:inline">New Standup</span>

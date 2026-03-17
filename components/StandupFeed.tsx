@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { Standup, User, Comment, Reaction } from '../types';
 import { Trash2, Edit2, ExternalLink, Smile, Meh, Frown, MessageCircle } from 'lucide-react';
-import { StandupFeedModal } from './StandupFeedModal';
 import { isUserMentioned } from './mentionUtils';
 
 const REACTION_TYPES = [
@@ -28,7 +26,6 @@ interface StandupFeedProps {
 }
 
 export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, currentUserId, onDelete, onEdit, onView, onReact, onComment, onEditComment, onDeleteComment }) => {
-  const [selectedStandupId, setSelectedStandupId] = useState<string | null>(null);
   const storageKey = `standly_read_counts_${currentUserId}`;
   const [readCounts, setReadCounts] = useState<Record<string, number>>({});
 
@@ -54,8 +51,6 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
       return newCounts;
     });
   };
-
-  const selectedStandup = selectedStandupId ? standups.find(s => s.id === selectedStandupId) || null : null;
 
   const getMoodIcon = (mood: string, size: number = 28) => {
     switch (mood) {
@@ -113,10 +108,10 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
           <div key={dateLabel} className="space-y-3 animate-fade-in-up">
             {/* Date Header */}
             <div className="flex items-center gap-4">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap px-4 py-1.5 rounded-full shadow-neo-sm bg-slate-200">
                 {dateLabel}
               </h3>
-              <div className="h-px bg-slate-100 w-full"></div>
+              <div className="h-px bg-slate-300 w-full shadow-[0_1px_2px_rgba(255,255,255,0.8)]"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -186,19 +181,15 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                   <div
                     key={standup.id}
                     onClick={() => {
-                      setSelectedStandupId(standup.id);
                       onView(standup);
                       // Don't update read count here, do it on close so we can show unread highlights
                     }}
                     className={`
                     relative rounded-2xl p-6 cursor-pointer group transition-all duration-300
-                    border shadow-sm hover:shadow-xl hover:-translate-y-1 hover:z-10
-                    ${hasBlocker ? 'bg-red-50 border-red-300 ring-1 ring-red-500/20' : isViewed ? 'bg-white border-indigo-500 ring-1 ring-indigo-500/20' : 'bg-white border-slate-100'}
+                    border-none shadow-neo hover:shadow-neo-inner hover:-translate-y-1 hover:z-10 bg-slate-200
+                    ${hasBlocker ? 'ring-2 ring-red-400' : isViewed ? 'ring-2 ring-indigo-400' : ''}
                   `}
                   >
-                    {/* Gradient Top Border Effect on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-1 top-0 w-full rounded-t-2xl" />
-
                     {/* Unread Indicator (Blue Dot) - Shows if I haven't viewed the standup itself yet */}
                     {!isViewed && !isCurrentUser && (
                       <div className="absolute top-5 right-5 w-2 h-2 bg-indigo-500 rounded-full animate-pulse shadow-lg shadow-indigo-200" />
@@ -219,12 +210,12 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                         <img
                           src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`}
                           alt={user?.name}
-                          className="w-12 h-12 rounded-xl bg-slate-100 object-cover shadow-sm group-hover:scale-105 transition-transform duration-300"
+                          className="w-12 h-12 rounded-xl bg-slate-200 object-cover shadow-neo group-hover:scale-105 transition-transform duration-300 border-2 border-slate-200"
                           onError={(e) => {
                             e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=random`;
                           }}
                         />
-                        <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm">
+                        <div className="absolute -bottom-1 -right-1 bg-slate-200 rounded-full p-1 shadow-neo-sm">
                           {getMoodIcon(standup.mood, 18)}
                         </div>
                       </div>
@@ -242,24 +233,24 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                           </p>
                           {isCurrentUser && (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onEdit(standup);
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                title="Edit Standup"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDelete(standup.id);
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Delete Standup"
-                              >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEdit(standup);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-500 shadow-neo-sm hover:shadow-neo-sm-inner bg-slate-200 rounded-lg transition-all mx-1"
+                                  title="Edit Standup"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDelete(standup.id);
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-red-500 shadow-neo-sm hover:shadow-neo-sm-inner bg-slate-200 rounded-lg transition-all"
+                                  title="Delete Standup"
+                                >
                                 <Trash2 size={14} />
                               </button>
                             </div>
@@ -288,11 +279,10 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                       </div>
                     )}
 
-                    {/* Card Footer: Reactions & Comments */}
-                    <div className="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-slate-300/50 flex items-center justify-between">
                       <div className="flex items-center gap-2 relative">
                         {/* Reaction Picker on Hover */}
-                        <div className="absolute top-full left-0 mt-2 bg-white rounded-full shadow-xl border border-slate-100 p-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 origin-top-left z-20">
+                        <div className="absolute top-full left-0 mt-2 bg-slate-200 rounded-full shadow-neo border-none p-1.5 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 origin-top-left z-20">
                           {REACTION_TYPES.map((reaction) => (
                             <button
                               key={reaction.id}
@@ -300,7 +290,7 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                                 e.stopPropagation();
                                 onReact(standup.id, reaction.id);
                               }}
-                              className="w-8 h-8 flex items-center justify-center hover:bg-slate-50 rounded-full text-lg transition-transform hover:scale-125"
+                              className="w-8 h-8 flex items-center justify-center hover:shadow-neo-sm-inner bg-slate-200 rounded-full text-lg transition-all hover:scale-110"
                               title={reaction.label}
                             >
                               {reaction.icon}
@@ -315,13 +305,13 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                             [...new Set(reactions.map((r: Reaction) => r.type))].slice(0, 3).map((type: string) => {
                               const rIcon = REACTION_TYPES.find(rt => rt.id === type)?.icon;
                               return (
-                                <div key={type} className="w-8 h-8 rounded-full bg-slate-50 border border-white flex items-center justify-center text-sm shadow-sm">
+                                <div key={type} className="w-8 h-8 rounded-full bg-slate-200 border border-slate-200 flex items-center justify-center text-sm shadow-neo-sm">
                                   {rIcon}
                                 </div>
                               );
                             })
                           ) : (
-                            <div className="w-6 h-6 rounded-full bg-slate-50 border border-white flex items-center justify-center text-slate-300 shadow-sm">
+                            <div className="w-6 h-6 rounded-full bg-slate-200 border border-slate-200 flex items-center justify-center text-slate-400 shadow-neo-sm-inner">
                               <Smile size={12} />
                             </div>
                           )}
@@ -344,31 +334,11 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
         ))}
 
         {todaysStandups.length === 0 && (
-          <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          <div className="text-center py-12 bg-slate-200 rounded-2xl border-none shadow-neo-inner">
             <p className="text-slate-500">No Standup entries posted for today</p>
           </div>
         )}
       </div>
-
-      {selectedStandup && createPortal(
-        <StandupFeedModal
-          standup={selectedStandup}
-          users={users}
-          currentUserId={currentUserId}
-          initialReadCount={readCounts[selectedStandup.id] || 0}
-          onClose={() => {
-            if (selectedStandup) {
-              updateReadCount(selectedStandup.id, (selectedStandup.comments || []).length);
-            }
-            setSelectedStandupId(null);
-          }}
-          onReact={onReact}
-          onComment={onComment}
-          onEditComment={onEditComment}
-          onDeleteComment={onDeleteComment}
-        />,
-        document.body
-      )}
     </>
   );
 };

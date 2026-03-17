@@ -31,8 +31,8 @@ export const AnnouncementsWidget: React.FC<AnnouncementsWidgetProps> = ({ users,
   .slice(0, 5); // Limit to 5 items
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-      <h3 className="text-lg font-bold text-slate-800 mb-4">Team Announcements</h3>
+    <div className="bg-slate-200 p-6 rounded-3xl border-none shadow-neo">
+      <h3 className="text-lg font-bold text-slate-600 mb-4">Team Announcements</h3>
       
       <div className="space-y-4">
         {/* Upcoming Leaves */}
@@ -60,19 +60,19 @@ export const AnnouncementsWidget: React.FC<AnnouncementsWidgetProps> = ({ users,
             };
 
             return (
-              <div key={leave.id} className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 border border-slate-100">
+              <div key={leave.id} className="bg-slate-200 rounded-2xl p-3 flex items-center gap-4 shadow-neo-sm-inner border-none">
                 <img 
                   src={user.avatar || `https://ui-avatars.com/api/?name=${user.name}`} 
                   alt={user.name} 
-                  className="w-10 h-10 rounded-full bg-white object-cover border border-slate-200"
+                  className="w-10 h-10 rounded-xl bg-slate-200 object-cover border-2 shadow-neo-sm border-slate-200"
                 />
                 <div>
-                  <p className="font-medium text-sm text-slate-700">
-                    <span className="font-bold text-slate-900">{user.name.split(' ')[0]}</span> {isActive ? 'is on' : 'will be on'} 
+                  <p className="font-medium text-sm text-slate-600">
+                    <span className="font-bold text-indigo-500">{user.name.split(' ')[0]}</span> {isActive ? 'is on' : 'will be on'} 
                     <span className="lowercase"> {getLeaveTypeLabel(leave.type)}</span>
                     {isActive && ' today'}
                   </p>
-                  <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                  <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
                     <Calendar size={12} />
                     <span>
                       {isActive ? 'Currently away' : `Starting ${dateStr}`}

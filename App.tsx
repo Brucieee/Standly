@@ -58,11 +58,17 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQuickLinkModalOpen, setIsQuickLinkModalOpen] = useState(false);
+  const [editingQuickLink, setEditingQuickLink] = useState<any>(null);
   const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
   const [editingStandup, setEditingStandup] = useState<Standup | null>(null);
   const [editingDeadline, setEditingDeadline] = useState<Deadline | null>(null);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  // Modal initial date for StandupModal (string)
   const [modalInitialDate, setModalInitialDate] = useState<string>("");
+  
+  // Modal initial date for LeaveModal (Date)
+  const [leaveModalInitialDate, setLeaveModalInitialDate] = useState<Date | undefined>(undefined);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [isVirtualOfficeModalOpen, setIsVirtualOfficeModalOpen] =
     useState(false);
@@ -1130,8 +1136,9 @@ const App: React.FC = () => {
             holidays={state.holidays || []}
             currentUserId={state.currentUser.id}
             currentUserIsAdmin={state.currentUser.isAdmin}
-            onAddLeave={() => {
+            onAddLeave={(date?: Date) => {
               setEditingLeave(null);
+              setLeaveModalInitialDate(date);
               setIsLeaveModalOpen(true);
             }}
             onDeleteLeave={handleDeleteLeave}
@@ -1217,9 +1224,13 @@ const App: React.FC = () => {
 
       <LeaveModal
         isOpen={isLeaveModalOpen}
-        onClose={() => setIsLeaveModalOpen(false)}
+        onClose={() => {
+          setIsLeaveModalOpen(false);
+          setLeaveModalInitialDate(undefined);
+        }}
         onSubmit={handleSaveLeave}
         initialData={editingLeave}
+        initialDate={leaveModalInitialDate}
         onDelete={
           editingLeave ? () => handleDeleteLeave(editingLeave.id) : undefined
         }
@@ -1285,26 +1296,14 @@ const App: React.FC = () => {
       />
 
       {isSummaryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-slate-900">
-                Weekly AI Summary
-              </h2>
-              <button
-                onClick={() => setIsSummaryModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <WeeklySummaryWidget
-                standups={state.standups}
-                users={state.users}
-                deadlines={state.deadlines}
-              />
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsSummaryModalOpen(false)}>
+          <div className="w-full max-w-4xl animate-fade-in-up" onClick={e => e.stopPropagation()}>
+            <WeeklySummaryWidget
+              standups={state.standups}
+              users={state.users}
+              deadlines={state.deadlines}
+              onClose={() => setIsSummaryModalOpen(false)}
+            />
           </div>
         </div>
       )}
@@ -1327,7 +1326,18 @@ const App: React.FC = () => {
         message={confirmModal.message}
         isDestructive={confirmModal.isDestructive}
       />
-      <Toaster position="top-right" richColors />
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          className: 'bg-slate-200 border-none rounded-2xl shadow-neo text-slate-700 font-bold',
+          style: {
+            background: '#e2e8f0', // slate-200
+            border: 'none',
+            color: '#334155', // slate-700
+            borderRadius: '1rem',
+          }
+        }}
+      />
     </>
   );
 };

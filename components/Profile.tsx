@@ -172,7 +172,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
       <h1 className="text-2xl font-bold text-slate-900 mb-2">Profile Settings</h1>
       <p className="text-slate-500 mb-8">Manage your account information</p>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-slate-200 rounded-3xl shadow-neo border-none overflow-hidden">
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="flex items-center gap-6">
             <div className={`relative group ${user.isAdmin ? 'cursor-pointer' : ''}`} onClick={() => user.isAdmin && fileInputRef.current?.click()}>
@@ -210,7 +210,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all"
                 />
               </div>
             </div>
@@ -223,7 +223,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
                   type="text"
                   value={loginCode}
                   onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all tracking-widest font-mono"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all tracking-widest font-mono"
                   placeholder="000000"
                   maxLength={6}
                 />
@@ -292,7 +292,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
             <button
               type="submit"
               disabled={uploading}
-              className={`bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-200 flex items-center gap-2 transition-all active:scale-[0.98] ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`py-3 px-8 text-white font-bold rounded-2xl bg-gradient-to-r from-orange-400 to-red-500 shadow-[4px_4px_10px_rgba(239,68,68,0.3),-4px_-4px_10px_rgba(255,255,255,0.8)] active:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1),inset_-4px_-4px_10px_rgba(255,255,255,0.2)] hover:from-orange-500 hover:to-red-600 flex items-center gap-2 transition-all active:scale-[0.98] ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               <Save size={20} />
               {uploading ? 'Saving...' : 'Save Changes'}

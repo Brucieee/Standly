@@ -151,9 +151,9 @@ export const Layout: React.FC<LayoutProps> = ({
   }, {} as Record<QuickLinkCategory, QuickLink[]>);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-200 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 fixed h-full z-10 hidden md:flex flex-col overflow-y-auto custom-scrollbar">
+      <aside className="w-64 bg-slate-200 fixed h-full z-10 hidden md:flex flex-col overflow-y-auto custom-scrollbar border-none shadow-neo">
         <div className="p-6">
           <div
             className="flex items-center gap-3 mb-8 cursor-pointer hover:opacity-80 transition-opacity"
@@ -182,9 +182,9 @@ export const Layout: React.FC<LayoutProps> = ({
                     onTabChange(item.id);
                   }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === item.id
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${activeTab === item.id
+                  ? 'bg-slate-200 text-red-500 shadow-neo-inner'
+                  : 'bg-slate-200 text-slate-500 shadow-neo hover:text-red-400'
                   }`}
               >
                 <item.icon size={20} />
@@ -195,7 +195,7 @@ export const Layout: React.FC<LayoutProps> = ({
             {(userRole === 'Software Developer' || userRole === 'Product Owner' || userRole === 'Product Manager') && (
               <button
                 onClick={onOpenAnnouncements}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-slate-500 bg-slate-200 shadow-neo hover:text-red-400 transition-all duration-300 text-left mt-4"
               >
                 <FileText size={20} />
                 Announcements
@@ -242,31 +242,31 @@ export const Layout: React.FC<LayoutProps> = ({
                           <div key={link.id} className="group relative">
                             <button
                               onClick={() => window.open(link.url, '_blank')}
-                              className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all pr-14 text-left"
+                              className="w-[95%] mx-auto flex items-center gap-3 px-4 py-2 mt-2 rounded-xl text-sm font-medium text-slate-500 bg-slate-200 shadow-neo-sm hover:text-red-400 transition-all pr-14 text-left"
                             >
                               {link.iconUrl ? (
                                 <img src={link.iconUrl} alt="" className="w-5 h-5 object-contain rounded-md flex-shrink-0" />
                               ) : (
-                                <LinkIcon size={20} className="text-slate-400 group-hover:text-indigo-500 transition-colors flex-shrink-0" />
+                                <LinkIcon size={20} className="text-slate-400 group-hover:text-red-400 transition-colors flex-shrink-0" />
                               )}
                               <span className="flex-1 whitespace-normal break-words">{link.title}</span>
                             </button>
                             {isAdmin && (
-                              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all bg-white shadow-sm rounded-lg border border-slate-100 p-0.5">
+                              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all bg-slate-200 shadow-neo rounded-lg p-0.5">
                                 <button
                                   onClick={(e) => openEditModal(link, e)}
-                                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:shadow-neo-sm-inner rounded-md transition-all"
                                   title="Edit Link"
                                 >
                                   <Settings size={14} />
                                 </button>
-                                <div className="w-[1px] h-4 bg-slate-200" />
+                                <div className="w-[1px] h-4 bg-slate-300 mx-1" />
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     confirmDelete(link);
                                   }}
-                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:shadow-neo-sm-inner rounded-md transition-all"
                                   title="Delete Link"
                                 >
                                   <Trash2 size={14} />
@@ -282,7 +282,7 @@ export const Layout: React.FC<LayoutProps> = ({
               ))}
 
               {Object.keys(groupedLinks).length === 0 && (
-                <div className="px-4 py-4 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-lg mx-4">
+                <div className="px-4 py-4 text-center text-xs text-slate-400 border-none shadow-neo-sm-inner rounded-2xl mx-4">
                   No links yet
                 </div>
               )}
@@ -290,37 +290,40 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
 
-        <div className="mt-auto p-6 border-t border-slate-100">
-          <div
-            className="flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-50 p-2 -mx-2 rounded-lg transition-colors group"
-            onClick={() => onTabChange('profile')}
-          >
-            <img
-              src={userAvatar}
-              alt={userName}
-              className="w-10 h-10 rounded-full bg-slate-100 object-cover"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">{userName}</p>
-              <p className="text-xs text-slate-500 truncate">{userRole}</p>
+        <div className="mt-auto p-4 shadow-[0_-10px_15px_-3px_rgba(255,255,255,0.7)] relative z-20 bg-slate-200">
+          <div className="flex items-center gap-2">
+            <div
+              className="flex-1 flex items-center gap-2 cursor-pointer rounded-2xl p-2 transition-all shadow-neo hover:shadow-neo-inner group bg-slate-200"
+              onClick={() => onTabChange('profile')}
+            >
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-10 h-10 rounded-full shadow-neo border-2 border-slate-200 object-cover shrink-0"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-600 group-hover:text-red-500 transition-colors leading-tight break-words pr-1">{userName}</p>
+                <p className="text-xs text-slate-400 leading-tight mt-0.5 break-words pr-1">{userRole}</p>
+              </div>
             </div>
+            
+            <button
+              onClick={onLogout}
+              className="p-3 text-slate-400 hover:text-red-500 hover:shadow-neo-inner bg-slate-200 shadow-neo rounded-xl transition-all flex items-center justify-center shrink-0 active:scale-95"
+              title="Sign Out"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-2 text-slate-500 hover:text-red-600 text-sm font-medium transition-colors"
-          >
-            <LogOut size={18} />
-            Sign Out
-          </button>
         </div>
       </aside>
 
       {/* Mobile Header & Content */}
       <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center sticky top-0 z-20">
+        <header className="md:hidden bg-slate-200 shadow-neo-sm p-4 flex justify-between items-center sticky top-0 z-20 rounded-b-2xl mb-4">
           <div
-            className="flex items-center gap-2 cursor-pointer active:opacity-70 transition-opacity"
+            className="flex items-center gap-2 cursor-pointer active:shadow-neo-sm-inner transition-all p-2 rounded-xl"
             onClick={() => onTabChange('dashboard')}
           >
             <img
@@ -494,7 +497,7 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
 
-        <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8 max-w-[1600px] mx-auto w-full">
           {children}
         </main>
       </div>

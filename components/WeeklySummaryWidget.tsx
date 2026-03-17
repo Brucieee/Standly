@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Loader2, FileText, CalendarRange } from 'lucide-react';
+import { Sparkles, Loader2, FileText, CalendarRange, X } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { generateWeeklySummary } from '../services/geminiService';
 import { Standup, User, Deadline } from '../types';
@@ -8,9 +8,10 @@ interface WeeklySummaryWidgetProps {
   standups: Standup[];
   users: User[];
   deadlines: Deadline[];
+  onClose?: () => void;
 }
 
-export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standups, users, deadlines }) => {
+export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standups, users, deadlines, onClose }) => {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -82,38 +83,51 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
+    <div className="bg-slate-200 rounded-3xl shadow-neo border-none overflow-hidden flex flex-col max-h-[90vh]">
       {/* Header Section */}
-      <div className="p-6 bg-gradient-to-r from-indigo-50 to-white border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-             <Sparkles className="text-indigo-500" size={20} />
-             Weekly AI Summary
-           </h2>
+      <div className="p-6 border-b border-slate-300/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-transparent shrink-0">
+        <div className="flex-1">
+           <div className="flex justify-between items-start w-full">
+             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+               <Sparkles className="text-indigo-600" size={24} />
+               Weekly AI Summary
+             </h2>
+             {onClose && (
+               <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors sm:hidden">
+                 <X size={20} />
+               </button>
+             )}
+           </div>
            <p className="text-slate-500 text-sm mt-1">
              Summarizing team progress for {getWeekLabel()}
            </p>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
           <input 
             type="date" 
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600 shadow-sm"
+            className="px-4 py-3 rounded-xl border-none shadow-neo-sm-inner bg-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo text-slate-600 transition-all font-medium"
           />
           <button 
             onClick={handleGenerate}
             disabled={loading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl text-sm font-bold transition-all shadow-neo active:scale-[0.98] flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
             {loading ? 'Analyzing...' : 'Generate Report'}
           </button>
+          
+          {onClose && (
+             <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors hidden sm:block ml-2">
+               <X size={24} />
+             </button>
+          )}
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-6 flex-1 min-h-[300px] bg-slate-50/50">
+      <div className="p-6 flex-1 min-h-[300px] bg-transparent overflow-y-auto">
         {summary ? (
           <div className="prose prose-sm max-w-none text-slate-700">
              <Markdown 
@@ -138,10 +152,10 @@ export const WeeklySummaryWidget: React.FC<WeeklySummaryWidgetProps> = ({ standu
           </div>
         ) : (
            <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12">
-             <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-               <CalendarRange size={32} className="text-slate-300" />
+             <div className="w-20 h-20 bg-slate-200 shadow-neo rounded-full flex items-center justify-center mb-6">
+               <CalendarRange size={32} className="text-indigo-400" />
              </div>
-             <p className="font-medium text-slate-500">No report generated yet</p>
+             <p className="font-bold text-slate-500">No report generated yet</p>
              <p className="text-xs max-w-xs text-center mt-2">
                Click "Generate Report" to analyze standups from the current week.
              </p>

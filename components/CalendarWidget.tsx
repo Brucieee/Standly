@@ -56,19 +56,19 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-      <h3 className="text-lg font-bold text-slate-800 mb-4">Activity Streak</h3>
+    <div className="bg-slate-200 p-6 rounded-3xl border-none shadow-neo">
+      <h3 className="text-lg font-bold text-slate-600 mb-4">Activity Streak</h3>
       <div className="flex justify-between items-end h-24">
         {days.map((date, idx) => {
           const status = getStatus(date);
           const dateStr = formatYMD(date);
           
-          let bgClass = 'bg-slate-100';
-          if (status === 'present') bgClass = 'bg-green-500';
-          if (status === 'missed') bgClass = 'bg-red-400 cursor-pointer hover:bg-red-500';
-          if (status === 'weekend') bgClass = 'bg-slate-200';
-          if (status === 'pending') bgClass = 'bg-slate-100 border border-slate-200';
-          if (status === 'future') bgClass = 'bg-slate-50 opacity-50';
+          let bgClass = 'bg-slate-200 shadow-neo-sm-inner';
+          if (status === 'present') bgClass = 'bg-green-400 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.3)]';
+          if (status === 'missed') bgClass = 'bg-red-400 cursor-pointer shadow-[2px_2px_5px_rgba(239,68,68,0.4),-2px_-2px_5px_rgba(255,255,255,0.8)] hover:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.1),inset_-2px_-2px_5px_rgba(255,255,255,0.3)]';
+          if (status === 'weekend') bgClass = 'bg-slate-200 shadow-neo-sm-inner opacity-70';
+          if (status === 'pending') bgClass = 'bg-slate-200 shadow-neo-sm-inner';
+          if (status === 'future') bgClass = 'bg-slate-200 opacity-30 shadow-neo-sm-inner';
           
           const isInteractable = (status === 'missed' || status === 'present' || status === 'pending' || status === 'weekend');
 
@@ -90,7 +90,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
                 
                 {/* Tooltip */}
                 {status !== 'future' && (
-                  <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-50 pointer-events-none shadow-xl">
+                  <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 text-white text-xs py-1 px-2 rounded-xl whitespace-nowrap z-50 pointer-events-none shadow-neo">
                     {date.toLocaleDateString()}
                     {status === 'missed' && ' - Missed'}
                     {status === 'present' && ' - Posted'}
@@ -98,7 +98,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
                 )}
               </div>
               
-              <span className={`text-[10px] font-medium ${date.getDate() === new Date().getDate() ? 'text-indigo-600 font-bold' : 'text-slate-400'}`}>
+              <span className={`text-[10px] font-medium ${date.getDate() === new Date().getDate() ? 'text-indigo-500 font-bold' : 'text-slate-400'}`}>
                 {date.toLocaleDateString('en-US', { weekday: 'narrow' })}
               </span>
             </div>
@@ -106,9 +106,9 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({ standups, userId
         })}
       </div>
       <div className="mt-6 flex space-x-4 text-xs text-slate-500 justify-center">
-        <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div> Posted</div>
-        <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-red-400 mr-1"></div> Missed</div>
-        <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-slate-200 mr-1"></div> Weekend</div>
+        <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-green-400 mr-1 shadow-sm"></div> Posted</div>
+        <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-red-400 mr-1 shadow-sm"></div> Missed</div>
+        <div className="flex items-center"><div className="w-2 h-2 rounded-full bg-slate-300 mr-1 shadow-inner"></div> Weekend</div>
       </div>
     </div>
   );

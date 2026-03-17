@@ -55,7 +55,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           return (
             <div
               key={deadline.id}
-              className={`bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition-all group flex flex-col gap-3 relative ${isDueToday ? 'border-red-500 ring-1 ring-red-500/20' : isAssignee ? 'border-indigo-500 ring-1 ring-indigo-500/20' : 'border-slate-100'}`}
+              className={`bg-slate-200 p-5 rounded-2xl border-none shadow-neo hover:shadow-neo-inner transition-all group flex flex-col gap-3 relative ${isDueToday ? 'ring-2 ring-red-400' : isAssignee ? 'ring-2 ring-indigo-400' : ''}`}
             >
               {isAssignee && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
@@ -110,7 +110,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
               </div>
 
               {/* Footer: Created By & Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-50 mt-1">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-300/50 mt-1">
                 <div className="flex items-center gap-4">
                   {/* Creator */}
                   <div className="flex items-center gap-2">
@@ -131,13 +131,13 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                       <div className="flex -space-x-2 overflow-hidden">
                         {assignees.map(assignee => (
                           <img
-                            key={assignee.id}
-                            src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`}
-                            alt={assignee.name}
-                            title={assignee.name}
-                            className="inline-block w-6 h-6 rounded-full bg-slate-100 object-cover border-2 border-white"
-                          />
-                        ))}
+                              key={assignee.id}
+                              src={assignee.avatar || `https://ui-avatars.com/api/?name=${assignee.name}`}
+                              alt={assignee.name}
+                              title={assignee.name}
+                              className="inline-block w-6 h-6 rounded-full shadow-neo-sm border border-slate-200 object-cover"
+                            />
+                          ))}
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">Assigned to</span>
@@ -154,14 +154,14 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                     <div className="flex gap-1">
                       <button
                         onClick={(e) => { e.stopPropagation(); onEdit(deadline); }}
-                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-indigo-500 shadow-neo-sm hover:shadow-neo-sm-inner bg-slate-200 rounded-lg transition-all"
                         title="Edit"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); onDelete(deadline.id); }}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-red-500 shadow-neo-sm hover:shadow-neo-sm-inner bg-slate-200 rounded-lg transition-all"
                         title="Delete"
                       >
                         <Trash2 size={16} />
@@ -175,7 +175,7 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
         })}
 
         {deadlines.length === 0 && (
-          <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <div className="py-8 text-center bg-slate-200 rounded-2xl border-none shadow-neo-inner">
             <p className="text-sm text-slate-500">No upcoming deadlines within 5 days.</p>
           </div>
         )}

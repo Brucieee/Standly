@@ -177,35 +177,35 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
           <p className="text-slate-500">View past activities and records.</p>
         </div>
 
-        <div className="flex items-center gap-3 bg-slate-100 p-1 rounded-xl self-start md:self-auto">
+        <div className="flex items-center gap-3 bg-slate-200 shadow-neo-sm-inner p-2 rounded-2xl self-start md:self-auto">
           <button
             onClick={handleExport}
-            className="mr-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
+            className="mr-2 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-neo transition-all active:scale-[0.98]"
             title="Export to Excel"
           >
             <Download size={16} />
-            <span className="hidden sm:inline">Export Excel</span>
+            <span className="hidden sm:inline whitespace-nowrap">Export Excel</span>
           </button>
           <div className="w-px h-6 bg-slate-300 mx-1"></div>
           <button
             onClick={() => setActiveTab('standups')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'standups' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'standups' ? 'bg-slate-200 text-indigo-600 shadow-neo-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Standups
           </button>
           <button
             onClick={() => setActiveTab('deadlines')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'deadlines' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === 'deadlines' ? 'bg-slate-200 text-indigo-600 shadow-neo-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             Deadlines
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-slate-200 rounded-3xl shadow-neo border-none overflow-hidden">
         {activeTab === 'standups' && (
           <>
-            <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4">
+            <div className="p-5 border-none bg-transparent flex flex-col sm:flex-row gap-4">
               {/* User Dropdown */}
               <div className="relative flex-1 max-w-xs">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -218,7 +218,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                       setEndDate('');
                     }
                   }}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none bg-white text-slate-600"
+                  className="w-full pl-9 pr-4 py-3 rounded-xl border-none shadow-neo-sm-inner bg-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo appearance-none text-slate-600 transition-all font-medium"
                 >
                   <option value="">All Users</option>
                   {users.map(user => (
@@ -236,7 +236,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border-none shadow-neo-sm-inner bg-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo text-slate-600 transition-all font-medium"
                     placeholder="Start Date"
                   />
                 </div>
@@ -247,7 +247,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600"
+                    className="w-full pl-9 pr-4 py-3 rounded-xl border-none shadow-neo-sm-inner bg-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo text-slate-600 transition-all font-medium"
                     placeholder="End Date"
                   />
                 </div>
@@ -270,7 +270,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                     setEndDate(formatDate(today));
                     setStartDate(formatDate(threeDaysAgo));
                   }}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-500 font-bold hover:text-slate-700 bg-slate-200 rounded-xl shadow-neo hover:shadow-neo-inner transition-colors active:scale-95"
                 >
                   <X size={16} />
                   Reset
@@ -281,21 +281,21 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 border-b border-slate-100">
+                <thead className="bg-transparent border-none">
                   <tr>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Date</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">User</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Yesterday</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Today</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Blockers</th>
-                    <th className="px-6 py-4 font-semibold text-slate-700">Links</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-xs uppercase">Date</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-xs uppercase">User</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-xs uppercase">Yesterday</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-xs uppercase">Today</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-xs uppercase">Blockers</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-xs uppercase">Links</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-300/30">
                   {displayStandups.map((standup) => (
                     <tr
                       key={standup.id}
-                      className="hover:bg-slate-50/50 transition-colors cursor-pointer"
+                      className="hover:bg-slate-200 hover:shadow-neo-sm-inner transition-all cursor-pointer"
                       onClick={() => onViewStandup(standup)}
                     >
                       <td className="px-6 py-4 text-slate-600 whitespace-nowrap">
@@ -350,7 +350,7 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
               {displayStandups.map((standup) => (
                 <div
                   key={standup.id}
-                  className="p-4 space-y-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                  className="p-5 space-y-3 cursor-pointer hover:shadow-neo-sm-inner transition-all"
                   onClick={() => onViewStandup(standup)}
                 >
                   <div className="flex justify-between items-start">
@@ -409,25 +409,25 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50">
-                <div className="text-sm text-slate-500 hidden sm:block">
+              <div className="flex items-center justify-between px-6 py-4 border-none bg-transparent">
+                <div className="text-sm font-medium text-slate-500 hidden sm:block">
                   Showing {paginatedDates.length} days of standups
                 </div>
-                <div className="flex items-center gap-2 mx-auto sm:mx-0">
+                <div className="flex items-center gap-4 mx-auto sm:mx-0">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-transparent hover:border-slate-200"
+                    className="p-3 bg-slate-200 rounded-xl shadow-neo hover:shadow-neo-inner disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronLeft size={16} />
                   </button>
-                  <span className="text-sm font-medium text-slate-700">
+                  <span className="text-sm font-bold text-slate-700">
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-transparent hover:border-slate-200"
+                    className="p-3 bg-slate-200 rounded-xl shadow-neo hover:shadow-neo-inner disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronRight size={16} />
                   </button>
@@ -438,29 +438,29 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
         )}
 
         {activeTab === 'deadlines' && (
-          <div className="p-4 md:p-8">
+          <div className="p-5 md:p-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-              <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                <div className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Pending</div>
-                <div className="text-2xl font-bold text-amber-700">{deadlineStats.pending}</div>
+              <div className="bg-slate-200 shadow-neo-sm-inner p-4 rounded-2xl border-none">
+                <div className="text-xs font-bold text-amber-500 uppercase tracking-wider mb-1">Pending</div>
+                <div className="text-2xl font-bold text-amber-600">{deadlineStats.pending}</div>
               </div>
-              <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <div className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">In Progress</div>
-                <div className="text-2xl font-bold text-blue-700">{deadlineStats.inProgress}</div>
+              <div className="bg-slate-200 shadow-neo-sm-inner p-4 rounded-2xl border-none">
+                <div className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">In Progress</div>
+                <div className="text-2xl font-bold text-blue-600">{deadlineStats.inProgress}</div>
               </div>
-              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                <div className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1">For QA</div>
-                <div className="text-2xl font-bold text-purple-700">{deadlineStats.forQA}</div>
+              <div className="bg-slate-200 shadow-neo-sm-inner p-4 rounded-2xl border-none">
+                <div className="text-xs font-bold text-purple-500 uppercase tracking-wider mb-1">For QA</div>
+                <div className="text-2xl font-bold text-purple-600">{deadlineStats.forQA}</div>
               </div>
-              <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                <div className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">Beyond Schedule</div>
-                <div className="text-2xl font-bold text-orange-700">{deadlineStats.completedBeyondSchedule}</div>
+              <div className="bg-slate-200 shadow-neo-sm-inner p-4 rounded-2xl border-none">
+                <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-1">Beyond Schedule</div>
+                <div className="text-2xl font-bold text-orange-600">{deadlineStats.completedBeyondSchedule}</div>
               </div>
-              <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Completed</div>
-                <div className="text-2xl font-bold text-emerald-700">{deadlineStats.completed}</div>
+              <div className="bg-slate-200 shadow-neo-sm-inner p-4 rounded-2xl border-none">
+                <div className="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Completed</div>
+                <div className="text-2xl font-bold text-emerald-600">{deadlineStats.completed}</div>
               </div>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+              <div className="bg-slate-200 shadow-neo-sm-inner p-4 rounded-2xl border-none">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total</div>
                 <div className="text-2xl font-bold text-slate-900">{deadlineStats.total}</div>
               </div>

@@ -91,10 +91,10 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-up"
+        className="bg-slate-200 rounded-3xl shadow-neo border-none w-full max-w-2xl max-h-[90vh] flex flex-col animate-fade-in-up"
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
+        <div className="px-5 py-4 border-none flex justify-between items-center bg-transparent flex-shrink-0">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <Flag className="text-red-500" size={20} />
             {initialData ? 'Edit Deadline' : 'Add Deadline'}
@@ -104,7 +104,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto px-5 pb-5">
           <form id="deadline-form" onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">
@@ -116,7 +116,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Q3 Release"
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900"
+                className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-red-400 focus:shadow-neo transition-all text-slate-700"
               />
             </div>
 
@@ -135,7 +135,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
                     onClick={(e) => {
                       try { if (e.currentTarget.showPicker) e.currentTarget.showPicker(); } catch (err) { }
                     }}
-                    className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900 cursor-pointer"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-red-400 focus:shadow-neo transition-all text-slate-700 cursor-pointer"
                   />
                 </div>
               </div>
@@ -149,7 +149,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as Deadline['status'])}
-                    className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900 appearance-none"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-red-400 focus:shadow-neo transition-all text-slate-700 appearance-none"
                   >
                     <option value="Pending">Pending</option>
                     <option value="In Progress">In Progress</option>
@@ -162,94 +162,98 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Assignees
-              </label>
-              <div className="p-2 border border-slate-200 rounded-lg min-h-[42px] flex flex-col justify-center">
-                <div className="flex flex-wrap gap-2 max-h-16 overflow-y-auto pr-2">
-                  {assigneeIds.map(id => {
-                    const user = users.find(u => u.id === id);
-                    return (
-                      <div key={id} className="flex items-center gap-2 bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 text-sm font-medium animate-fade-in-up">
-                        <img src={user?.avatar} alt={user?.name} className="w-5 h-5 rounded-full object-cover" />
-                        <span>{user?.name || 'Unknown User'}</span>
-                        <button type="button" onClick={() => removeAssignee(id)} className="text-indigo-400 hover:text-indigo-600">
-                          <X size={14} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {unassignedUsers.length > 0 && (
-                  <div className="relative mt-2">
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-                    <select
-                      value=""
-                      onChange={(e) => addAssignee(e.target.value)}
-                      className="w-full pl-10 pr-3 py-2 bg-white border-0 focus:ring-0 focus:border-transparent outline-none transition-all text-slate-900 appearance-none rounded-lg"
-                    >
-                      <option value="" disabled>Add an assignee...</option>
-                      {unassignedUsers.map(user => (
-                        <option key={user.id} value={user.id}>{user.name}</option>
-                      ))}
-                    </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Assignees
+                </label>
+                <div className="p-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner min-h-[50px] flex flex-col justify-center">
+                  <div className="flex flex-wrap gap-2 max-h-16 overflow-y-auto pr-2">
+                    {assigneeIds.map(id => {
+                      const user = users.find(u => u.id === id);
+                      return (
+                        <div key={id} className="flex items-center gap-2 bg-slate-200 shadow-neo-sm text-indigo-600 rounded-full px-3 py-1 text-sm font-medium animate-fade-in-up">
+                          <img src={user?.avatar} alt={user?.name} className="w-5 h-5 rounded-full object-cover" />
+                          <span>{user?.name || 'Unknown User'}</span>
+                          <button type="button" onClick={() => removeAssignee(id)} className="text-indigo-400 hover:text-indigo-600">
+                            <X size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
+
+                  {unassignedUsers.length > 0 && (
+                    <div className="relative mt-2">
+                      <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                      <select
+                        value=""
+                        onChange={(e) => addAssignee(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-transparent border-none focus:outline-none transition-all text-slate-700 appearance-none rounded-xl"
+                      >
+                        <option value="" disabled>Add an assignee...</option>
+                        {unassignedUsers.map(user => (
+                          <option key={user.id} value={user.id}>{user.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Release Link
+                </label>
+                <div className="relative">
+                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                  <input
+                    type="url"
+                    value={releaseLink}
+                    onChange={(e) => setReleaseLink(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full pl-11 pr-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-red-400 focus:shadow-neo transition-all text-slate-700"
+                  />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Release Link
-              </label>
-              <div className="relative">
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
-                <input
-                  type="url"
-                  value={releaseLink}
-                  onChange={(e) => setReleaseLink(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all text-slate-900"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Description (Optional)
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Additional details..."
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-none h-20 text-slate-900"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1">
-                Remarks
-              </label>
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 text-slate-400 pointer-events-none" size={18} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Description (Optional)
+                </label>
                 <textarea
-                  value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Any remarks..."
-                  className="w-full pl-10 pr-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-none h-20 text-slate-900"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Additional details..."
+                  className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-red-400 focus:shadow-neo transition-all resize-none h-20 text-slate-700"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Remarks
+                </label>
+                <div className="relative">
+                  <MessageSquare className="absolute left-3 top-3 text-slate-400 pointer-events-none" size={18} />
+                  <textarea
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Any remarks..."
+                    className="w-full pl-11 pr-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-red-400 focus:shadow-neo transition-all resize-none h-20 text-slate-700"
+                  />
+                </div>
               </div>
             </div>
           </form>
         </div>
-        <div className="p-6 border-t border-slate-100 flex-shrink-0 bg-white rounded-b-2xl flex gap-3">
+        <div className="px-6 py-4 border-none flex-shrink-0 bg-transparent rounded-b-3xl flex gap-4">
           {initialData && onDelete && (
             <button
               type="button"
               onClick={onDelete}
-              className="px-4 py-2.5 rounded-lg font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-all"
+              className="px-6 py-3 rounded-2xl font-bold border-none shadow-neo hover:shadow-neo-inner text-red-500 bg-slate-200 transition-all active:scale-[0.98]"
             >
               Delete
             </button>
@@ -257,7 +261,7 @@ export const DeadlineModal: React.FC<DeadlineModalProps> = ({ isOpen, onClose, o
           <button
             type="submit"
             form="deadline-form"
-            className="flex-1 bg-red-600 text-white py-2.5 rounded-lg font-semibold hover:bg-red-700 active:scale-[0.98] transition-all shadow-md shadow-red-200"
+            className="flex-1 bg-gradient-to-r border-none from-orange-400 to-red-500 text-white py-3 rounded-2xl font-bold hover:from-orange-500 hover:to-red-600 active:scale-[0.98] transition-all shadow-[4px_4px_10px_rgba(239,68,68,0.3),-4px_-4px_10px_rgba(255,255,255,0.8)] active:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1),inset_-4px_-4px_10px_rgba(255,255,255,0.2)]"
           >
             {initialData ? 'Save Changes' : 'Set Deadline'}
           </button>

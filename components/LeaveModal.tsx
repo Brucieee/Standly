@@ -7,6 +7,7 @@ interface LeaveModalProps {
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
   initialData?: Leave | null;
+  initialDate?: Date;
   onDelete?: () => void;
 }
 
@@ -15,6 +16,7 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
   onClose,
   onSubmit,
   initialData,
+  initialDate,
   onDelete,
 }) => {
   const [startDate, setStartDate] = useState('');
@@ -45,8 +47,12 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
           setDuration('full');
         }
       } else {
-        setStartDate(new Date().toISOString().split('T')[0]);
-        setEndDate(new Date().toISOString().split('T')[0]);
+        const defaultDate = initialDate 
+          ? new Date(initialDate.getTime() - (initialDate.getTimezoneOffset() * 60000)).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0];
+          
+        setStartDate(defaultDate);
+        setEndDate(defaultDate);
         setStartTime('');
         setEndTime('');
         setType('vacation');
@@ -54,7 +60,7 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
         setDuration('full');
       }
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, initialDate]);
 
   useEffect(() => {
     if (duration === 'morning') {
@@ -108,22 +114,22 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-slate-200 rounded-3xl shadow-neo border-none w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b border-slate-300/30 flex justify-between items-center bg-transparent">
           <h2 className="text-xl font-bold text-slate-900">{initialData ? 'Edit Leave' : 'New Leave Request'}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 transition-colors"><X size={24} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Duration Selection */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Duration</label>
-            <div className="grid grid-cols-3 gap-3">
+            <label className="block text-sm font-bold text-slate-700 mb-2">Duration</label>
+            <div className="grid grid-cols-3 gap-4">
               <button
                 type="button"
                 onClick={() => setDuration('full')}
-                className={`p-3 rounded-xl border-2 flex flex-col items-center justify-center gap-2 transition-all ${duration === 'full' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 hover:border-slate-200 text-slate-600'}`}
+                className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all ${duration === 'full' ? 'bg-indigo-50 text-indigo-700 shadow-neo-inner border border-indigo-200' : 'bg-slate-200 shadow-neo hover:shadow-neo-inner text-slate-600 border border-transparent'}`}
               >
                 <Calendar size={20} />
                 <span className="text-xs font-bold">Full Day</span>
@@ -131,38 +137,38 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
               <button
                 type="button"
                 onClick={() => setDuration('morning')}
-                className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${duration === 'morning' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-slate-100 hover:border-slate-200 text-slate-600'}`}
+                className={`p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${duration === 'morning' ? 'bg-amber-50 text-amber-700 shadow-neo-inner border border-amber-200' : 'bg-slate-200 shadow-neo hover:shadow-neo-inner text-slate-600 border border-transparent'}`}
               >
                 <Sun size={20} />
                 <span className="text-xs font-bold">Morning</span>
-                <span className="text-[10px] opacity-75">8AM - 12PM</span>
+                <span className="text-[10px] opacity-75 font-medium">8AM - 12PM</span>
               </button>
               <button
                 type="button"
                 onClick={() => setDuration('afternoon')}
-                className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${duration === 'afternoon' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-100 hover:border-slate-200 text-slate-600'}`}
+                className={`p-4 rounded-2xl flex flex-col items-center gap-2 transition-all ${duration === 'afternoon' ? 'bg-blue-50 text-blue-700 shadow-neo-inner border border-blue-200' : 'bg-slate-200 shadow-neo hover:shadow-neo-inner text-slate-600 border border-transparent'}`}
               >
                 <Moon size={20} />
                 <span className="text-xs font-bold">Afternoon</span>
-                <span className="text-[10px] opacity-75">1PM - 5PM</span>
+                <span className="text-[10px] opacity-75 font-medium">1PM - 5PM</span>
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
-              <input type="date" required value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <label className="block text-sm font-bold text-slate-700 mb-2">Start Date</label>
+              <input type="date" required value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700 font-medium" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
-              <input type="date" required value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+              <label className="block text-sm font-bold text-slate-700 mb-2">End Date</label>
+              <input type="date" required value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700 font-medium" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-            <select value={type} onChange={e => setType(e.target.value as any)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+            <label className="block text-sm font-bold text-slate-700 mb-2">Type</label>
+            <select value={type} onChange={e => setType(e.target.value as any)} className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700 font-medium appearance-none">
               <option value="vacation">🏖️ Vacation Leave</option>
               <option value="sick">🤒 Sick Leave</option>
               <option value="personal">🏠 Personal Leave</option>
@@ -172,20 +178,20 @@ export const LeaveModal: React.FC<LeaveModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Reason (Optional)</label>
-            <textarea value={reason} onChange={e => setReason(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]" placeholder="Briefly describe your leave..." />
+            <label className="block text-sm font-bold text-slate-700 mb-2">Reason (Optional)</label>
+            <textarea value={reason} onChange={e => setReason(e.target.value)} className="w-full px-4 py-3 bg-slate-200 border-none rounded-xl shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700 min-h-[100px] resize-y font-medium" placeholder="Briefly describe your leave..." />
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-6 border-t border-slate-300/30">
             {initialData && onDelete ? (
-              <button type="button" onClick={onDelete} className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                <Trash2 size={20} /> <span>Delete Leave</span>
+              <button type="button" onClick={onDelete} className="flex items-center gap-2 px-6 py-3 text-red-600 bg-slate-200 shadow-neo hover:shadow-neo-inner rounded-xl font-bold transition-all">
+                <Trash2 size={20} /> <span className="hidden sm:inline">Delete Leave</span>
               </button>
             ) : <div></div>}
             
-            <div className="flex gap-3">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg">Cancel</button>
-              <button type="submit" disabled={isSubmitting} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+            <div className="flex gap-4 w-full sm:w-auto mt-4 sm:mt-0">
+              <button type="button" onClick={onClose} className="flex-1 sm:flex-none px-6 py-3 text-slate-600 shadow-neo hover:shadow-neo-inner bg-slate-200 rounded-xl font-bold transition-all">Cancel</button>
+              <button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-none px-8 py-3 text-white font-bold rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-[4px_4px_10px_rgba(79,70,229,0.3),-4px_-4px_10px_rgba(255,255,255,0.8)] active:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1),inset_-4px_-4px_10px_rgba(255,255,255,0.2)] hover:from-indigo-600 hover:to-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 {isSubmitting ? 'Saving...' : initialData ? 'Update' : 'Post Leave'}
               </button>
             </div>

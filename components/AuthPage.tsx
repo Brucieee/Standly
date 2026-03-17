@@ -41,8 +41,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+    <div className="min-h-screen bg-slate-200 flex items-center justify-center p-4">
+      <div className="bg-slate-200 rounded-3xl shadow-neo border-none w-full max-w-md overflow-hidden">
         <div className="p-8">
           <div className="text-center mb-8">
             <img 
@@ -61,18 +61,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
           </div>
 
           {isLogin && (
-            <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+            <div className="flex p-2 bg-slate-200 rounded-2xl mb-6 shadow-neo-sm-inner gap-2">
               <button
                 type="button"
                 onClick={() => setLoginMethod('email')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${loginMethod === 'email' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${loginMethod === 'email' ? 'bg-slate-200 text-indigo-600 shadow-neo-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Email & Password
               </button>
               <button
                 type="button"
                 onClick={() => setLoginMethod('code')}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${loginMethod === 'code' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${loginMethod === 'code' ? 'bg-slate-200 text-indigo-600 shadow-neo-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
                 Secret Code
               </button>
@@ -85,13 +85,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       type="text"
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700"
                       placeholder="John Doe"
                     />
                   </div>
@@ -100,12 +100,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Position</label>
                   <div className="relative">
-                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <select
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all appearance-none bg-white invalid:text-slate-400"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all appearance-none text-slate-700 invalid:text-slate-400"
                     >
                       <option value="" disabled>Select Position</option>
                       {Object.values(UserRole).map((r) => (
@@ -126,7 +126,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                         required
                         value={customRole}
                         onChange={(e) => setCustomRole(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                        className="w-full pl-12 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700"
                         placeholder="e.g. UI/UX Designer"
                       />
                     </div>
@@ -146,7 +146,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                     required
                     value={loginCode}
                     onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-indigo-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none transition-all tracking-[0.5em] font-mono text-center text-2xl font-bold text-indigo-900 placeholder:text-slate-300"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-200 rounded-2xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all tracking-[0.5em] font-mono text-center text-2xl font-bold text-indigo-600 placeholder:text-slate-400"
                     placeholder="000000"
                     maxLength={6}
                     autoFocus
@@ -161,13 +161,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       type="email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700"
                       placeholder="john@example.com"
                     />
                   </div>
@@ -176,13 +176,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                       type="password"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-200 rounded-xl border-none shadow-neo-sm-inner focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:shadow-neo transition-all text-slate-700"
                       placeholder="••••••••"
                     />
                   </div>
@@ -192,7 +192,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onRegister, onCodeL
 
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] mt-6"
+              className="w-full py-4 text-white font-bold rounded-2xl bg-gradient-to-r from-orange-400 to-red-500 shadow-[4px_4px_10px_rgba(239,68,68,0.3),-4px_-4px_10px_rgba(255,255,255,0.8)] active:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.1),inset_-4px_-4px_10px_rgba(255,255,255,0.2)] hover:from-orange-500 hover:to-red-600 transition-all active:scale-[0.98] mt-8"
             >
               {isLogin ? (loginMethod === 'code' ? 'Login with Code' : 'Sign In') : 'Create Account'}
             </button>
