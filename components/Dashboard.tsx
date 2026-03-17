@@ -140,7 +140,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
           userId={currentUser.id}
           onDateClick={onCalendarDateClick}
         />
-        <MissedDeadlinesWidget users={users} deadlines={missedDeadlines} currentUserId={currentUser.id} />
+        <MissedDeadlinesWidget 
+          users={users} 
+          deadlines={missedDeadlines} 
+          currentUserId={currentUser.id} 
+          onEdit={onEditDeadline}
+        />
         <AnnouncementsWidget users={users} leaves={leaves} />
       </div>
     </div>
