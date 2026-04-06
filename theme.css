@@ -1,0 +1,75 @@
+/* Neumorphism (Default 'neo' - styling is mostly handled by existing Tailwind classes) */
+body {
+  background-color: #E2E8F0;
+  color: #475569;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* 1. Glassmorphism */
+body[data-theme="glass"] {
+  background: radial-gradient(circle at 10% 20%, rgba(200, 150, 255, 0.4) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(150, 200, 255, 0.4) 0%, transparent 50%),
+              linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  background-attachment: fixed;
+  color: #1e293b;
+}
+body[data-theme="glass"] .bg-slate-200,
+body[data-theme="glass"] .bg-slate-100,
+body[data-theme="glass"] .bg-white {
+  background: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05) !important;
+}
+
+/* 2. Neubrutalism */
+body[data-theme="brutal"] {
+  background-color: #fceea7;
+  color: #000000;
+  background-image: radial-gradient(#000000 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+body[data-theme="brutal"] .bg-slate-200,
+body[data-theme="brutal"] .bg-slate-100,
+body[data-theme="brutal"] .bg-white {
+  background-color: #ffffff !important;
+  border: 3px solid #000000 !important;
+  box-shadow: 6px 6px 0px 0px #000000 !important;
+  color: #000000 !important;
+}
+body[data-theme="brutal"] .rounded-2xl,
+body[data-theme="brutal"] .rounded-3xl,
+body[data-theme="brutal"] .rounded-xl {
+  border-radius: 0px !important;
+}
+
+/* 4. Claymorphism */
+body[data-theme="clay"] {
+  background-color: #e5e7eb; 
+  color: #374151;
+}
+body[data-theme="clay"] .bg-slate-200,
+body[data-theme="clay"] .bg-slate-100,
+body[data-theme="clay"] .bg-white {
+  background-color: #f3f4f6 !important;
+  border-radius: 34px !important;
+  box-shadow: 
+    8px 8px 16px rgba(165, 177, 198, 0.4), 
+    -8px -8px 16px rgba(255, 255, 255, 0.8),
+    inset -4px -4px 8px rgba(165, 177, 198, 0.3),
+    inset 4px 4px 8px rgba(255, 255, 255, 0.9) !important;
+  border: none !important;
+}
+body[data-theme="clay"] .rounded-2xl,
+body[data-theme="clay"] .rounded-3xl {
+  border-radius: 34px !important;
+}
+
+/* Strip out original neo shadows when non-default themes are applied */
+body:not([data-theme="neo"]):not(:not([data-theme])) .shadow-neo,
+body:not([data-theme="neo"]):not(:not([data-theme])) .shadow-neo-inner,
+body:not([data-theme="neo"]):not(:not([data-theme])) .shadow-neo-sm,
+body:not([data-theme="neo"]):not(:not([data-theme])) .shadow-neo-sm-inner {
+  box-shadow: none !important;
+}

@@ -18,6 +18,7 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('standly_theme') || 'neo');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const presetInputRef = useRef<HTMLInputElement>(null);
   const [presets, setPresets] = useState<{ name: string; url: string }[]>([]);
@@ -229,6 +230,39 @@ export const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
                 />
               </div>
               <p className="text-xs text-slate-400 mt-1">Used for quick login. Must be unique.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-3">App Design Language (Theme)</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { id: 'neo', name: 'Neumorphism', color: 'bg-[#E2E8F0] shadow-[3px_3px_6px_#a6abb1,-3px_-3px_6px_#ffffff]' },
+                  { id: 'glass', name: 'Glassmorphism', color: 'bg-gradient-to-br from-white/60 to-white/20 backdrop-blur-md border border-white/50 shadow-sm' },
+                  { id: 'brutal', name: 'Neubrutalism', color: 'bg-[#fceea7] border-2 border-black shadow-[3px_3px_0px_#000] rounded-none' },
+                  { id: 'clay', name: 'Claymorphism', color: 'bg-[#f3f4f6] shadow-[8px_8px_16px_rgba(165,177,198,0.4),-8px_-8px_16px_rgba(255,255,255,0.8),inset_-4px_-4px_8px_rgba(165,177,198,0.3),inset_4px_4px_8px_rgba(255,255,255,0.9)]' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => {
+                      setTheme(t.id);
+                      localStorage.setItem('standly_theme', t.id);
+                      window.dispatchEvent(new Event('themechange'));
+                    }}
+                    className={`relative p-3 rounded-2xl flex flex-col items-center gap-2 border-2 transition-all ${
+                      theme === t.id ? 'border-indigo-500 scale-[1.02] shadow-md bg-slate-50' : 'border-transparent hover:border-slate-300 bg-slate-50 opacity-80 hover:opacity-100'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-full border shadow-inner ${t.color}`}></div>
+                    <span className="text-xs font-bold text-slate-700">{t.name}</span>
+                    {theme === t.id && (
+                      <div className="absolute top-2 right-2 bg-indigo-500 rounded-full text-white">
+                        <CheckCircle2 size={14} />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

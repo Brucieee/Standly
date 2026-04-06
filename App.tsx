@@ -158,9 +158,22 @@ const App: React.FC = () => {
       setLoading(false);
     }, 5000);
 
+    // Theme initialization and listener
+    const applyTheme = () => {
+      const savedTheme = localStorage.getItem('standly_theme') || 'neo';
+      if (savedTheme === 'neo') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', savedTheme);
+      }
+    };
+    applyTheme();
+    window.addEventListener('themechange', applyTheme);
+
     return () => {
       subscription.unsubscribe();
       clearTimeout(safetyTimeout);
+      window.removeEventListener('themechange', applyTheme);
     };
   }, []);
 

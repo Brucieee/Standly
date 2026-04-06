@@ -8,11 +8,23 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      
+      :root {
+        --base-bg: #E2E8F0;
+        --text-base: #475569;
+        --theme-shadow: 7px 7px 15px -5px #a6abb1, -7px -7px 15px -5px #ffffff;
+        --theme-shadow-inner: inset 5px 5px 10px -5px #a6abb1, inset -5px -5px 10px -5px #ffffff;
+        --theme-shadow-sm: 4px 4px 8px -3px #a6abb1, -4px -4px 8px -3px #ffffff;
+        --theme-shadow-sm-inner: inset 4px 4px 8px -3px #a6abb1, inset -4px -4px 8px -3px #ffffff;
+      }
+      
       body {
         font-family: 'Inter', sans-serif;
-        background-color: #E2E8F0; /* Neomorphism base gray */
-        color: #475569; /* slate-600 */
+        background-color: var(--base-bg) !important;
+        color: var(--text-base) !important;
+        transition: background-color 0.3s, color 0.3s;
       }
+
       /* Custom scrollbar for webkit */
       ::-webkit-scrollbar {
         width: 8px;
@@ -34,13 +46,13 @@
         theme: {
           extend: {
             colors: {
-              'neo-base': '#E2E8F0', // Match base bg
+              'neo-base': 'var(--base-bg)', // Match base bg
             },
             boxShadow: {
-              'neo': '7px 7px 15px -5px #a6abb1, -7px -7px 15px -5px #ffffff',
-              'neo-inner': 'inset 5px 5px 10px -5px #a6abb1, inset -5px -5px 10px -5px #ffffff',
-              'neo-sm': '4px 4px 8px -3px #a6abb1, -4px -4px 8px -3px #ffffff',
-              'neo-sm-inner': 'inset 4px 4px 8px -3px #a6abb1, inset -4px -4px 8px -3px #ffffff',
+              'neo': 'var(--theme-shadow)',
+              'neo-inner': 'var(--theme-shadow-inner)',
+              'neo-sm': 'var(--theme-shadow-sm)',
+              'neo-sm-inner': 'var(--theme-shadow-sm-inner)',
             }
           }
         }
