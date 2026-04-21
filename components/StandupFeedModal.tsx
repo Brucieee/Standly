@@ -147,9 +147,9 @@ export const StandupFeedModal: React.FC<StandupFeedModalProps> = ({
 
   const getMoodIcon = (mood: string, size: number = 28) => {
     switch (mood) {
-      case 'happy': return <Smile className="text-green-500" size={size} />;
-      case 'neutral': return <Meh className="text-yellow-500" size={size} />;
-      case 'stressed': return <Frown className="text-red-500" size={size} />;
+      case 'happy': return <span style={{ fontSize: `${size * 0.8}px` }}>😄</span>;
+      case 'neutral': return <span style={{ fontSize: `${size * 0.8}px` }}>😐</span>;
+      case 'stressed': return <span style={{ fontSize: `${size * 0.8}px` }}>😫</span>;
       case 'sad': return <span style={{ fontSize: `${size * 0.8}px` }}>😔</span>;
       case 'hungry': return <span style={{ fontSize: `${size * 0.8}px` }}>🤤</span>;
       case 'excited': return <span style={{ fontSize: `${size * 0.8}px` }}>🤩</span>;

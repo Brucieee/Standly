@@ -153,7 +153,7 @@ export const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="min-h-screen bg-slate-200 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-200 fixed h-full z-10 hidden md:flex flex-col overflow-y-auto custom-scrollbar border-none shadow-neo">
+      <aside className="w-80 bg-slate-200 fixed h-full z-10 hidden md:flex flex-col overflow-y-auto custom-scrollbar border-none shadow-neo">
         <div className="p-6">
           <div
             className="flex items-center justify-center gap-3 mb-8 cursor-pointer hover:opacity-80 transition-opacity"
@@ -249,7 +249,7 @@ export const Layout: React.FC<LayoutProps> = ({
                               ) : (
                                 <LinkIcon size={20} className="text-slate-400 group-hover:text-red-400 transition-colors flex-shrink-0" />
                               )}
-                              <span className="flex-1 whitespace-normal break-words">{link.title}</span>
+                              <span className="flex-1 whitespace-nowrap text-left">{link.title}</span>
                             </button>
                             {isAdmin && (
                               <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all bg-slate-200 shadow-neo rounded-lg p-0.5">
@@ -302,8 +302,8 @@ export const Layout: React.FC<LayoutProps> = ({
                 className="w-10 h-10 rounded-full shadow-neo border-2 border-slate-200 object-cover shrink-0"
               />
               <div className="flex-1">
-                <p className="text-sm font-bold text-slate-600 group-hover:text-red-500 transition-colors leading-tight break-words pr-1">{userName}</p>
-                <p className="text-xs text-slate-400 leading-tight mt-0.5 break-words pr-1">{userRole}</p>
+                <p className="text-sm font-bold text-slate-600 group-hover:text-red-500 transition-colors leading-tight whitespace-nowrap pr-1">{userName}</p>
+                <p className="text-xs text-slate-400 leading-tight mt-0.5 whitespace-nowrap pr-1">{userRole}</p>
               </div>
             </div>
             
@@ -319,7 +319,7 @@ export const Layout: React.FC<LayoutProps> = ({
       </aside>
 
       {/* Mobile Header & Content */}
-      <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 md:ml-80 flex flex-col min-h-screen">
         {/* Mobile Header */}
         <header className="md:hidden bg-slate-200 shadow-neo-sm p-4 flex justify-between items-center sticky top-0 z-20 rounded-b-2xl mb-4">
           <div
@@ -403,7 +403,7 @@ export const Layout: React.FC<LayoutProps> = ({
                                   <LinkIcon size={20} />
                                 </div>
                               )}
-                              <span className="text-xs font-medium text-slate-700 text-center whitespace-normal break-words">{item.title}</span>
+                              <span className="text-xs font-medium text-slate-700 text-center whitespace-normal break-words px-1">{item.title}</span>
 
                               {/* Mobile Edit Button (Only for Admins) */}
                               {isAdmin && (
