@@ -1,6 +1,7 @@
 import React from 'react';
 import { Deadline, User } from '../types';
-import { Trash2, Edit2, Flag, Clock, ExternalLink, MessageSquare } from 'lucide-react';
+import { Trash2, Edit2, Flag, Clock, ExternalLink, MessageSquare, AlertCircle } from 'lucide-react';
+import moment from 'moment-timezone';
 
 interface DeadlinesWidgetProps {
   deadlines: Deadline[];
@@ -52,15 +53,29 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
 
           const isDueToday = new Date().toDateString() === dueDate.toDateString();
 
+          const today = moment().startOf('day');
+          const deadlineDate = moment(deadline.dueDate).startOf('day');
+          const diffDays = deadlineDate.diff(today, 'days');
+          const isNearDeadline = diffDays >= 0 && diffDays <= 3;
+
+          let ringClass = '';
+          if (isDueToday) {
+            ringClass = 'ring-2 ring-red-400';
+          } else if (isNearDeadline) {
+            ringClass = 'ring-2 ring-amber-400';
+          } else if (isAssignee) {
+            ringClass = 'ring-2 ring-indigo-400';
+          }
+
           return (
             <div
               key={deadline.id}
-              className={`bg-slate-200 p-5 rounded-2xl border-none shadow-neo hover:shadow-neo-inner transition-all group flex flex-col gap-3 relative ${isDueToday ? 'ring-2 ring-red-400' : isAssignee ? 'ring-2 ring-indigo-400' : ''}`}
+              className={`bg-slate-200 p-5 rounded-2xl border-none shadow-neo hover:shadow-neo-inner transition-all group flex flex-col gap-3 relative ${ringClass}`}
             >
-              {isAssignee && (
+              {(isAssignee || isNearDeadline) && (
                 <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isDueToday ? 'bg-red-400' : 'bg-indigo-400'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${isDueToday ? 'bg-red-500' : 'bg-indigo-500'}`}></span>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isDueToday || isNearDeadline ? 'bg-red-400' : 'bg-indigo-400'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-3 w-3 ${isDueToday || isNearDeadline ? 'bg-red-500' : 'bg-indigo-500'}`}></span>
                 </span>
               )}
               {/* Header: Title, Date, Status */}
@@ -86,6 +101,12 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
                       <ExternalLink size={12} />
                       Link
                     </a>
+                  )}
+                  {isNearDeadline && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 shadow-sm animate-pulse shrink-0">
+                      <AlertCircle size={12} className="text-rose-600" />
+                      Important
+                    </span>
                   )}
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border shrink-0 ${getStatusColor(deadline.status)}`}>
                     {deadline.status || 'Pending'}
