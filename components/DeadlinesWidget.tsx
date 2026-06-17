@@ -59,13 +59,13 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
           const isNearDeadline = diffDays >= 0 && diffDays <= 3;
 
           let ringClass = '';
-          if (isDueToday) {
+          if (isDueToday || isNearDeadline) {
             ringClass = 'ring-2 ring-red-400';
-          } else if (isNearDeadline) {
-            ringClass = 'ring-2 ring-amber-400';
           } else if (isAssignee) {
             ringClass = 'ring-2 ring-indigo-400';
           }
+
+          const isUrgent = isDueToday || isNearDeadline;
 
           return (
             <div
@@ -73,9 +73,11 @@ export const DeadlinesWidget: React.FC<DeadlinesWidgetProps> = ({ deadlines, use
               className={`bg-slate-200 p-5 rounded-2xl border-none shadow-neo hover:shadow-neo-inner transition-all group flex flex-col gap-3 relative ${ringClass}`}
             >
               {(isAssignee || isNearDeadline) && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isDueToday || isNearDeadline ? 'bg-red-400' : 'bg-indigo-400'}`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${isDueToday || isNearDeadline ? 'bg-red-500' : 'bg-indigo-500'}`}></span>
+                <span className={`absolute flex ${isUrgent ? '-top-2 -right-2 h-5 w-5' : '-top-1.5 -right-1.5 h-3 w-3'}`}>
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isUrgent ? 'bg-red-400' : 'bg-indigo-400'}`}></span>
+                  <span className={`relative inline-flex rounded-full h-full w-full items-center justify-center text-[11px] font-black leading-none text-white ${isUrgent ? 'bg-red-500' : 'bg-indigo-500'}`}>
+                    {isUrgent ? '!' : ''}
+                  </span>
                 </span>
               )}
               {/* Header: Title, Date, Status */}
