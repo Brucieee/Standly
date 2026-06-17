@@ -1,7 +1,7 @@
 import moment from 'moment-timezone';
 import React from 'react';
 import { User, Standup, Deadline, Leave } from '../types';
-import { Plus, Flag, FileText } from 'lucide-react';
+import { Plus, Flag, FileText, Sparkles } from 'lucide-react';
 import { DeadlinesWidget } from './DeadlinesWidget';
 import { StandupFeed } from './StandupFeed';
 import { CalendarWidget } from './CalendarWidget';
@@ -135,6 +135,57 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Sidebar Widgets */}
       <div className="space-y-6">
+        {/* Tap Portal Advertisement Banner */}
+        <div className="bg-slate-200 p-6 rounded-3xl border-none shadow-neo relative overflow-hidden group">
+          <div className="relative space-y-3">
+            <div className="flex items-center gap-3">
+              <svg 
+                width="36" 
+                height="36" 
+                viewBox="0 0 120 110" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="flex-shrink-0"
+              >
+                {/* Deep Indigo Background Dial Face */}
+                <circle cx="60" cy="55" r="30" fill="#4f46e5" />
+                {/* Indicator Dots */}
+                <circle cx="60" cy="35" r="2" fill="#ffffff" opacity="0.9" />
+                <circle cx="60" cy="75" r="2" fill="#ffffff" opacity="0.9" />
+                <circle cx="40" cy="55" r="2" fill="#ffffff" opacity="0.9" />
+                <circle cx="80" cy="55" r="2" fill="#ffffff" opacity="0.9" />
+                {/* Segmented Clock Outer Arcs */}
+                <path d="M 41 22.1 A 38 38 0 0 1 79 22.1" stroke="#4f46e5" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                <path d="M 89.1 30.6 A 38 38 0 0 1 66.6 92.4" stroke="#4f46e5" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                <path d="M 53.4 92.4 A 38 38 0 0 1 30.9 30.6" stroke="#4f46e5" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                {/* Clock Hands */}
+                <line x1="60" y1="55" x2="43.7" y2="38.7" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
+                <line x1="60" y1="55" x2="69.9" y2="45.1" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
+                {/* Central Pin */}
+                <circle cx="60" cy="55" r="4.5" fill="#ffffff" />
+                <circle cx="60" cy="55" r="1.5" fill="#4f46e5" />
+              </svg>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200/50">
+                Tap Portal
+              </span>
+            </div>
+            <h3 className="text-base font-bold text-slate-700 leading-snug">
+              Sync Leaves & Timelogs to MyPortal
+            </h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Automate timelogs, MyPortal filings, and leave submissions.
+            </p>
+            <a 
+              href="https://tap-timelog.vercel.app/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:shadow-indigo-500/20 transition-all active:scale-95 border-none mt-2"
+            >
+              Get Started →
+            </a>
+          </div>
+        </div>
+
         <CalendarWidget
           standups={standups}
           userId={currentUser.id}
