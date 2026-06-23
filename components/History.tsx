@@ -28,18 +28,18 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
   const [expandedDeadlineIds, setExpandedDeadlineIds] = useState<Set<string>>(new Set());
   const [hideCompleted, setHideCompleted] = useState(false);
 
-  // Initialize dates to past 3 days on mount
+  // Initialize dates to current month on mount
   useEffect(() => {
     const today = new Date();
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(today.getDate() - 3);
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     const formatDate = (date: Date) => {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     };
 
-    setEndDate(formatDate(today));
-    setStartDate(formatDate(threeDaysAgo));
+    setEndDate(formatDate(endOfMonth));
+    setStartDate(formatDate(startOfMonth));
   }, []);
 
   const toggleDeadline = (id: string) => {
@@ -258,17 +258,17 @@ export const History: React.FC<HistoryProps> = ({ standups, deadlines, users, cu
                 <button
                   onClick={() => {
                     setSelectedUserId('');
-                    // Reset to default 3 days
+                    // Reset to current month
                     const today = new Date();
-                    const threeDaysAgo = new Date();
-                    threeDaysAgo.setDate(today.getDate() - 3);
+                    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
                     const formatDate = (date: Date) => {
                       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                     };
 
-                    setEndDate(formatDate(today));
-                    setStartDate(formatDate(threeDaysAgo));
+                    setEndDate(formatDate(endOfMonth));
+                    setStartDate(formatDate(startOfMonth));
                   }}
                   className="flex items-center gap-2 px-4 py-2 text-sm text-slate-500 font-bold hover:text-slate-700 bg-slate-200 rounded-xl shadow-neo hover:shadow-neo-inner transition-colors active:scale-95"
                 >

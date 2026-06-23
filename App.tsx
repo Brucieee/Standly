@@ -465,6 +465,9 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     await apiAuth.signOut();
     localStorage.removeItem("standly_login_code");
+    if (supabase && (supabase as any).rest) {
+      delete (supabase as any).rest.headers['x-login-code'];
+    }
     setActiveTab("dashboard");
   };
 

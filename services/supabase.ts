@@ -7,23 +7,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-let supabaseInstance: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseInstance: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    headers: {
+      get 'x-login-code'() {
+        return localStorage.getItem('standly_login_code') || '';
+      }
+    } as any
+  }
+});
 
 export const getSupabase = () => supabaseInstance;
 
 export const initSupabaseWithCode = (code: string) => {
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        'x-login-code': code
-      }
-    }
-  });
+  localStorage.setItem('standly_login_code', code);
+  if (supabaseInstance && (supabaseInstance as any).rest) {
+    (supabaseInstance as any).rest.headers['x-login-code'] = code;
+  }
 };
 
-// Export a proxy to always use the current instance
-export const supabase = new Proxy({} as SupabaseClient, {
-  get: (_target, prop) => {
-    return (supabaseInstance as any)[prop];
-  }
-});
+export const supabase = supabaseInstance;
