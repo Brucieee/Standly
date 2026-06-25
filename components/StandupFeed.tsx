@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Standup, User, Comment, Reaction } from '../types';
-import { Trash2, Edit2, ExternalLink, Smile, Meh, Frown, MessageCircle } from 'lucide-react';
-import { isUserMentioned } from './mentionUtils';
+import { Trash2, Edit2, ExternalLink, Smile, Meh, Frown, MessageCircle, Clock } from 'lucide-react';
+import { isUserMentioned, renderTextWithMentions } from './mentionUtils';
 
 const REACTION_TYPES = [
   { id: 'like', icon: '👍', label: 'Like' },
@@ -81,6 +81,41 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
       // If not a valid URL, return a truncated version of the original string
       return link.length > 30 ? `${link.substring(0, 27)}...` : link;
     }
+  };
+
+  const renderContent = (text: string) => {
+    // First, get the mentions processed
+    const nodes = renderTextWithMentions(text, users);
+    
+    // Then process links in any string nodes
+    return nodes.map((node, index) => {
+      if (typeof node === 'string') {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const parts = node.split(urlRegex);
+        return (
+          <React.Fragment key={index}>
+            {parts.map((part, partIndex) => {
+              if (part.match(urlRegex)) {
+                return (
+                  <a
+                    key={partIndex}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 hover:underline break-all"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {part}
+                  </a>
+                );
+              }
+              return part;
+            })}
+          </React.Fragment>
+        );
+      }
+      return <React.Fragment key={index}>{node}</React.Fragment>;
+    });
   };
 
   // Filter standups to show only today's entries
@@ -261,6 +296,19 @@ export const StandupFeed: React.FC<StandupFeedProps> = ({ standups, users, curre
                         </div>
                       </div>
                     </div>
+
+                    {/* Today content preview */}
+                    {standup.today && (
+                      <div className="mt-4 p-3 bg-slate-100/50 rounded-xl shadow-[inset_1px_1px_3px_rgba(0,0,0,0.05)] border border-slate-200/50">
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+                          <Clock size={11} className="text-indigo-500" />
+                          Today
+                        </h4>
+                        <p className="text-xs text-slate-600 line-clamp-3 whitespace-pre-wrap leading-relaxed">
+                          {renderContent(standup.today)}
+                        </p>
+                      </div>
+                    )}
 
                     {/* Jira Links on Card */}
                     {hasLinks && (
