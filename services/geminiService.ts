@@ -79,3 +79,57 @@ export const generateWeeklySummary = async (
     return "Error generating summary. Please try again later.";
   }
 };
+
+export const generateMonthlySummary = async (
+  standups: { name: string, date: string, yesterday: string, today: string, blockers: string }[],
+  deadlines: { title: string, description?: string, date: string, status: string }[] = [],
+  monthLabel: string = "this month"
+): Promise<string> => {
+  if (!apiKey) {
+    return `Monthly Summary Preview (${monthLabel}): Access to the Gemini API is required to generate a comprehensive monthly report. Please ensure your API key is configured correctly.`;
+  }
+
+  try {
+    const standupStr = standups.length > 0
+      ? standups.map(s => 
+          `- ${s.name} (${new Date(s.date).toLocaleDateString()}): Yesterday: ${s.yesterday}, Today: ${s.today}, Blockers: ${s.blockers}`
+        ).join('\n')
+      : 'No standups recorded for this month.';
+
+    const deadlineStr = deadlines.length > 0
+      ? deadlines.map(d => 
+          `- ${d.title} (Due: ${new Date(d.date).toLocaleDateString()}, Status: ${d.status})${d.description ? ` - ${d.description}` : ''}`
+        ).join('\n')
+      : 'No deadlines recorded for this month.';
+
+    const prompt = `
+      You are a Senior Technical Project Manager.
+      
+      Provide a comprehensive Monthly Executive Summary for ${monthLabel} based on the following team updates and deadlines:
+
+      Daily Standup Updates for ${monthLabel}:
+      ${standupStr}
+
+      Key Deadlines & Milestones for ${monthLabel}:
+      ${deadlineStr}
+
+      Please structure the Monthly Summary with clear headings:
+      1. Executive Overview & Monthly Accomplishments
+      2. Milestone & Project Deliverable Status
+      3. Key Blockers & Risks (Resolved vs Ongoing)
+      4. Team Highlights & Recommendations for Next Month
+
+      Keep the tone professional, clear, and actionable (approx. 200-300 words).
+    `;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    return response.text || "Could not generate monthly summary.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "Error generating monthly summary. Please try again later.";
+  }
+};
